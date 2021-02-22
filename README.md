@@ -65,7 +65,7 @@ std::string filter_str_target_only = "m_Header.TargetCompID = 'MATCHING_ENGINE'"
     participant.createDataReaderListener(cft, newOrderSingleDataListener);
 ```
 
-Example of a NewOrderSingle received from FIX Client(TRADER_1) on FIX Gateway(FIX_GATEWAY_1) for Symbol(Tag:55) AA.Z and SecurityExchange(Tag:207) MARKET_Z.
+Example of a NewOrderSingle received from FIX Client(TRADER_1) on FIX Gateway(FIX_GATEWAY_1) for Symbol(Tag:55) AAA and SecurityExchange(Tag:207) MARKET_Y.
 
 ```
 20210222-18:25:23.093908000 : 8=FIX.4.4|9=222|35=8|34=7|49=FIX_GWY_1|52=20210222-18:25:23.093852|56=TRADER_1|6=0.|14=0|17=1000001|31=0|32=0|37=1614018323:MARKET_Y:AAA:7|38=150|39=0|44=1075|54=2|55=AAA|58=OK|
