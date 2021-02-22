@@ -1,0 +1,17 @@
+// Don't modify, automatically generated file by QuickFIX2OpenDDS.py
+
+module DistributedATS
+{
+	struct Header
+	{
+		string BeginString;
+		long BodyLength;
+		string MsgType;
+		string SenderCompID;
+		string TargetCompID;
+		long MsgSeqNum;
+		string SenderSubID;
+		string TargetSubID;
+		unsigned long long SendingTime;
+	};
+};

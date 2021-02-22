@@ -1,0 +1,36 @@
+// Don't modify, automatically generated file by QuickFIX2OpenDDS.py
+project(Logout) : dcps {
+
+	dynamicflags   = DISTRIBUTEDATS_BUILD_DLL 
+	libout         = $(DATS_HOME)/lib 
+	requires += tao_orbsvcs 
+	after    += Svc_Utils 
+	includes      += $(TAO_ROOT)/orbsvcs 
+	idlflags      += -I$(TAO_ROOT)/orbsvcs \ 
+		-Wb,export_macro=DistributedATS_Export \ 
+		-Wb,export_include=DistributedATS_Export.h 
+		dcps_ts_flags += -Wb,export_macro=DistributedATS_Export 
+
+	TypeSupport_Files{
+	Logout.idl
+Header.idl
+
+}
+
+	IDL_Files{
+	LogoutTypeSupport.idl
+
+Logout.idl
+Header.idl
+HeaderTypeSupport.idl
+
+}
+
+	Header_Files {
+
+	}
+	Source_Files {
+
+	}
+}
+

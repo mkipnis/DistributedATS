@@ -1,0 +1,26 @@
+// Don't modify, automatically generated file by QuickFIX2OpenDDS.py
+#include "Header.idl"
+
+module DistributedATS_MarketDataIncrementalRefresh
+{
+#pragma DCPS_DATA_TYPE "DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefresh"
+
+	struct NoMDEntries
+	{
+		char MDUpdateAction;
+		char MDEntryType;
+		string Symbol;
+		string SecurityExchange;
+		float MDEntryPx;
+		long MDEntrySize;
+		string Text;
+	};
+	typedef sequence<NoMDEntries> NoMDEntriesSeq;
+
+	struct MarketDataIncrementalRefresh
+	{
+	DistributedATS::Header m_Header;
+		string MDReqID;
+		NoMDEntriesSeq c_NoMDEntries;
+	};
+};

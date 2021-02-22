@@ -1,0 +1,58 @@
+<mxfile host="app.diagrams.net" modified="2020-10-15T20:45:14.633Z" agent="5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Safari/605.1.15" etag="srnZQA2u5VOrWsjJLPpr" version="13.8.0" type="github">
+  <diagram id="N9B1Cnlf-uNhBs5uOrOw" name="Page-1">
+    <mxGraphModel dx="1055" dy="666" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="KdCL0gf_oUFvldQPIiQg-1" value="FIX Gateway" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="200" y="78" width="100" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="KdCL0gf_oUFvldQPIiQg-2" value="FIX Gateway" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="210" y="88" width="100" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="KdCL0gf_oUFvldQPIiQg-3" value="FIX Gateways&lt;br&gt;(QuickFIX)" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="220" y="98" width="100" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="KdCL0gf_oUFvldQPIiQg-4" value="Matching Engines" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="600" y="90" width="100" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="KdCL0gf_oUFvldQPIiQg-5" value="Matching Engines" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="610" y="100" width="100" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="KdCL0gf_oUFvldQPIiQg-6" value="Matching Engines&lt;br&gt;(LiquiBook)" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="620" y="110" width="100" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="KdCL0gf_oUFvldQPIiQg-7" value="FIX Gateways" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="400" y="280.00000000000006" width="100" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="KdCL0gf_oUFvldQPIiQg-8" value="FIX Gateways" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="410" y="290.00000000000006" width="100" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="KdCL0gf_oUFvldQPIiQg-9" value="DataServices&lt;br&gt;(MySQL)" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="420" y="300.00000000000006" width="100" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="KdCL0gf_oUFvldQPIiQg-10" value="DDS&lt;br&gt;(OpenDDS)" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.start_2;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="400" y="80" width="120" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="KdCL0gf_oUFvldQPIiQg-11" value="" style="shape=flexArrow;endArrow=classic;startArrow=classic;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;exitX=1.02;exitY=0.41;exitDx=0;exitDy=0;exitPerimeter=0;fillColor=#f5f5f5;strokeColor=#666666;" edge="1" parent="1" source="KdCL0gf_oUFvldQPIiQg-3">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="320" y="142" as="sourcePoint" />
+            <mxPoint x="400" y="139" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="KdCL0gf_oUFvldQPIiQg-12" value="" style="shape=flexArrow;endArrow=classic;startArrow=classic;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;fillColor=#f5f5f5;strokeColor=#666666;" edge="1" parent="1" source="KdCL0gf_oUFvldQPIiQg-10" target="KdCL0gf_oUFvldQPIiQg-4">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="505" y="122.5" as="sourcePoint" />
+            <mxPoint x="583" y="123.5" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="KdCL0gf_oUFvldQPIiQg-13" value="" style="shape=flexArrow;endArrow=classic;startArrow=classic;html=1;exitX=0.58;exitY=0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;entryPerimeter=0;fillColor=#f5f5f5;strokeColor=#666666;" edge="1" parent="1" source="KdCL0gf_oUFvldQPIiQg-7" target="KdCL0gf_oUFvldQPIiQg-10">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="335" y="183" as="sourcePoint" />
+            <mxPoint x="445" y="198" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

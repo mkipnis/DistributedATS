@@ -1,0 +1,30 @@
+// Don't modify, automatically generated file by QuickFIX2OpenDDS.py
+#include "Header.idl"
+
+module DistributedATS_ExecutionReport
+{
+#pragma DCPS_DATA_TYPE "DistributedATS_ExecutionReport::ExecutionReport"
+
+	struct ExecutionReport
+	{
+	DistributedATS::Header m_Header;
+		string OrderID;
+		string OrigClOrdID;
+		string ExecID;
+		char ExecType;
+		char OrdStatus;
+		long OrdRejReason;
+		string Symbol;
+		string SecurityExchange;
+		char Side;
+		long OrderQty;
+		float Price;
+		long LastQty;
+		float LastPx;
+		long LeavesQty;
+		long CumQty;
+		float AvgPx;
+		unsigned long long TransactTime;
+		string Text;
+	};
+};

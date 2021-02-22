@@ -1,0 +1,15 @@
+// Don't modify, automatically generated file by QuickFIX2OpenDDS.py
+#include "Header.idl"
+
+module DistributedATS_BusinessMessageReject
+{
+#pragma DCPS_DATA_TYPE "DistributedATS_BusinessMessageReject::BusinessMessageReject"
+
+	struct BusinessMessageReject
+	{
+	DistributedATS::Header m_Header;
+		string RefMsgType;
+		long BusinessRejectReason;
+		string Text;
+	};
+};

@@ -1,0 +1,12 @@
+// Don't modify, automatically generated file by QuickFIX2OpenDDS.py
+#include "Header.idl"
+
+module DistributedATS_Heartbeat
+{
+#pragma DCPS_DATA_TYPE "DistributedATS_Heartbeat::Heartbeat"
+
+	struct Heartbeat
+	{
+	DistributedATS::Header m_Header;
+	};
+};

@@ -1,0 +1,29 @@
+project(SimulatorATS) : dcpsexe, dcps_tcp, svc_utils  {
+
+        dynamicflags   = DISTRIBUTEDATS_BUILD_DLL
+        requires += tao_orbsvcs
+        after    += Svc_Utils
+        includes      += $(TAO_ROOT)/orbsvcs
+        idlflags      += -I$(TAO_ROOT)/orbsvcs \
+                -Wb,export_macro=DistributedATS_Export \
+                -Wb,export_include=DistributedATS_Export.h
+                dcps_ts_flags += -Wb,export_macro=DistributedATS_Export
+
+        exename         =       SimulatorATS
+        requires       +=       tao_orbsvcs
+
+        includes       +=       $(TAO_ROOT)/orbsvcs $(QUICKFIX_HOME)/include $(DATS_HOME)/GenTools/idl/ $(DATS_HOME)/Common
+        libpaths       +=       $(QUICKFIX_HOME)/lib $(DATS_HOME)/GenTools/idl/
+
+        after    += Svc_Utils
+
+        libs           +=       quickfix
+
+        Source_Files {
+		SimulatorATS.cpp
+		Application.cpp
+		Market.cpp
+		OrderManager.cpp
+        }
+}
+

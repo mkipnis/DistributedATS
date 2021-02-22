@@ -1,0 +1,30 @@
+// Don't modify, automatically generated file by QuickFIX2OpenDDS.py
+#include "Header.idl"
+
+module DistributedATS_MarketDataRequest
+{
+#pragma DCPS_DATA_TYPE "DistributedATS_MarketDataRequest::MarketDataRequest"
+
+	struct NoMDEntryTypes
+	{
+		char MDEntryType;
+	};
+	typedef sequence<NoMDEntryTypes> NoMDEntryTypesSeq;
+
+	struct NoRelatedSym
+	{
+		string Symbol;
+		string SecurityExchange;
+	};
+	typedef sequence<NoRelatedSym> NoRelatedSymSeq;
+
+	struct MarketDataRequest
+	{
+	DistributedATS::Header m_Header;
+		string MDReqID;
+		char SubscriptionRequestType;
+		long MarketDepth;
+		NoMDEntryTypesSeq c_NoMDEntryTypes;
+		NoRelatedSymSeq c_NoRelatedSym;
+	};
+};

@@ -1,0 +1,40 @@
+
+
+
+project(MatchingEngine) : dcpsexe, dcps_tcp, svc_utils  {
+
+        dynamicflags   = DISTRIBUTEDATS_BUILD_DLL
+        requires += tao_orbsvcs
+        after    += Svc_Utils NewOrderSingle ExecutionReport MarketDataIncrementalRefresh OrderCancelRequest OrderCancelReject OrderMassCancelRequest OrderMassCancelReport SecurityListRequest SecurityList
+        includes      += $(TAO_ROOT)/orbsvcs
+        idlflags      += -I$(TAO_ROOT)/orbsvcs \
+                -Wb,export_macro=DistributedATS_Export \
+                -Wb,export_include=DistributedATS_Export.h
+                dcps_ts_flags += -Wb,export_macro=DistributedATS_Export
+
+	exeout		= 	$(DATS_HOME)/bin
+
+        exename         =       * 
+	requires       +=       tao_orbsvcs
+
+        includes       +=       $(TAO_ROOT)/orbsvcs $(QUICKFIX_HOME)/include $(DATS_HOME)/GenTools/idl/ $(DATS_HOME)/Common $(LIQUIDBOOK_HOME)/src $(QUICKFIX_HOME)/include
+        libpaths       +=       $(DATS_HOME)/lib $(QUICKFIX_HOME)/lib
+
+	after    += Svc_Utils
+
+        libs           +=       NewOrderSingle ExecutionReport MarketDataIncrementalRefresh OrderCancelRequest OrderCancelReject OrderMassCancelRequest OrderMassCancelReport SecurityListRequest SecurityList MarketDataRequest MarketDataSnapshotFullRefresh BusinessMessageReject
+
+        Source_Files {
+		main.cpp
+		Market.cpp
+		Order.cpp
+		NewOrderSingleDataReaderListenerImpl.cpp
+		OrderException.cpp
+		OrderCancelRequestDataReaderListenerImpl.cpp
+		OrderMassCancelRequestDataReaderListenerImpl.cpp
+	        SecurityListDataReaderListenerImpl.cpp
+		MarketDataSnapshotFullRefreshDataReaderListenerImpl.cpp
+		PriceDepthPublisherService.cpp
+        }
+}
+

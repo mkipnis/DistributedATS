@@ -1,0 +1,24 @@
+// Don't modify, automatically generated file by QuickFIX2OpenDDS.py
+#include "Header.idl"
+
+module DistributedATS_SecurityList
+{
+#pragma DCPS_DATA_TYPE "DistributedATS_SecurityList::SecurityList"
+
+	struct NoRelatedSym
+	{
+		string Symbol;
+		string SecurityExchange;
+		string Text;
+	};
+	typedef sequence<NoRelatedSym> NoRelatedSymSeq;
+
+	struct SecurityList
+	{
+	DistributedATS::Header m_Header;
+		string SecurityReqID;
+		string SecurityResponseID;
+		long SecurityRequestResult;
+		NoRelatedSymSeq c_NoRelatedSym;
+	};
+};

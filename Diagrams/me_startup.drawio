@@ -1,0 +1,53 @@
+<mxfile host="app.diagrams.net" modified="2020-11-12T02:11:18.654Z" agent="5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Safari/605.1.15" etag="9Uiwy5DzVifTfYac8m_9" version="13.8.8" type="github">
+  <diagram id="A25ST83Qe22Eu15xapJm" name="Page-1">
+    <mxGraphModel dx="1272" dy="742" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="M1uxwemXO-QeWWL-5LEK-6" value="MatchingEngine&lt;br&gt;(MARKET_Z)" style="shape=umlLifeline;participant=umlActor;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;verticalAlign=top;spacingTop=36;outlineConnect=0;" parent="1" vertex="1">
+          <mxGeometry x="110" y="107" width="20" height="360" as="geometry" />
+        </mxCell>
+        <mxCell id="M1uxwemXO-QeWWL-5LEK-7" value="DataService&lt;br&gt;(DATA_SERVICE_B)" style="shape=umlLifeline;participant=umlActor;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;verticalAlign=top;spacingTop=36;outlineConnect=0;" parent="1" vertex="1">
+          <mxGeometry x="470" y="107" width="20" height="360" as="geometry" />
+        </mxCell>
+        <mxCell id="M1uxwemXO-QeWWL-5LEK-8" value="&lt;b&gt;Topic&lt;/b&gt;: SECURITY_LIST_REQUEST_TOPIC&lt;br&gt;&lt;p style=&quot;margin: 0px ; font-stretch: normal ; line-height: normal ; font-family: &amp;#34;menlo&amp;#34;&quot;&gt;&lt;b&gt;SenderCompID&lt;/b&gt; : MARKET_Z&lt;/p&gt;&lt;p style=&quot;margin: 0px ; font-stretch: normal ; line-height: normal ; font-family: &amp;#34;menlo&amp;#34;&quot;&gt;&lt;b&gt;TargetCompID&lt;/b&gt; : REF_DATA_SERVICE&lt;/p&gt;&lt;p style=&quot;margin: 0px ; font-stretch: normal ; line-height: normal ; font-family: &amp;#34;menlo&amp;#34;&quot;&gt;&lt;span&gt;&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;margin: 0px ; font-stretch: normal ; line-height: normal ; font-family: &amp;#34;menlo&amp;#34;&quot;&gt;&lt;b&gt;TargetSubID&lt;/b&gt; : DATA_SERVICE_B&lt;/p&gt;" style="html=1;verticalAlign=bottom;endArrow=block;" parent="1" source="M1uxwemXO-QeWWL-5LEK-6" target="M1uxwemXO-QeWWL-5LEK-7" edge="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="370" y="407" as="sourcePoint" />
+            <mxPoint x="450" y="407" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="300" y="227" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="M1uxwemXO-QeWWL-5LEK-9" value="&lt;b&gt;Topic&lt;/b&gt;: SECURITY_LIST_TOPIC&lt;br&gt;&lt;p style=&quot;margin: 0px ; font-stretch: normal ; line-height: normal ; font-family: &amp;#34;menlo&amp;#34;&quot;&gt;&lt;b&gt;SenderCompID&lt;/b&gt; : REF_DATA_SERVICE&lt;/p&gt;&lt;p style=&quot;margin: 0px ; font-stretch: normal ; line-height: normal ; font-family: &amp;#34;menlo&amp;#34;&quot;&gt;&lt;b&gt;TargetCompID&lt;/b&gt; : MARKET_Z&lt;/p&gt;" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;endSize=8;" parent="1" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="479.5" y="307" as="sourcePoint" />
+            <mxPoint x="119.5" y="307" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="380" y="307" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="M1uxwemXO-QeWWL-5LEK-10" value="&lt;b&gt;Topic&lt;/b&gt;: MARKET_DATA_REQUEST_TOPIC&lt;br&gt;&lt;p style=&quot;margin: 0px ; font-stretch: normal ; line-height: normal ; font-family: &amp;#34;menlo&amp;#34;&quot;&gt;&lt;b&gt;SenderCompID&lt;/b&gt; : MARKET_Z&lt;/p&gt;&lt;p style=&quot;margin: 0px ; font-stretch: normal ; line-height: normal ; font-family: &amp;#34;menlo&amp;#34;&quot;&gt;&lt;b&gt;TargetCompID&lt;/b&gt; : DATA_SERVICE&lt;/p&gt;&lt;p style=&quot;margin: 0px ; font-stretch: normal ; line-height: normal ; font-family: &amp;#34;menlo&amp;#34;&quot;&gt;&lt;/p&gt;&lt;p style=&quot;margin: 0px ; font-stretch: normal ; line-height: normal ; font-family: &amp;#34;menlo&amp;#34;&quot;&gt;&lt;b&gt;TargetSubID&lt;/b&gt; : DATA_SERVICE_B&lt;/p&gt;" style="html=1;verticalAlign=bottom;endArrow=block;" parent="1" source="M1uxwemXO-QeWWL-5LEK-6" target="M1uxwemXO-QeWWL-5LEK-7" edge="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="370" y="407" as="sourcePoint" />
+            <mxPoint x="450" y="407" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="360" y="387" />
+              <mxPoint x="430" y="387" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="M1uxwemXO-QeWWL-5LEK-12" value="&lt;b&gt;Topic&lt;/b&gt;: MARKET_DATA_SNAPSHOT_FULL_REFRESH_TOPIC&lt;br&gt;&lt;p style=&quot;margin: 0px ; font-stretch: normal ; line-height: normal ; font-family: &amp;#34;menlo&amp;#34;&quot;&gt;&lt;b&gt;SenderCompID&lt;/b&gt; : DATA_SERVICE&lt;/p&gt;&lt;p style=&quot;margin: 0px ; font-stretch: normal ; line-height: normal ; font-family: &amp;#34;menlo&amp;#34;&quot;&gt;&lt;b&gt;TargetCompID&lt;/b&gt; : MARKET_Z&lt;/p&gt;" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;endSize=8;" parent="1" source="M1uxwemXO-QeWWL-5LEK-7" target="M1uxwemXO-QeWWL-5LEK-6" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="450" y="407" as="sourcePoint" />
+            <mxPoint x="140" y="467" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="180" y="467" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

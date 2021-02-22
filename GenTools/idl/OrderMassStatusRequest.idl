@@ -1,0 +1,16 @@
+// Don't modify, automatically generated file by QuickFIX2OpenDDS.py
+#include "Header.idl"
+
+module DistributedATS_OrderMassStatusRequest
+{
+#pragma DCPS_DATA_TYPE "DistributedATS_OrderMassStatusRequest::OrderMassStatusRequest"
+
+	struct OrderMassStatusRequest
+	{
+	DistributedATS::Header m_Header;
+		string MassStatusReqID;
+		long MassStatusReqType;
+		string Symbol;
+		string SecurityExchange;
+	};
+};

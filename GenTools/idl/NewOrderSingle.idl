@@ -1,0 +1,21 @@
+// Don't modify, automatically generated file by QuickFIX2OpenDDS.py
+#include "Header.idl"
+
+module DistributedATS_NewOrderSingle
+{
+#pragma DCPS_DATA_TYPE "DistributedATS_NewOrderSingle::NewOrderSingle"
+
+	struct NewOrderSingle
+	{
+	DistributedATS::Header m_Header;
+		string ClOrdID;
+		string Symbol;
+		string SecurityExchange;
+		char Side;
+		unsigned long long TransactTime;
+		long OrderQty;
+		char OrdType;
+		float Price;
+		string Text;
+	};
+};

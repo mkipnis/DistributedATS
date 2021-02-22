@@ -1,0 +1,3 @@
+QuickFIX2OpenDDS.py converts specified in requirements file messages, groups and fields from FIX specs to OpenDDS IDL libraries and conversion helper classes
+QuickFIX2OpenDDS.py -r <requirements> -s <fix_specs>
+try this : python QuickFIX2OpenDDS.py -r ../spec/dats_requirements.xml -s ../../FIXGateway/spec/FIX44.xml

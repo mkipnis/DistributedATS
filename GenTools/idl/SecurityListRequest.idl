@@ -1,0 +1,17 @@
+// Don't modify, automatically generated file by QuickFIX2OpenDDS.py
+#include "Header.idl"
+
+module DistributedATS_SecurityListRequest
+{
+#pragma DCPS_DATA_TYPE "DistributedATS_SecurityListRequest::SecurityListRequest"
+
+	struct SecurityListRequest
+	{
+	DistributedATS::Header m_Header;
+		string SecurityReqID;
+		long SecurityListRequestType;
+		string Symbol;
+		string SecurityExchange;
+		string Text;
+	};
+};

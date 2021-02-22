@@ -1,0 +1,3 @@
+
+1. creates distributed_ats schema, distributed_ats user and populates it with sample data, that can be used to start BasicATS
+	./create.sh {MYSQL_ADMIN} {MYSQL_ADMIN_PASSWORD} 

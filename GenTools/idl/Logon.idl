@@ -1,0 +1,17 @@
+// Don't modify, automatically generated file by QuickFIX2OpenDDS.py
+#include "Header.idl"
+
+module DistributedATS_Logon
+{
+#pragma DCPS_DATA_TYPE "DistributedATS_Logon::Logon"
+
+	struct Logon
+	{
+	DistributedATS::Header m_Header;
+		long EncryptMethod;
+		long HeartBtInt;
+		string RawData;
+		string Username;
+		string Password;
+	};
+};
