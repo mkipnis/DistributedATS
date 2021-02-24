@@ -37,6 +37,8 @@
 #include <OrderMassCancelRequestTypeSupportImpl.h>
 #include <OrderMassStatusRequestAdapter.hpp>
 #include <OrderMassStatusRequestTypeSupportImpl.h>
+#include <OrderCancelReplaceRequestAdapter.hpp>
+#include <OrderCancelReplaceRequestTypeSupportImpl.h>
 #include <SecurityListRequestAdapter.hpp>
 #include <SecurityListRequestTypeSupportImpl.h>
 
@@ -62,6 +64,7 @@
 #include <OrderMassCancelRequestLogger.hpp>
 #include <OrderMassStatusRequestLogger.hpp>
 #include <SecurityListRequestLogger.hpp>
+#include <OrderCancelReplaceRequestLogger.hpp>
 
 #include "DataWriterContainer.hpp"
 
@@ -230,6 +233,17 @@ void DATSApplication::onMessage(const FIX44::OrderMassCancelRequest &message,
     DistributedATS_OrderMassCancelRequest::OrderMassCancelRequest,
                OrderMassCancelRequestLogger>(
       message, _dataWriterContainer->_orderMassCancelRequestDataWriter,
+      sessionID.getSenderCompID(), "MATCHING_ENGINE",
+      sessionID.getTargetCompID());
+}
+
+void DATSApplication::onMessage(const FIX44::OrderCancelReplaceRequest &message, const FIX::SessionID &sessionID)
+{
+    publishToDDS<OrderCancelReplaceRequestAdapter,
+    DistributedATS_OrderCancelReplaceRequest::OrderCancelReplaceRequestDataWriter_ptr,
+    DistributedATS_OrderCancelReplaceRequest::OrderCancelReplaceRequest,
+        OrderCancelReplaceRequestLogger>(
+      message, _dataWriterContainer->_orderCancelReplaceRequestDataWriter,
       sessionID.getSenderCompID(), "MATCHING_ENGINE",
       sessionID.getTargetCompID());
 }

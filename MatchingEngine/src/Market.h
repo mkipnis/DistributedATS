@@ -98,6 +98,11 @@ public:
 
   /// @brief mass cancels all orders from a given FIX Client/counter_party, called on clients disconnects as well
   bool mass_cancel(const std::string &counter_party);
+                   
+    /// @brief attempts to replace existing order
+ bool replace_order(const OrderBookPtr &book, const std::string &counter_party,
+                                     const std::string &client_order_id,
+                                int32_t size_delta, liquibook::book::Price new_price);
 
   /// @brief sets opening market price
   void set_market_price(const std::string &symbol,

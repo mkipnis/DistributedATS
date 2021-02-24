@@ -41,6 +41,7 @@
 #include <quickfix/fix44/OrderMassCancelRequest.h>
 #include <quickfix/fix44/OrderMassStatusRequest.h>
 #include <quickfix/fix44/SecurityListRequest.h>
+#include <quickfix/fix44/OrderCancelReplaceRequest.h>
 #include <stdio.h>
 
 #include "AuthServiceHelper.h"
@@ -77,6 +78,8 @@ class DATSApplication : public FIX::Application, public FIX::MessageCracker {
   void onMessage(const FIX44::SecurityListRequest &, const FIX::SessionID &);
   void onMessage(const FIX44::MarketDataRequest &, const FIX::SessionID &);
   void onMessage(const FIX44::OrderMassStatusRequest &, const FIX::SessionID &);
+  void onMessage(const FIX44::OrderCancelReplaceRequest &, const FIX::SessionID &);
+
 
 public:
   DATSApplication(

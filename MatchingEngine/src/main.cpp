@@ -35,6 +35,8 @@
 #include <OrderMassCancelRequestTypeSupportImpl.h>
 #include <SecurityListRequestTypeSupportImpl.h>
 #include <SecurityListTypeSupportImpl.h>
+#include <OrderCancelReplaceRequestTypeSupportImpl.h>
+
 #include <book/depth_order_book.h>
 
 #include <Common.h>
@@ -53,6 +55,7 @@
 #include "OrderCancelRequestDataReaderListenerImpl.h"
 #include "OrderMassCancelRequestDataReaderListenerImpl.h"
 #include "SecurityListDataReaderListenerImpl.h"
+#include "OrderCancelReplaceRequestDataReaderListenerImpl.h"
 
 #include "Market.h"
 
@@ -257,6 +260,26 @@ int main(int argc, char *argv[]) {
             market));
     participant.createDataReaderListener(cft_mass_cancel,
                                          orderMassCancelRequestDataListener);
+      
+      // Order cancel/replace requests
+      // Topic
+      DDS::Topic_var order_cancel_replace_request_topic =
+          participant.createTopicAndRegisterType<
+        DistributedATS_OrderCancelReplaceRequest::OrderCancelReplaceRequestTypeSupport_var,
+        DistributedATS_OrderCancelReplaceRequest::OrderCancelReplaceRequestTypeSupportImpl>(
+              ORDER_CANCEL_REPLACE_REQUEST_TOPIC_NAME);
+      // Filter
+      DDS::ContentFilteredTopic_ptr cft_cancel_replace =
+          participant.getDomainParticipant()->create_contentfilteredtopic(
+              "FILTER_MATCHING_ENGINE_ORDER_CANCEL_REPLACE_REQUEST",
+              order_cancel_replace_request_topic, filter_str_target_only.c_str(),
+              DDS::StringSeq());
+      // Data Reader
+      DDS::DataReaderListener_var orderCancelReplaceRequestDataListener(
+          new MatchingEngine::OrderCancelReplaceRequestDataReaderListenerImpl(
+              market));
+      participant.createDataReaderListener(cft_cancel_replace,
+                                           orderCancelReplaceRequestDataListener);
    
     // Topic to receive list of securities to setup order books
     // Topic
