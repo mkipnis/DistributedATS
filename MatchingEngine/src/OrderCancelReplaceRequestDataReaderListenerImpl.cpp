@@ -87,11 +87,16 @@ void OrderCancelReplaceRequestDataReaderListenerImpl::on_data_available(
             break;
           }
 
-          std::string client_order_id = order_cancel_replace_request.OrigClOrdID.in();
+          std::string orig_client_order_id = order_cancel_replace_request.OrigClOrdID.in();
+          std::string client_order_id = order_cancel_replace_request.ClOrdID.in();
           std::string contra_party =
             order_cancel_replace_request.m_Header.SenderSubID.in();
 
-          _market->replace_order(book, contra_party, client_order_id, order_cancel_replace_request.OrderQty, order_cancel_replace_request.Price);
+          _market->replace_order(book, contra_party,
+                                 orig_client_order_id,
+                                 client_order_id,
+                                 order_cancel_replace_request.OrderQty,
+                                 order_cancel_replace_request.Price);
 
         } catch (DistributedATS::OrderException &orderException) {
             DistributedATS_OrderCancelReject::OrderCancelReject orderCancelReject;

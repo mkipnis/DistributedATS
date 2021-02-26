@@ -49,6 +49,8 @@
 
 #include "OrderBookStats.h"
 
+#include "DataWriterContainer.h"
+
 
 namespace DistributedATS {
 
@@ -85,7 +87,8 @@ class Market : public liquibook::book::OrderListener<OrderPtr>,
   typedef std::shared_ptr<OrderBookStatsMap> OrderBookStatsMapPtr;
 
 public:
-  Market(std::string marketName, std::string dataServiceName,
+  Market(DataWriterContainerPtr dataWriterContainerPtr,
+         std::string marketName, std::string dataServiceName,
          PriceDepthPublisherQueuePtr &price_depth_publisher_queue_ptr);
   virtual ~Market();
  
@@ -101,7 +104,7 @@ public:
                    
     /// @brief attempts to replace existing order
  bool replace_order(const OrderBookPtr &book, const std::string &counter_party,
-                                     const std::string &client_order_id,
+                                     const std::string &orig_client_order_id, const std::string& client_order_id,
                                 int32_t size_delta, liquibook::book::Price new_price);
 
   /// @brief sets opening market price
@@ -165,7 +168,7 @@ public:
   OrderBookPtr addBook(const std::string &symbol, bool useDepthBook);
 
 public:
-  void setExecutionReportDataWriter(
+  /* void setExecutionReportDataWriter(
     DistributedATS_ExecutionReport::ExecutionReportDataWriter_var &execution_report_dw) {
     _execution_report_dw = execution_report_dw;
   }
@@ -199,6 +202,11 @@ public:
         DistributedATS_MarketDataRequest::MarketDataRequestDataWriter_var
           &market_date_request_dw) {
     _market_date_request_dw = market_date_request_dw;
+  }*/
+                   
+  DataWriterContainerPtr getDataWriterContainer()
+  {
+      return dataWriterContainerPtr_;
   }
 
   void
@@ -232,8 +240,9 @@ private:
   CustomerOrderMap orders_;
   SymbolToBookMap books_;
   OrderBookStatsMapPtr stats_ptr_;
+  DataWriterContainerPtr dataWriterContainerPtr_;
 
-                   DistributedATS_ExecutionReport::ExecutionReportDataWriter_var _execution_report_dw;
+                  /* DistributedATS_ExecutionReport::ExecutionReportDataWriter_var _execution_report_dw;
                    DistributedATS_OrderCancelReject::OrderCancelRejectDataWriter_var
       _order_cancel_reject_dw;
                    DistributedATS_OrderMassCancelReport::OrderMassCancelReportDataWriter_var
@@ -243,10 +252,12 @@ private:
                    DistributedATS_SecurityListRequest::SecurityListRequestDataWriter_var
       _security_list_request_dw;
                    DistributedATS_MarketDataRequest::MarketDataRequestDataWriter_var
-      _market_date_request_dw;
+      _market_date_request_dw;*/
 
   std::string _marketName; // Quickfix field 207 - Security Exchange
   std::string _dataServiceName;
 };
+
+typedef std::shared_ptr<Market> MarketPtr;
 
 } // namespace DistributedATS

@@ -72,7 +72,7 @@ public:
       const DDS::SampleLostStatus &status) throw(CORBA::SystemException){};
 
 private:
-  std::shared_ptr<DistributedATS::Market> _market;
+  MarketPtr _marketPtr;
 };
 
 } /* namespace DistributedATS */

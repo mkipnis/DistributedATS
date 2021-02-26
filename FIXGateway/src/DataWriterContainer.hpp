@@ -25,8 +25,8 @@
    SOFTWARE.
 */
 
-#ifndef DataWriterSingleton_hpp
-#define DataWriterSingleton_hpp
+#ifndef DataWriterContainer_hpp
+#define DataWriterContainer_hpp
 
 #include <ace/Singleton.h>
 

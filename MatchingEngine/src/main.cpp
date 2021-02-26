@@ -67,6 +67,8 @@
 
 #include <LoggerHelper.h>
 
+#include "DataWriterContainer.h"
+
 #include "PriceDepthPublisherService.hpp"
 
 #include <atomic>
@@ -188,9 +190,11 @@ int main(int argc, char *argv[]) {
     // the MarketData Service Thread
     auto price_depth_publisher_queue_ptr =
             std::make_shared<DistributedATS::PriceDepthPublisherQueue>();
+      
+    auto dataWriterContainer = std::make_shared<DistributedATS::DataWriterContainer>();
 
     auto market =
-        std::make_shared<DistributedATS::Market>(
+        std::make_shared<DistributedATS::Market>(dataWriterContainer,
             market_name.c_str(), data_service_name.c_str(),
             price_depth_publisher_queue_ptr);
 
@@ -342,7 +346,7 @@ int main(int argc, char *argv[]) {
       DistributedATS_ExecutionReport::ExecutionReportDataWriter>(
             execution_report_topic);
     // Market Setter
-    market->setExecutionReportDataWriter(execution_report_dw);
+      dataWriterContainer->setExecutionReportDataWriter(execution_report_dw);
 
     // Topic to publish status of mass cancel report
     // Topic
@@ -358,7 +362,7 @@ int main(int argc, char *argv[]) {
       DistributedATS_OrderMassCancelReport::OrderMassCancelReportDataWriter>(
             order_mass_cancel_report_topic);
     // Market Setter
-    market->setOrderMassCancelReportDataWriter(order_mass_cancel_report_dw);
+      dataWriterContainer->setOrderMassCancelReportDataWriter(order_mass_cancel_report_dw);
 
     // Topic to request list of securities to setup order books
     // Topic
@@ -374,7 +378,7 @@ int main(int argc, char *argv[]) {
       DistributedATS_SecurityListRequest::SecurityListRequestDataWriter>(
             security_list_request_topic);
     // Market Setter
-    market->setSecurityListRequestDataWriter(security_list_request_dw);
+      dataWriterContainer->setSecurityListRequestDataWriter(security_list_request_dw);
 
     // Topic to publish order cancel reject
     // Topic
@@ -390,7 +394,7 @@ int main(int argc, char *argv[]) {
       DistributedATS_OrderCancelReject::OrderCancelRejectDataWriter>(
             order_cancel_reject_topic);
     // Market Setter
-    market->setOrderCancelRejectDataWriter(order_cancel_reject_dw);
+      dataWriterContainer->setOrderCancelRejectDataWriter(order_cancel_reject_dw);
 
     // Topic to publish conflated incremental market data refresh
     // Topic
@@ -410,7 +414,7 @@ int main(int argc, char *argv[]) {
                 MarketDataIncrementalRefreshDataWriter>(
             market_data_incremental_refresh_topic);
     // Market Setter
-    market->setMarketDataIncrementalRefreshDataWriter(
+      dataWriterContainer->setMarketDataIncrementalRefreshDataWriter(
         market_data_incremental_refresh_dw);
 
     // Market Data Request
@@ -427,7 +431,7 @@ int main(int argc, char *argv[]) {
       DistributedATS_MarketDataRequest::MarketDataRequestDataWriter>(
             market_data_request_topic);
     // Market Setter
-    market->setMarketDataRequestDataWriter(marketDataRequestDataWriter);
+      dataWriterContainer->setMarketDataRequestDataWriter(marketDataRequestDataWriter);
 
     //
     // We should be all set with topics, data readers and data writers setup.
