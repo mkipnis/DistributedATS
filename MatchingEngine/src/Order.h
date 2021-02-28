@@ -30,16 +30,20 @@
 #include <book/types.h>
 
 #include <ExecutionReportTypeSupportImpl.h>
+#include <OrderCancelRejectTypeSupportImpl.h>
 #include <memory>
 #include <quickfix/FixValues.h>
 #include <string>
 #include <vector>
 
+#include "DataWriterContainer.h"
+
 namespace DistributedATS {
 
 class Order {
 public:
-  Order(const std::string
+  Order(DataWriterContainerPtr dataWriterContainerPtr,
+        const std::string
             &gateway, // name of the gateway from which order was originated, it
                       // will be used as a destination for execution reports
         const std::string
@@ -87,7 +91,7 @@ public:
   /// @brief instrument name
   std::string symbol() const;
 
-  /// @brief Matching Engine OrderID
+  /// @brief Client OrderID
   std::string order_id() const;
 
   /// @brief FIX Target CompID
@@ -103,10 +107,10 @@ public:
   void onCancelRequested();
   void onCancelled();
   void onCancelRejected(const char *reason);
-  void onReplaceRequested(const int32_t &size_delta,
+  void onReplaceRequested(const std::string& replacement_client_order_id, const int32_t &size_delta,
                           liquibook::book::Price new_price);
   void onReplaced(const int32_t &size_delta, liquibook::book::Price new_price);
-  void onReplaceRejected(const char *reaseon);
+  void onReplaceRejected(const char *reason);
   
   uint32_t quantityFilled() const;
   uint32_t quantityOnMarket() const;
@@ -119,6 +123,11 @@ public:
   void
   populateExecutionReport(DistributedATS_ExecutionReport::ExecutionReport &executionReport,
                           const char ExecType);
+    ////////
+    // Cancel Reject
+    /*void
+    populateCancelReject(DistributedATS_OrderCancelReject::OrderCancelReject &orderCancelReject);
+     */
 
 private:
   std::string client_order_id_;
@@ -141,6 +150,10 @@ private:
 
   // std::vector<StateChange> history_;
   bool verbose_;
+
+  std::string replacement_client_order_id_;
+    
+  DataWriterContainerPtr dataWriterContainerPtr_;
 };
 
 typedef std::shared_ptr<Order> OrderPtr;

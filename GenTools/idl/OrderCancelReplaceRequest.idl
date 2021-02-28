@@ -1,0 +1,22 @@
+// Don't modify, automatically generated file by QuickFIX2OpenDDS.py
+#include "Header.idl"
+
+module DistributedATS_OrderCancelReplaceRequest
+{
+#pragma DCPS_DATA_TYPE "DistributedATS_OrderCancelReplaceRequest::OrderCancelReplaceRequest"
+
+	struct OrderCancelReplaceRequest
+	{
+	DistributedATS::Header m_Header;
+		string OrigClOrdID;
+		string ClOrdID;
+		string Symbol;
+		string SecurityExchange;
+		char Side;
+		unsigned long long TransactTime;
+		long OrderQty;
+		char OrdType;
+		float Price;
+		string Text;
+	};
+};

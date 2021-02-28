@@ -16,6 +16,7 @@
         <message name='SecurityList'/>
         <message name='OrderMassStatusRequest'/>
         <message name='BusinessMessageReject'/>
+        <message name='OrderCancelReplaceRequest'/>
     </messages>
     <components>
         <component name='Header' gen_cpp='Y'/>

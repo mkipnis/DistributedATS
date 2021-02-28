@@ -1,0 +1,11 @@
+Work in progress
+
+
+Current tests:
+	Single session logon
+	Cancel/Correct with delta, it includes, new order single, cancel correct - delta up and down and cancel
+
+
+Run
+---
+mvn install

@@ -22,7 +22,7 @@ project(MatchingEngine) : dcpsexe, dcps_tcp, svc_utils  {
 
 	after    += Svc_Utils
 
-        libs           +=       NewOrderSingle ExecutionReport MarketDataIncrementalRefresh OrderCancelRequest OrderCancelReject OrderMassCancelRequest OrderMassCancelReport SecurityListRequest SecurityList MarketDataRequest MarketDataSnapshotFullRefresh BusinessMessageReject
+        libs           +=       NewOrderSingle ExecutionReport MarketDataIncrementalRefresh OrderCancelRequest OrderCancelReject OrderMassCancelRequest OrderMassCancelReport SecurityListRequest SecurityList MarketDataRequest MarketDataSnapshotFullRefresh BusinessMessageReject OrderCancelReplaceRequest
 
         Source_Files {
 		main.cpp
@@ -35,6 +35,7 @@ project(MatchingEngine) : dcpsexe, dcps_tcp, svc_utils  {
 	        SecurityListDataReaderListenerImpl.cpp
 		MarketDataSnapshotFullRefreshDataReaderListenerImpl.cpp
 		PriceDepthPublisherService.cpp
+		OrderCancelReplaceRequestDataReaderListenerImpl.cpp
         }
 }
 

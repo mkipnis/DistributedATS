@@ -29,15 +29,20 @@
 #include <iostream>
 #include <sstream>
 
+#include <LoggerHelper.h>
+#include <OrderCancelRejectLogger.hpp>
+
 namespace DistributedATS {
 
-Order::Order(const std::string &gateway, const std::string &dataService,
+Order::Order( DataWriterContainerPtr dataWriterContainerPtr,
+             const std::string &gateway, const std::string &dataService,
              const std::string &contra_party,
              const std::string &client_order_id, bool buy_side,
              liquibook::book::Quantity quantity, std::string &symbol,
              std::string &securityExchange, liquibook::book::Price price,
              liquibook::book::Price stopPrice, bool aon, bool ioc)
-    : gateway_(gateway), dataService_(dataService), contra_party_(contra_party),
+    : dataWriterContainerPtr_(dataWriterContainerPtr), gateway_(gateway),
+      dataService_(dataService), contra_party_(contra_party),
       client_order_id_(client_order_id), buy_side_(buy_side), symbol_(symbol),
       securityExchange_(securityExchange), quantity_(quantity), price_(price),
       stopPrice_(stopPrice), ioc_(ioc), aon_(aon), quantityFilled_(0),
@@ -98,11 +103,37 @@ void Order::onCancelRequested() {}
 
 void Order::onCancelled() { quantityOnMarket_ = 0; }
 
-void Order::onCancelRejected(const char *reason) {}
+void Order::onCancelRejected(const char *reason)
+{
+    DistributedATS_OrderCancelReject::OrderCancelReject orderCancelReject;
+    
+    orderCancelReject.m_Header.TargetSubID =
+        CORBA::string_dup(dataService_.c_str());
+    orderCancelReject.m_Header.TargetCompID = CORBA::string_dup(gateway_.c_str());
+    orderCancelReject.m_Header.SenderSubID =
+        CORBA::string_dup(contra_party_.c_str());
+    
+    orderCancelReject.m_Header.MsgType = CORBA::string_dup("9");
+    orderCancelReject.Text =  reason;
+    orderCancelReject.ClOrdID = CORBA::string_dup(client_order_id_.c_str());
+    
+    LoggerHelper::log_debug<std::stringstream, OrderCancelRejectLogger,
+    DistributedATS_OrderCancelReject::OrderCancelReject>(
+                                                         orderCancelReject, "OrderCancelReject");
 
-void Order::onReplaceRequested(const int32_t &size_delta,
+    int ret = dataWriterContainerPtr_->_order_cancel_reject_dw->write(orderCancelReject, NULL);
+
+    if (ret != DDS::RETCODE_OK) {
+      ACE_ERROR((LM_ERROR,
+                 ACE_TEXT("(%P|%t) ERROR: OrderCancelReject write returned %d.\n"),
+                 ret));
+    }
+}
+
+void Order::onReplaceRequested(const std::string& replacement_client_order_id,
+                               const int32_t &size_delta,
                                liquibook::book::Price new_price) {
-  /* std::stringstream msg;
+   std::stringstream msg;
    if(size_delta != liquibook::book::SIZE_UNCHANGED)
    {
        msg << "Quantity change: " << size_delta << ' ';
@@ -110,12 +141,14 @@ void Order::onReplaceRequested(const int32_t &size_delta,
    if(new_price != liquibook::book::PRICE_UNCHANGED)
    {
        msg << "New Price " << new_price;
-   }*/
+   }
+    
+    replacement_client_order_id_  = replacement_client_order_id;
 }
 
 void Order::onReplaced(const int32_t &size_delta,
                        liquibook::book::Price new_price) {
-  /*std::stringstream msg;
+  std::stringstream msg;
   if(size_delta != liquibook::book::SIZE_UNCHANGED)
   {
       quantity_ += size_delta;
@@ -126,14 +159,42 @@ void Order::onReplaced(const int32_t &size_delta,
   {
       price_ = new_price;
       msg << "New Price " << new_price;
-  }*/
+  }
+  client_order_id_ = replacement_client_order_id_;
 }
 
-void Order::onReplaceRejected(const char *reason) {}
+void Order::onReplaceRejected(const char *reason)
+{
+    DistributedATS_OrderCancelReject::OrderCancelReject orderCancelReject;
+    
+    orderCancelReject.m_Header.TargetSubID =
+        CORBA::string_dup(dataService_.c_str());
+    orderCancelReject.m_Header.TargetCompID = CORBA::string_dup(gateway_.c_str());
+    orderCancelReject.m_Header.SenderSubID =
+        CORBA::string_dup(contra_party_.c_str());
+    
+    orderCancelReject.m_Header.MsgType = CORBA::string_dup("9");
+    orderCancelReject.Text =  CORBA::string_dup(reason);
+    orderCancelReject.ClOrdID = CORBA::string_dup(client_order_id_.c_str());
+    
+    LoggerHelper::log_debug<std::stringstream, OrderCancelRejectLogger,
+    DistributedATS_OrderCancelReject::OrderCancelReject>(
+                                                         orderCancelReject, "OrderCancelReject");
+
+    int ret = dataWriterContainerPtr_->_order_cancel_reject_dw->write(orderCancelReject, NULL);
+
+    if (ret != DDS::RETCODE_OK) {
+      ACE_ERROR((LM_ERROR,
+                 ACE_TEXT("(%P|%t) ERROR: OrderCancelReject write returned %d.\n"),
+                 ret));
+    }
+}
 
 void Order::populateExecutionReport(
-                                    DistributedATS_ExecutionReport::ExecutionReport &executionReport, char ExecType) {
-
+                                    DistributedATS_ExecutionReport::ExecutionReport &executionReport,
+                                    char ExecType)
+    {
+            
   executionReport.m_Header.SenderCompID = CORBA::string_dup("MATCHING_ENGINE");
   executionReport.m_Header.TargetSubID =
       CORBA::string_dup(dataService_.c_str());

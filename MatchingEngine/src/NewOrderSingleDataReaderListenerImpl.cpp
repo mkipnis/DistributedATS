@@ -103,6 +103,7 @@ void NewOrderSingleDataReaderListenerImpl::on_data_available(
 
           DistributedATS::OrderPtr order =
               std::make_shared<DistributedATS::Order>(
+                  _market->getDataWriterContainer(),
                   gateway, dataService, contra_party, clientOrderId, buy_side,
                   quantity, symbol, securityExchange, price, 0, false, false);
 

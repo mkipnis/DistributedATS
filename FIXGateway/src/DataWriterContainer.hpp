@@ -25,8 +25,8 @@
    SOFTWARE.
 */
 
-#ifndef DataWriterSingleton_hpp
-#define DataWriterSingleton_hpp
+#ifndef DataWriterContainer_hpp
+#define DataWriterContainer_hpp
 
 #include <ace/Singleton.h>
 
@@ -42,6 +42,7 @@
 #include <OrderMassCancelRequestTypeSupportImpl.h>
 #include <OrderMassStatusRequestAdapter.hpp>
 #include <SecurityListRequestTypeSupportImpl.h>
+#include <OrderCancelReplaceRequestTypeSupportImpl.h>
 #include <dds/DdsDcpsPublicationC.h>
 
 #include <BasicDomainParticipant.h>
@@ -94,6 +95,12 @@ struct DataWriterContrainer {
       DistributedATS_MarketDataRequest::MarketDataRequestTypeSupport_var,
       DistributedATS_MarketDataRequest::MarketDataRequestTypeSupportImpl>(
             MARKET_DATA_REQUEST_TOPIC_NAME);
+      
+      DDS::Topic_var order_cancel_replace_request_topic =
+          participantPtr->createTopicAndRegisterType<
+        DistributedATS_OrderCancelReplaceRequest::OrderCancelReplaceRequestTypeSupport_var,
+        DistributedATS_OrderCancelReplaceRequest::OrderCancelReplaceRequestTypeSupportImpl>(
+            ORDER_CANCEL_REPLACE_REQUEST_TOPIC_NAME);
 
     //
     // Data Writers
@@ -133,6 +140,10 @@ struct DataWriterContrainer {
       DistributedATS_MarketDataRequest::MarketDataRequestDataWriter_var,
       DistributedATS_MarketDataRequest::MarketDataRequestDataWriter>(
         market_data_request_topic);
+      
+    _orderCancelReplaceRequestDataWriter = participantPtr->createDataWriter<
+        DistributedATS_OrderCancelReplaceRequest::OrderCancelReplaceRequestDataWriter_var,
+        DistributedATS_OrderCancelReplaceRequest::OrderCancelReplaceRequestDataWriter>(order_cancel_replace_request_topic);
   }
 
     DistributedATS_Logon::LogonDataWriter_var _logonDataWriter;
@@ -147,6 +158,9 @@ struct DataWriterContrainer {
       _marketDataRequestDataWriter;
     DistributedATS_OrderMassStatusRequest::OrderMassStatusRequestDataWriter_ptr
       _orderMassStatusRequestDataWriter;
+    
+    DistributedATS_OrderCancelReplaceRequest::OrderCancelReplaceRequestDataWriter_ptr
+      _orderCancelReplaceRequestDataWriter;
 };
 
 }; // namespace DistributedATS

@@ -25,20 +25,21 @@
    SOFTWARE.
 */
 
-#ifndef SECURITYLISTDATAREADERLISTENERIMPL_H_
-#define SECURITYLISTDATAREADERLISTENERIMPL_H_
+#ifndef ORDERCANCELREPLACEREQUESTDATAREADERLISTENERIMPL_H_
+#define ORDERCANCELREPLACEREQUESTDATAREADERLISTENERIMPL_H_
 
 #include "Market.h"
-#include <SecurityListTypeSupportImpl.h>
+#include <OrderCancelRequestTypeSupportImpl.h>
+#include <stdint.h>
 
-namespace DistributedATS {
+namespace MatchingEngine {
 
-class SecurityListDataReaderListenerImpl
+class OrderCancelReplaceRequestDataReaderListenerImpl
     : public virtual OpenDDS::DCPS::LocalObject<DDS::DataReaderListener> {
 public:
-  SecurityListDataReaderListenerImpl(
+        OrderCancelReplaceRequestDataReaderListenerImpl(
       std::shared_ptr<DistributedATS::Market> market);
-  virtual ~SecurityListDataReaderListenerImpl();
+  virtual ~OrderCancelReplaceRequestDataReaderListenerImpl();
 
   virtual void
   on_data_available(DDS::DataReader_ptr reader) throw(CORBA::SystemException);
@@ -72,9 +73,10 @@ public:
       const DDS::SampleLostStatus &status) throw(CORBA::SystemException){};
 
 private:
-  MarketPtr _marketPtr;
+  std::shared_ptr<DistributedATS::Market> _market;
 };
 
-} /* namespace DistributedATS */
+} /* namespace MatchingEngine */
 
-#endif /* SECURITYLISTDATAREADERLISTENERIMPL_H_ */
+#endif /* ORDERCANCELREPLACEREQUESTDATAREADERLISTENERIMPL_H_ */
+

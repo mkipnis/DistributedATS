@@ -1,6 +1,6 @@
 project( Adapters ) : dcps {
 
-	after += OrderCancelReject OrderMassStatusRequest MarketDataSnapshotFullRefresh SecurityListRequest MarketDataRequest BusinessMessageReject MarketDataIncrementalRefresh NewOrderSingle ExecutionReport Logout OrderMassCancelRequest OrderCancelRequest SecurityList Heartbeat Logon OrderMassCancelReport
+	after += OrderCancelReject OrderMassStatusRequest MarketDataSnapshotFullRefresh SecurityListRequest OrderCancelReplaceRequest MarketDataRequest BusinessMessageReject MarketDataIncrementalRefresh NewOrderSingle ExecutionReport Logout OrderMassCancelRequest OrderCancelRequest SecurityList Heartbeat Logon OrderMassCancelReport
 	dynamicflags   = DISTRIBUTEDATS_BUILD_DLL 
 	libout         = $(DATS_HOME)/lib 
 	requires += tao_orbsvcs 
@@ -22,6 +22,7 @@ project( Adapters ) : dcps {
 	OrderMassStatusRequestAdapter.hpp
 	MarketDataSnapshotFullRefreshAdapter.hpp
 	SecurityListRequestAdapter.hpp
+	OrderCancelReplaceRequestAdapter.hpp
 	MarketDataRequestAdapter.hpp
 	BusinessMessageRejectAdapter.hpp
 	MarketDataIncrementalRefreshAdapter.hpp
@@ -42,6 +43,7 @@ project( Adapters ) : dcps {
 	OrderMassStatusRequestAdapter.cpp
 	MarketDataSnapshotFullRefreshAdapter.cpp
 	SecurityListRequestAdapter.cpp
+	OrderCancelReplaceRequestAdapter.cpp
 	MarketDataRequestAdapter.cpp
 	BusinessMessageRejectAdapter.cpp
 	MarketDataIncrementalRefreshAdapter.cpp

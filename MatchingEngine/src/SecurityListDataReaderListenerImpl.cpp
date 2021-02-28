@@ -33,8 +33,8 @@
 namespace DistributedATS {
 
 SecurityListDataReaderListenerImpl::SecurityListDataReaderListenerImpl(
-    std::shared_ptr<DistributedATS::Market> market)
-    : _market(market) {
+    MarketPtr marketPtr)
+    : _marketPtr(marketPtr) {
   // TODO Auto-generated constructor stub
 }
 
@@ -76,11 +76,11 @@ void SecurityListDataReaderListenerImpl::on_data_available(
 
           std::cout << "Adding book : " << instrument << std::endl;
 
-          _market->addBook(instrument, true);
+            _marketPtr->addBook(instrument, true);
         }
 
         // request to recieve opening price
-        _market->publishMarketDataRequest();
+        _marketPtr->publishMarketDataRequest();
 
       } else if (status == DDS::RETCODE_NO_DATA) {
         break;

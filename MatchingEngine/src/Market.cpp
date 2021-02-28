@@ -44,10 +44,11 @@ namespace DistributedATS {
 uint32_t Market::orderIdSeed_ = 0;
 uint32_t Market::executionIdSeed_ = 1000000;
 
-Market::Market(std::string marketName, std::string dataServiceName,
+Market::Market(DataWriterContainerPtr dataWriterContainerPtr,
+               std::string marketName, std::string dataServiceName,
                PriceDepthPublisherQueuePtr&
                price_depth_publisher_queue_ptr)
-    : _marketName(marketName), _dataServiceName(dataServiceName),
+    : dataWriterContainerPtr_(dataWriterContainerPtr), _marketName(marketName), _dataServiceName(dataServiceName),
     _price_depth_publisher_queue_ptr( price_depth_publisher_queue_ptr )
 {
   stats_ptr_ = std::make_shared<OrderBookStatsMap>();
@@ -129,7 +130,7 @@ void Market::publishSecurityListRequest() {
     DistributedATS_SecurityListRequest::SecurityListRequest>(
       securityListRequest, "SecurityListRequest");
 
-  int ret = _security_list_request_dw->write(securityListRequest, NULL);
+  int ret = dataWriterContainerPtr_->_security_list_request_dw->write(securityListRequest, NULL);
 
   if (ret != DDS::RETCODE_OK) {
     ACE_ERROR(
@@ -169,7 +170,7 @@ void Market::publishMarketDataRequest() {
     DistributedATS_MarketDataRequest::MarketDataRequest>(
       marketDataRequest, "MarketDataRequest");
 
-  int ret = _market_date_request_dw->write(marketDataRequest, NULL);
+  int ret = dataWriterContainerPtr_->_market_date_request_dw->write(marketDataRequest, NULL);
 
   if (ret != DDS::RETCODE_OK) {
     ACE_ERROR(
@@ -202,6 +203,37 @@ bool Market::cancel_order(const OrderBookPtr &book,
 
   return true;
 }
+
+
+/// @brief attempts to replace existing order
+bool Market::replace_order(const OrderBookPtr &book, const std::string &counter_party,
+                           const std::string &orig_client_order_id, const std::string& client_order_id,
+                            int32_t size_delta, liquibook::book::Price new_price)
+{
+    auto contra_party_orders = orders_.find(counter_party);
+
+    if (contra_party_orders == orders_.end()) {
+      std::cerr << "Order for given counter party not found : " << counter_party
+                << std::endl;
+
+      return false;
+    };
+
+    auto orderIter = contra_party_orders->second->find(orig_client_order_id);
+
+    if (orderIter == contra_party_orders->second->end()) {
+      throw DistributedATS::OrderException(counter_party, client_order_id,
+                                           FIX::OrdRejReason_UNKNOWN_ORDER);
+    }
+    
+    orderIter->second->onReplaceRequested(client_order_id, size_delta, new_price);
+    book->replace(orderIter->second, size_delta, new_price);
+    
+    contra_party_orders->second->emplace(client_order_id, orderIter->second );
+    contra_party_orders->second->erase(orig_client_order_id);
+    
+    return true;
+};
 
 bool Market::mass_cancel(const std::string &counter_party) {
   auto contra_party_orders = orders_.find(counter_party);
@@ -264,7 +296,7 @@ void Market::publishExecutionReport(
     DistributedATS_ExecutionReport::ExecutionReport>(
       executionReport, "ExecutionReport");
 
-  int ret = _execution_report_dw->write(executionReport, NULL);
+  int ret = dataWriterContainerPtr_->_execution_report_dw->write(executionReport, NULL);
 
   if (ret != DDS::RETCODE_OK) {
     ACE_ERROR((LM_ERROR,
@@ -280,7 +312,7 @@ void Market::publishOrderMassCancelReport(
     DistributedATS_OrderMassCancelReport::OrderMassCancelReport>(
       orderMassCancelReport, "OrderMassCancelReport");
 
-  int ret = _order_mass_cancel_report_dw->write(orderMassCancelReport, NULL);
+  int ret = dataWriterContainerPtr_->_order_mass_cancel_report_dw->write(orderMassCancelReport, NULL);
 
   if (ret != DDS::RETCODE_OK) {
     ACE_ERROR(
@@ -298,7 +330,7 @@ void Market::publishOrderCancelReject(
     DistributedATS_OrderCancelReject::OrderCancelReject>(
       orderCancelReject, "OrderCancelReject");
 
-  int ret = _order_cancel_reject_dw->write(orderCancelReject, NULL);
+  int ret = dataWriterContainerPtr_->_order_cancel_reject_dw->write(orderCancelReject, NULL);
 
   if (ret != DDS::RETCODE_OK) {
     ACE_ERROR(
@@ -376,9 +408,14 @@ void Market::on_replace(const OrderPtr &order, const int32_t &size_delta,
                         liquibook::book::Price new_price) {
   // out() << "\tCancel Reject: " <<*order<< " : " << size_delta << " : "  <<
   // new_price << std::endl;
+    order->onReplaced(size_delta, new_price);
+    DistributedATS_ExecutionReport::ExecutionReport executionReport;
+    order->populateExecutionReport(executionReport, FIX::ExecType_REPLACE);
+    publishExecutionReport(executionReport);
 }
 
 void Market::on_replace_reject(const OrderPtr &order, const char *reason) {
+    order->onReplaceRejected(reason);
   // out() << "\tCancel Reject: " <<*order<< " : " << reason << std::endl;
 }
 
