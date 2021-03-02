@@ -95,11 +95,16 @@ void SecurityListDataReaderListenerImpl::on_data_available(
           std::string exchange =
               securityList.c_NoRelatedSym[sec_index].SecurityExchange.in();
 
+	  std::string ref_data = securityList.c_NoRelatedSym[sec_index].Text.in();
+
           FIX::Symbol symbol(instrument);
           relatedSymbol.setField(symbol);
 
           FIX::SecurityExchange securityExchange(exchange);
           relatedSymbol.setField(securityExchange);
+
+          FIX::Text text(ref_data);
+          relatedSymbol.setField(text);
 
           securityListMessage.addGroup(relatedSymbol);
         }

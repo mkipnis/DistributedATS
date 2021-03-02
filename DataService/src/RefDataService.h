@@ -57,18 +57,29 @@ namespace DistributedATS {
 
 struct Instrument
 {
+    Instrument() = default;
+    Instrument(Instrument const&) = default;
+    Instrument(Instrument&&) = default;
+    Instrument& operator=(Instrument&) = default;
+    Instrument& operator=(Instrument&&) = default;
+    virtual ~Instrument() = default;
+    
 	Instrument( const char* marketNameIn, const char* symbolIn )
 		: marketName( marketNameIn ),  symbol( symbolIn )
 	{
+        ref_data.reset();
 	};
 
 	Instrument( std::string& marketNameIn, std::string& symbolIn )
 		: marketName( marketNameIn  ),  symbol( symbolIn )
 	{
+        ref_data.reset();
 	};
 
+    uint32_t instrument_id;
 	std::string symbol;
 	std::string marketName; // FIX SecurityExchange
+    std::shared_ptr<std::string> ref_data;
 
 	friend bool operator<( const Instrument& i1, const Instrument& i2 )
 	{
@@ -82,6 +93,8 @@ struct Instrument
 };
 
 typedef std::shared_ptr<Instrument> InstrumentPtr;
+typedef std::map<uint32_t, InstrumentPtr> InstrumentMap;
+typedef std::shared_ptr<InstrumentMap> InstrumentMapPtr;
 typedef std::list<InstrumentPtr> InstrumentList;
 typedef std::shared_ptr<InstrumentList> InstrumentListPtr;
 typedef std::map<std::string, InstrumentListPtr> UserInstrumentList;
@@ -116,13 +129,21 @@ public:
 			instrumentListPtrOut->assign( instrumentListPtr->second->begin(),  instrumentListPtr->second->end() );
 	};
 
+protected:
+    void populateUserGroupInstrumentMap();
+    void populateInstrumentIdToRefDataMap();
     
 private:
 
-	std::unique_ptr<FIX::MySQLConnection> m_pMySqlConnectionPtr;
+	std::shared_ptr<FIX::MySQLConnection> m_pMySqlConnectionPtr;
     std::shared_ptr<distributed_ats_utils::BasicDomainParticipant> m_basicDomainParticipantPtr;
+    
+    // instrument_id to ref_data
+    std::map<uint32_t,std::shared_ptr<std::string>> m_instrumentIdToRefDataMap;
 
 	UserInstrumentListPtr m_pUserInstruments;
+    
+    InstrumentMapPtr m_pInstrumentMapPtr;
     
     DistributedATS_SecurityList::SecurityListDataWriter_var m_security_list_dw;
 };

@@ -9,9 +9,11 @@ BEGIN
 		INSERT INTO market_type (market_type_name) VALUES (market_type_name_in);
 	END if;
     
-    insert into market (market_type_id, market_name)
-	select  mt.market_type_id, market_name_in  from market_type mt 
-    where mt.market_type_name=market_type_name_in;
+	IF NOT EXISTS ( SELECT * FROM market WHERE market_name=market_name_in ) then
+		insert into market (market_type_id, market_name)
+		select  mt.market_type_id, market_name_in  from market_type mt 
+		where mt.market_type_name=market_type_name_in;
+	END if;
 END$$
 DELIMITER ;
 

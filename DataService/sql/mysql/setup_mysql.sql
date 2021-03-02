@@ -11,6 +11,7 @@ source user_group_type_table.sql;
 source user_group_table.sql;
 source user_table.sql;
 source user_group_market_map_table.sql;
+source instrument_ref_data.sql;
 
 -- SPs
 source insert_instrument_sp.sql;
@@ -20,6 +21,7 @@ source insert_user_sp.sql;
 source map_instrument_to_market_sp.sql;
 source map_user_group_to_market_sp.sql;
 source user_logon_sp.sql;
+source insert_update_ref_data_sp.sql;
 
 -- User : to be used by DataServices
 source create_dataservice_user.sql;
