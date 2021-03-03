@@ -47,7 +47,7 @@ public class USTDataSaver {
         p.load(input_stream); 
         
         String jdbc_string = p.getProperty("jdbc_connection");
-        String market_name = p.getProperty("UST");
+        String market_name = p.getProperty("ust_market");
   
         // access properties data 
         //System.out.println(p.getProperty("jdbc_connection")); 
