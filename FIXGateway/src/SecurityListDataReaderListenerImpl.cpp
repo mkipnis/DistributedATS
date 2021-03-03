@@ -103,8 +103,11 @@ void SecurityListDataReaderListenerImpl::on_data_available(
           FIX::SecurityExchange securityExchange(exchange);
           relatedSymbol.setField(securityExchange);
 
-          FIX::Text text(ref_data);
-          relatedSymbol.setField(text);
+	  if ( ref_data.size() > 0 )
+	  {
+            FIX::Text text(ref_data);
+            relatedSymbol.setField(text);
+          }
 
           securityListMessage.addGroup(relatedSymbol);
         }
