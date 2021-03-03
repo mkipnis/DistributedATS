@@ -1,0 +1,13 @@
+Run
+-----
+mvn install
+
+cd scripts
+./load_data.sh
+
+start BasicATS
+
+start Matching Engine for UST
+
+cd $DATS_HOME/MatchingEngine/scripts
+./matchingengine.sh start matching_engine_UST.ini

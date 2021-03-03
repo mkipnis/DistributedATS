@@ -6,6 +6,11 @@ call insert_market('UST', 'CLOB');
 call map_user_group_to_market('TRADER_GROUP_A', 'UST');
 call map_user_group_to_market('TRADER_GROUP_B', 'UST');
 
+-- creating users matching engine -- DataService will replay to them with instrument lists
+call insert_user('MATCHING_ENGINE', 'MATCHING_ENGINE_UST', 'UST', 'Matching Market UST');
+
+call map_user_group_to_market('MATCHING_ENGINE_UST', 'UST');
+
 EOFSQL
 
 # bills
