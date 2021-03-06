@@ -59,8 +59,9 @@ public class USTJSONParser {
 												cal.get(Calendar.MONTH)+1, cal.get(Calendar.YEAR)%100);
 			}
 		} else {
+			// TODO: handle ticker for STRIPS
 			symbol = 
-					String.format("%02d/%02d", cal.get(Calendar.MONTH)+1, cal.get(Calendar.YEAR)%100);
+					String.format("B %02d/%02d", cal.get(Calendar.MONTH)+1, cal.get(Calendar.YEAR)%100);
 		}
 		
 		return symbol;
@@ -126,6 +127,8 @@ public class USTJSONParser {
 	    	                	dats_ust_object.put("dated_date", dats_date_format.format(datedDate));
 	    	                	dats_ust_object.put("maturity_date", dats_date_format.format(maturityDate));
 	    	                	dats_ust_object.put("coupon", coupon);
+	    	                	dats_ust_object.put("issuer", "US Treasury");
+	    	                	dats_ust_object.put("tick_size", UST_PRICE_TICK_SIZE);
 
 	    	                	String symbol = createSymbol(coupon, maturityDate);
 	    	              
