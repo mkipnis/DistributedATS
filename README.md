@@ -319,7 +319,7 @@ cd scripts
 
 This script also setups matching engine for market name 'UST' and maps users in TRADER_GROUP_A and TRADER_GROUP_B to 'UST' market.
 
-Start BasicATS then start matching engine for 'UST' market: 
+### Start BasicATS then start matching engine for 'UST' market 
 ```
 cd $DATS_HOME/MatchingEngine/scripts
 ./matchingengine.sh start matching_engine_UST.ini 
