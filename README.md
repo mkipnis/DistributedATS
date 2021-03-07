@@ -304,3 +304,24 @@ The following schema with related stored procedures and sample data for BasicATS
 
 See [WebTrader](https://github.com/mkipnis/WebTrader) - an interactive web based front-end.
 
+## US Treasuries - Central Limit Order Book (CLOB)
+
+### Loading reference data
+
+```
+cd 
+cd $DATS_HOME/StaticData/UST/USTDataSaver/
+mvn install
+cd scripts
+./load_data.sh
+```
+```load_data.sh``` loads static data from $DATS_HOME/StaticData/UST/Data/*.json into the database, see ```select ref_data from instrument_ref_data``` for populated fields in JSON format
+
+This script also setups matching engine for market name 'UST' and maps users in TRADER_GROUP_A and TRADER_GROUP_B to 'UST' market.
+
+Start BasicATS then start matching engine for 'UST' market: 
+```
+cd $DATS_HOME/MatchingEngine/scripts
+./matchingengine.sh start matching_engine_UST.ini 
+
+
