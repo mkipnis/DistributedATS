@@ -323,5 +323,4 @@ Start BasicATS then start matching engine for 'UST' market:
 ```
 cd $DATS_HOME/MatchingEngine/scripts
 ./matchingengine.sh start matching_engine_UST.ini 
-
-
+```
