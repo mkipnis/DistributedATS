@@ -30,6 +30,8 @@
 #include "quickfix/Session.h"
 #include <iostream>
 
+#include <algorithm>
+
 using namespace LatencyTest;
 
 uint32_t Application::_order_index = 0;
@@ -178,12 +180,13 @@ void Application::onMessage
             std::cout << "Orders : " << m_number_of_orders << ":" << _order_index << std::endl;
             FIX::Session* session = FIX::Session::lookupSession(sessionID);
             session->logout("Done.");
+            std::cout << "Stats:" << _min_latency << "|"<< _max_latency << "|" << _total_latency/m_number_of_orders << std::endl;
         } else {
             
-            long gatewayNewOrderSingleLatency = 0;
-            long matchingEngineLatency = 0;
-            long gatewayExecutionReportLatency = 0;
-            long roundTripLatency = 0;
+            uint32_t gatewayNewOrderSingleLatency = 0;
+            uint32_t matchingEngineLatency = 0;
+            uint32_t gatewayExecutionReportLatency = 0;
+            uint32_t roundTripLatency = 0;
             
             m_pLatencyStatsPtr->getLatencyStats(orderID.getValue(), gatewayNewOrderSingleLatency, matchingEngineLatency, gatewayExecutionReportLatency, roundTripLatency);
             
@@ -192,7 +195,13 @@ void Application::onMessage
                     << matchingEngineLatency << "|"
                     << gatewayExecutionReportLatency << "|"
                     << roundTripLatency << std::endl;
-
+            
+           // if ( _min_latency > roundTripLatency )
+            _min_latency = std::min(_min_latency, roundTripLatency);
+            _max_latency = std::max(_max_latency, roundTripLatency);
+            
+            _total_latency += roundTripLatency;
+            
             
             submitOrder( sessionID, symbol, securityExchange ,  clOrderID, side, orderQty, price
                         );

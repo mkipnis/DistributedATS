@@ -67,10 +67,10 @@ namespace LatencyTest
             (*_orderHopLatencyMapPtr)[orderHopLatency] = timestamp;
         };
         
-        void getLatencyStats( long& gatewayNewOrderSingleLatency,
-                              long& matchingEngineLatency,
-                              long& gatewayExecutionReportLatency,
-                              long& roundTripLatency )
+        void getLatencyStats( uint32_t& gatewayNewOrderSingleLatency,
+                             uint32_t& matchingEngineLatency,
+                             uint32_t& gatewayExecutionReportLatency,
+                             uint32_t& roundTripLatency )
         {
             FIX::Locker l( _mutex );
 
@@ -80,26 +80,26 @@ namespace LatencyTest
             auto new_order_single_timestamp_dds =
                 _orderHopLatencyMapPtr->find(OrderHopLatency::NEW_ORDER_SINGLE_DDS);
 
-            gatewayNewOrderSingleLatency = (new_order_single_timestamp_dds->second.tv_sec - (long)new_order_single_timestamp_fix->second.tv_sec) * 1000000 +
+            gatewayNewOrderSingleLatency = (new_order_single_timestamp_dds->second.tv_sec - (uint32_t)new_order_single_timestamp_fix->second.tv_sec) * 1000000 +
                     (new_order_single_timestamp_dds->second.tv_usec - (long)new_order_single_timestamp_fix->second.tv_usec);
 
             auto execution_report_dds =
                 _orderHopLatencyMapPtr->find(OrderHopLatency::EXECUTION_REPORT_DDS);
             
-            matchingEngineLatency = (execution_report_dds->second.tv_sec - (long)new_order_single_timestamp_dds->second.tv_sec) * 1000000 +
+            matchingEngineLatency = (execution_report_dds->second.tv_sec - (uint32_t)new_order_single_timestamp_dds->second.tv_sec) * 1000000 +
                     (execution_report_dds->second.tv_usec - (long)new_order_single_timestamp_dds->second.tv_usec);
             
             auto execution_report_fix =
                 _orderHopLatencyMapPtr->find(OrderHopLatency::EXECUTION_REPORT_FIX);
 
-            gatewayExecutionReportLatency = (execution_report_fix->second.tv_sec - (long)execution_report_dds->second.tv_sec) * 1000000 +
+            gatewayExecutionReportLatency = (execution_report_fix->second.tv_sec - (uint32_t)execution_report_dds->second.tv_sec) * 1000000 +
                     (execution_report_fix->second.tv_usec - (long)execution_report_dds->second.tv_usec);
 
             
             if ( matchingEngineLatency<0 ) // Fix message was recieved before dds exection report -- needs checking, might be resouce starvation if everything runs on the same box
                 matchingEngineLatency = gatewayExecutionReportLatency = 0;
             
-            roundTripLatency = (execution_report_fix->second.tv_sec - (long)new_order_single_timestamp_fix->second.tv_sec) * 1000000 +
+            roundTripLatency = (execution_report_fix->second.tv_sec - (uint32_t)new_order_single_timestamp_fix->second.tv_sec) * 1000000 +
                     (execution_report_fix->second.tv_usec - (long)new_order_single_timestamp_fix->second.tv_usec);
 
         }
@@ -135,10 +135,10 @@ namespace LatencyTest
         };
         
         void getLatencyStats( const std::string& orderId,
-                             long& gatewayNewOrderSingleLatency,
-                             long& matchingEngineLatency,
-                             long& gatewayExecutionReportLatency,
-                             long& roundTripLatency)
+                             uint32_t& gatewayNewOrderSingleLatency,
+                             uint32_t& matchingEngineLatency,
+                             uint32_t& gatewayExecutionReportLatency,
+                             uint32_t& roundTripLatency)
         {
             FIX::Locker l( _mutex );
 
