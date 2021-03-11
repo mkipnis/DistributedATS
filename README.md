@@ -1,7 +1,7 @@
 # Distributed ATS
 
 
-DistributedATS is a [**FIX Protocol**](https://www.fixtrading.org) based alternative trading system that integrates [QuickFIX](http://www.quickfixengine.org) and [LiquiBook](https://portal.ociweb.com/products/liquibook) over [OpenDDS](https://www.opendds.org). This project simplifies the process of having multiple FIX gateways communicating with multiple matching engines in realtime. FIX Gateways communicate with clients via FIX and with Matching Engines and Middleware(Data Service) components via topic based DDS IDL Pub/Sub mechanism.
+DistributedATS is a [**FIX Protocol**](https://www.fixtrading.org) based alternative trading system that integrates [QuickFIX](http://www.quickfixengine.org) and [LiquiBook](https://portal.ociweb.com/products/liquibook) over [OpenDDS](https://www.opendds.org). This project simplifies the process of communication between multiple FIX gateways and multiple matching engines(CLOB) in realtime. FIX Gateways communicate with clients via FIX and with Matching Engines and Middleware(Data Service) components via topic based DDS IDL Pub/Sub mechanism.
 
 ## Components
 * [**FIX Gateways**](https://github.com/mkipnis/DistributedATS/tree/master/FIXGateway/src) communicate with clients via FIX and with Matching Engines and Data Services via DDS. FIX Gateway converts FIX messages into DDS IDL and publishes them to Matching Engines or Data Services, it converts DDS IDL messages received from Matching Engines and Data Services into FIX and sends them to FIX clients.
