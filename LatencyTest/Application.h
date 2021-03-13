@@ -153,9 +153,9 @@ namespace LatencyTest
             std::condition_variable _login_cv;
             std::mutex _login_mutex;
         
-        uint32_t _min_latency {std::numeric_limits<uint32_t>::max()};
-        uint32_t _max_latency {std::numeric_limits<uint32_t>::min()};
-        uint32_t _total_latency {0};
+            uint32_t _min_latency {std::numeric_limits<uint32_t>::max()};
+            uint32_t _max_latency {std::numeric_limits<uint32_t>::min()};
+            uint32_t _total_latency {0};
     };
 
 };
