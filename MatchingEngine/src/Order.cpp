@@ -32,6 +32,8 @@
 #include <LoggerHelper.h>
 #include <OrderCancelRejectLogger.hpp>
 
+#include <math.h>
+
 namespace DistributedATS {
 
 Order::Order( DataWriterContainerPtr dataWriterContainerPtr,
@@ -220,7 +222,9 @@ void Order::populateExecutionReport(
   // executionReport.TransactTime << std::endl;
 
   if (quantityFilled() > 0)
-    executionReport.AvgPx = std::nearbyint(fillCost() / quantityFilled());
+    executionReport.AvgPx = std::nearbyint(fillCost() / quantityFilled()); // round to the nearest tick
+  else
+    executionReport.AvgPx = 0; // avoid scientific numbers
 
   executionReport.OrderQty = order_qty();
   executionReport.OrdStatus = ExecType;
