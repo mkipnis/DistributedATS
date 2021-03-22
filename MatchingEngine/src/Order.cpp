@@ -220,7 +220,7 @@ void Order::populateExecutionReport(
   // executionReport.TransactTime << std::endl;
 
   if (quantityFilled() > 0)
-    executionReport.AvgPx = fillCost() / quantityFilled();
+    executionReport.AvgPx = std::nearbyint(fillCost() / quantityFilled());
 
   executionReport.OrderQty = order_qty();
   executionReport.OrdStatus = ExecType;
