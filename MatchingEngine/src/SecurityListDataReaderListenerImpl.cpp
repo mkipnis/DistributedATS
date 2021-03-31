@@ -71,12 +71,24 @@ void SecurityListDataReaderListenerImpl::on_data_available(
 
         for (uint32_t sec_index = 0;
              sec_index < security_list.c_NoRelatedSym.length(); sec_index++) {
-          std::string instrument =
+            std::string instrument =
               security_list.c_NoRelatedSym[sec_index].Symbol.in();
 
-          std::cout << "Adding book : " << instrument << std::endl;
-
-            _marketPtr->addBook(instrument, true);
+            std::string ref_data = security_list.c_NoRelatedSym[sec_index].Text.in();
+            
+            std::cout << "Adding book : [" << instrument << "]"
+                        << "[" << ref_data << "]" <<  std::endl;
+            
+            bool is_inverted = false;
+            
+            // TODO: handle JSON
+            if ( ref_data.find("inverted") != std::string::npos )
+            {
+                std::cout << "Inverted Order Book : [" << instrument << "]" << std::endl;
+                is_inverted = true;
+            }
+                
+            _marketPtr->addBook(instrument, true, is_inverted);
         }
 
         // request to recieve opening price

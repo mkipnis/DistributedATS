@@ -132,7 +132,8 @@ public:
   /// @brief builds price depth snapshot that will be published as an MarketDataIncrementalRefresh(X) to FIX Gateways and then clients, and to DataServices
   void populatePriceLevelDepth(
       const std::string &symbol, DistributedATS::Market *market,
-      const DistributedATS::BookDepth &depth,
+      const DistributedATS::DepthOrderBook *book,
+      const DistributedATS::BookDepth *depth,
             DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefresh
           *marketDataRefresh);
 
@@ -165,7 +166,7 @@ public:
   // Implement DepthListener interface
   void on_depth_change(const DepthOrderBook *book, const BookDepth *depth);
 
-  OrderBookPtr addBook(const std::string &symbol, bool useDepthBook);
+  OrderBookPtr addBook(const std::string &symbol, bool useDepthBook, bool is_inverted);
 
 public:
   /* void setExecutionReportDataWriter(

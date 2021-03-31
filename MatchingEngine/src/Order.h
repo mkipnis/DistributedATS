@@ -56,7 +56,7 @@ public:
             &client_order_id, // client order id from new order single
         bool buy_side, liquibook::book::Quantity quantity, std::string &symbol,
         std::string &security_exchange, liquibook::book::Price price,
-        liquibook::book::Price stopPrice, bool aon, bool ioc);
+        liquibook::book::Price stopPrice, bool aon, bool ioc, bool is_book_inverted );
 
   //////////////////////////
   // Implement the
@@ -143,6 +143,7 @@ private:
 
   bool aon_;
   bool ioc_;
+  bool is_book_inverted_;
 
   liquibook::book::Quantity quantityFilled_;
   int32_t quantityOnMarket_;

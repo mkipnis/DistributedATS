@@ -42,13 +42,13 @@ Order::Order( DataWriterContainerPtr dataWriterContainerPtr,
              const std::string &client_order_id, bool buy_side,
              liquibook::book::Quantity quantity, std::string &symbol,
              std::string &securityExchange, liquibook::book::Price price,
-             liquibook::book::Price stopPrice, bool aon, bool ioc)
+             liquibook::book::Price stopPrice, bool aon, bool ioc, bool is_book_inverted)
     : dataWriterContainerPtr_(dataWriterContainerPtr), gateway_(gateway),
       dataService_(dataService), contra_party_(contra_party),
       client_order_id_(client_order_id), buy_side_(buy_side), symbol_(symbol),
       securityExchange_(securityExchange), quantity_(quantity), price_(price),
       stopPrice_(stopPrice), ioc_(ioc), aon_(aon), quantityFilled_(0),
-      quantityOnMarket_(0), fillCost_(0), verbose_(false)
+      quantityOnMarket_(0), fillCost_(0), verbose_(false), is_book_inverted_(is_book_inverted)
 
 {}
 
@@ -56,7 +56,7 @@ std::string Order::order_id() const { return client_order_id_; }
 
 std::string Order::contra_party() const { return contra_party_; }
 
-bool Order::is_limit() const { return price() != 0; }
+bool Order::is_limit() const { return true; }
 
 bool Order::is_buy() const { return buy_side_; }
 
@@ -66,17 +66,17 @@ bool Order::immediate_or_cancel() const { return ioc_; }
 
 std::string Order::symbol() const { return symbol_; }
 
-liquibook::book::Price Order::price() const { return price_; }
+liquibook::book::Price Order::price() const { return price_ * (is_book_inverted_ ? -1 : 1 ); }
 
 liquibook::book::Quantity Order::order_qty() const { return quantity_; }
 
-liquibook::book::Price Order::stop_price() const { return stopPrice_; }
+liquibook::book::Price Order::stop_price() const { return stopPrice_ * (is_book_inverted_ ? -1 : 1 ) ; }
 
 uint32_t Order::quantityOnMarket() const { return quantityOnMarket_; }
 
 uint32_t Order::quantityFilled() const { return quantityFilled_; }
 
-uint32_t Order::fillCost() const { return fillCost_; }
+uint32_t Order::fillCost() const { return fillCost_ * (is_book_inverted_ ? -1 : 1 ) ; }
 
 Order &Order::verbose(bool verbose) {
   verbose_ = verbose;

@@ -58,8 +58,9 @@ Market::~Market() {}
 
 void Market::populatePriceLevelDepth(
     const std::string &symbol, DistributedATS::Market *market,
-    const DistributedATS::BookDepth &depth,
-                                     DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefresh
+    const DistributedATS::DepthOrderBook *book,
+    const DistributedATS::BookDepth *depth,
+    DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefresh
         *marketDataRefresh) {
 
     DistributedATS_MarketDataIncrementalRefresh::NoMDEntries mdEntry;
@@ -69,15 +70,15 @@ void Market::populatePriceLevelDepth(
 
   uint16_t md_index = 0;
 
-  auto pos = depth.bids();
+  auto pos = depth->bids();
 
-  while (pos != depth.end()) {
+  while (pos != depth->end()) {
     mdEntry.MDEntrySize = pos->aggregate_qty();
 
     if (mdEntry.MDEntrySize == 0)
       mdEntry.MDEntryPx = 0;
     else
-      mdEntry.MDEntryPx = pos->price();
+      mdEntry.MDEntryPx = pos->price() * ( book->is_inverted() ? -1 : 1 ) ;
 
     mdEntry.MDEntrySize = pos->aggregate_qty();
     mdEntry.MDEntryType = md_index < MARKET_DATA_PRICE_DEPTH ? FIX::MDEntryType_BID
@@ -112,6 +113,7 @@ bool Market::submit(const OrderBookPtr &book, const OrderPtr &order) {
   customerOrders->emplace(order->order_id(), order);
 
   const liquibook::book::OrderConditions NOC(liquibook::book::oc_no_conditions);
+    
   book->add(order, NOC);
 
   return true;
@@ -227,7 +229,7 @@ bool Market::replace_order(const OrderBookPtr &book, const std::string &counter_
     }
     
     orderIter->second->onReplaceRequested(client_order_id, size_delta, new_price);
-    book->replace(orderIter->second, size_delta, new_price);
+    book->replace(orderIter->second, size_delta, new_price * ( book->is_inverted() ? -1 : 1 ) );
     
     contra_party_orders->second->emplace(client_order_id, orderIter->second );
     contra_party_orders->second->erase(orig_client_order_id);
@@ -260,17 +262,17 @@ bool Market::mass_cancel(const std::string &counter_party) {
   return true;
 }
 
-OrderBookPtr Market::addBook(const std::string &symbol, bool useDepthBook) {
+OrderBookPtr Market::addBook(const std::string &symbol, bool useDepthBook, bool is_inverted) {
   OrderBookPtr result;
   if (useDepthBook) {
     // out() << "Create new depth order book for " << symbol << std::endl;
-    DepthOrderBookPtr depthBook = std::make_shared<DepthOrderBook>(symbol);
+    DepthOrderBookPtr depthBook = std::make_shared<DepthOrderBook>(symbol, is_inverted);
     depthBook->set_bbo_listener(this);
     depthBook->set_depth_listener(this);
     result = depthBook;
   } else {
     // out() << "Create new order book for " << symbol << std::endl;
-    result = std::make_shared<OrderBook>(symbol);
+    result = std::make_shared<OrderBook>(symbol, is_inverted);
   }
   result->set_order_listener(this);
   result->set_trade_listener(this);
@@ -422,7 +424,7 @@ void Market::on_replace_reject(const OrderPtr &order, const char *reason) {
 void Market::on_trade(const OrderBook *book, liquibook::book::Quantity qty,
                       liquibook::book::Cost cost) {
   auto price = book->market_price();
-  update_symbol_stats(book, price, qty);
+  update_symbol_stats(book, price * ( book->is_inverted() ? -1 : 1 ), qty);
 }
 
 void Market::on_order_book_change(const OrderBook *book) {}
@@ -442,7 +444,7 @@ void Market::on_depth_change(const DepthOrderBook *book,
 
   marketDataRefresh->c_NoMDEntries.length(15);
 
-  populatePriceLevelDepth(book->symbol(), this, *depth, marketDataRefresh);
+  populatePriceLevelDepth(book->symbol(), this, book, depth, marketDataRefresh);
 
   int market_data_index = MARKET_DATA_PRICE_DEPTH * 2; // bids and asks
 
@@ -457,7 +459,7 @@ void Market::on_depth_change(const DepthOrderBook *book,
       set_market_data_stats_entry(
           marketDataRefresh->c_NoMDEntries[market_data_index++],
           getMarketName(), book->symbol(), FIX::MDUpdateAction_NEW,
-          FIX::MDEntryType_TRADE, book->market_price(), 0);
+          FIX::MDEntryType_TRADE, book->market_price() * ( book->is_inverted() ? -1 : 1 ), 0);
 
       set_market_data_stats_entry(
           marketDataRefresh->c_NoMDEntries[market_data_index++],
