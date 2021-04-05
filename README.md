@@ -326,7 +326,9 @@ cd $DATS_HOME/MatchingEngine/scripts
 ```
 ### Other CLOBs: inverted order book, zero and negative prices/rates/spreads
 The following version of LiquiBook is required in order to support inverted book, zero and negative prices/rates/spreads:
-![N|Solid][LiquiBook(Inverted Book, Zero and Negative Price/Rate/Spread)](https://github.com/mkipnis/liquibook)
+
+[LiquiBook(Inverted Book, Zero and Negative Price/Rate/Spread)](https://github.com/mkipnis/liquibook)
+
 
 Sample Repo instrument setup:
 ```
