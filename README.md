@@ -325,7 +325,8 @@ cd $DATS_HOME/MatchingEngine/scripts
 ./matchingengine.sh start matching_engine_UST.ini 
 ```
 ### Other CLOBs: inverted order book, zero and negative prices/rates/spreads
-The following version of LiquiBook is required in order to support inverted book, zero and negative prices/rates/spreads
+The following version of LiquiBook is required in order to support inverted book, zero and negative prices/rates/spreads:
+
 [LiquiBook](https://github.com/mkipnis/liquibook)
 
 Sample Repo instrument setup:
