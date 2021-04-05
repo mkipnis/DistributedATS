@@ -324,3 +324,11 @@ This script also setups matching engine for market name 'UST' and maps users in 
 cd $DATS_HOME/MatchingEngine/scripts
 ./matchingengine.sh start matching_engine_UST.ini 
 ```
+### Other CLOBs: inverted order book, zero and negative prices/rates/spreads
+The following version of LiquiBook is required in order to support inverted book, zero and negative prices/rates/spreads
+https://github.com/mkipnis/liquibook
+
+Sample Repo instrument setup:
+```
+$DATS_HOME/StaticData/Repo/Data/sample_repo.sql
+```
