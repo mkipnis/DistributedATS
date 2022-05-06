@@ -106,4 +106,4 @@ _market_date_request_dw;
 typedef std::shared_ptr<DataWriterContainer> DataWriterContainerPtr;
 };
 
-#endif DataWriterContainer_h
+#endif

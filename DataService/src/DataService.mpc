@@ -22,7 +22,7 @@ project(DataService) : dcpsexe, dcps_tcp, svc_utils  {
 
 	after    += Svc_Utils
 
-        libs           +=       Logon Logout mysqlclient SecurityList SecurityListRequest z ExecutionReport MarketDataSnapshotFullRefresh OrderMassStatusRequest MarketDataIncrementalRefresh ExecutionReport MarketDataRequest
+        libs           +=       Logon Logout mysqlclient SecurityList SecurityListRequest ExecutionReport MarketDataSnapshotFullRefresh OrderMassStatusRequest MarketDataIncrementalRefresh ExecutionReport MarketDataRequest
 
         Source_Files {
 		MassOrderStatusRequestDataReaderListenerImpl.cpp

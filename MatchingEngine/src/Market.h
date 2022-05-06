@@ -242,18 +242,6 @@ private:
   OrderBookStatsMapPtr stats_ptr_;
   DataWriterContainerPtr dataWriterContainerPtr_;
 
-                  /* DistributedATS_ExecutionReport::ExecutionReportDataWriter_var _execution_report_dw;
-                   DistributedATS_OrderCancelReject::OrderCancelRejectDataWriter_var
-      _order_cancel_reject_dw;
-                   DistributedATS_OrderMassCancelReport::OrderMassCancelReportDataWriter_var
-      _order_mass_cancel_report_dw;
-                   DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefreshDataWriter_var
-      _marketdata_incremental_refresh_dw;
-                   DistributedATS_SecurityListRequest::SecurityListRequestDataWriter_var
-      _security_list_request_dw;
-                   DistributedATS_MarketDataRequest::MarketDataRequestDataWriter_var
-      _market_date_request_dw;*/
-
   std::string _marketName; // Quickfix field 207 - Security Exchange
   std::string _dataServiceName;
 };

@@ -208,11 +208,7 @@ int main(int argc, char* argv[] )
         
         std::atomic_init(&is_running, true);
 
-	//
-	//
-	//  TO Gracefull shutdown ---- diactivate tasks
-	//
-	//
+        // TODO: Gracefull shutdown: deactivate tasks (disconnect from the db)
         while ( is_running == true )
             ACE_OS::sleep(1);
         

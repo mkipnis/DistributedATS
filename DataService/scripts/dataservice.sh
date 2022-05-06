@@ -1,15 +1,13 @@
 #!/bin/bash
 
-set -x
+#set -x
 
 PRG="$0"
 PROGNAME=DataService
 CONFIG_FILE_NAME=$2
 
-if [ "$1" == "start" ] || [ "$1" == "stop" ] || [ "$1" == "check" ] ;
+if [ "$1" != "start" ] && [ "$1" != "stop" ] && [ "$1" != "check" ] ;
 then
-	echo "Supported Command - "$1;
-else
         echo "Unsupported Command - "$1 : "Supported Commands : (start/stop/check)";
 	exit 1;
 fi
@@ -92,7 +90,7 @@ case $1 in
         check)
 		#PROCESS_CHECK="$PROGNAME.*$CONFIG_FILE_NAME"
 		PROCESS_CHECK="$PROCESS"
-        	echo "Checking :" $PROCESS_CHECK
+#		echo "Checking :" $PROCESS_CHECK
 		DATASERVICE_PID=`pgrep -f "$PROCESS_CHECK"`
 		echo $DATASERVICE_PID >> $logfile;
 		if [ ! -z "$DATASERVICE_PID" ]

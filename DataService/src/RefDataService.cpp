@@ -167,10 +167,9 @@ void RefDataService::createSecurityListDataWriter()
 bool RefDataService::processRefDataRequest( DistributedATS_SecurityListRequest::SecurityListRequest* securityListRequestPtr )
 {
 
-    std::cout << ">>>> Recieved Security List Request : "
-    << " : " << securityListRequestPtr->m_Header.SenderCompID
+    std::cout << "Received Security List Request : "
+                << " : " << securityListRequestPtr->m_Header.SenderCompID
 				<< ":" << securityListRequestPtr->m_Header.TargetCompID << ":" << securityListRequestPtr->SecurityReqID << std::endl;
-    
     
     
     auto instrumentListPtr = std::make_shared<DistributedATS::InstrumentList> ( DistributedATS::InstrumentList() );

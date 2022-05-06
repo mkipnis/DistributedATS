@@ -88,5 +88,5 @@ while true; do
 	$DATS_HOME/FIXGateway/scripts/fixgateway.sh check fix_gwy_2.cfg
 	$DATS_HOME/FIXGateway/scripts/fixgateway.sh check fix_gwy_3.cfg
 
-	sleep 30;
+	sleep 2;
 done

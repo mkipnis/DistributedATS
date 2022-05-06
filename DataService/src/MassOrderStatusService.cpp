@@ -121,7 +121,7 @@ OrderToExecutionReportMapPtr MassOrderStatusService::getOrderToExecutionReportMa
 	if ( orderIdToExecutionReportMap != m_executionReports->end() )
 		return orderIdToExecutionReportMap->second;
 
-	return NULL;
+	return OrderToExecutionReportMapPtr();
 }
     
 bool MassOrderStatusService::processMassOrderStatusServiceRequest( DistributedATS_OrderMassStatusRequest::OrderMassStatusRequest* orderMassStatusRequestPtr )

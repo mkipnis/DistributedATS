@@ -75,9 +75,7 @@ public:
 
 private:
   std::shared_ptr<DistributedATS::Market> _market;
-
-  // private:
-  //   FIXGateway::Application& _app;
+        
 };
 
 } /* namespace DistributedATS */
