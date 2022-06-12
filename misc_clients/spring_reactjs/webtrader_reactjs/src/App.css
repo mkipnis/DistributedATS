@@ -1,0 +1,94 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Inter, sans-serif;
+    height: 100vh;
+    background-color: #282D35;
+    color: white;
+}
+
+nav {
+    display: flex;
+    background-color: #21222A;
+    height: 70px;
+    color: white;
+}
+
+.App-Cell-Left
+{
+  float:left;
+  display: inline-block;
+  margin: auto;
+}
+
+.App-Cell-Right
+{
+  float:right;
+  display: inline-block;
+  margin: auto;
+}
+
+.App-Cell-Center
+{
+  float:center;
+  display: inline-block;
+  margin: auto;
+  text-align: left;
+}
+
+.Form-Login
+{
+  padding: 10px;
+}
+
+.App-Row {
+  padding: 10px 35px;
+  margin: auto;
+  width: 100%;
+  height: 100%;
+  display: inline-block;
+  vertical-align: top;
+  align: right;
+}
+
+.header {
+  color:#61dafb;;
+  font-weight: bold;
+}
+
+.header_ready_to_trade {
+  color: while;
+}
