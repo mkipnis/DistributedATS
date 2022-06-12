@@ -1,13 +1,11 @@
 # WebTrader - SpringBoot/ReactJS client for DistributedATS
 
-Run
-
----
-
+##### Maven install and Run:
 mvn install
+
 mvn spring-boot:run
 
 
-URL:
+##### Browser URL:
 
 http://localhost:8080/index.html
