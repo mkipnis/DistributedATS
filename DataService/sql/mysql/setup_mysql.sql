@@ -25,11 +25,3 @@ source insert_update_ref_data_sp.sql;
 
 -- User : to be used by DataServices
 source create_dataservice_user.sql;
-
--- Data
-source sample_instruments_data.sql;
-source sample_users_data.sql;
-source sample_markets_data.sql;
-
--- Maps
-source map_user_groups_to_markets.sql;

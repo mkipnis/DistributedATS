@@ -1,0 +1,46 @@
+USE distributed_ats;
+
+call insert_instrument('ADAUSD', 'Currency');
+call insert_instrument('SOLEUR', 'Currency');
+call insert_instrument('DOTGBP', 'Currency');
+call insert_instrument('AVXAUD', 'Currency');
+call insert_instrument('MTCCAD', 'Currency');
+call insert_instrument('XLMCNY', 'Currency');
+call insert_instrument('UNIJPY', 'Currency');
+call insert_instrument('DAIUSD', 'Currency');
+call insert_instrument('XLMEUR', 'Currency');
+call insert_instrument('XRPGBP', 'Currency');
+call insert_instrument('XMRAUD', 'Currency');
+call insert_instrument('LUNCAD', 'Currency');
+call insert_instrument('BCHCNY', 'Currency');
+call insert_instrument('LTCJPY', 'Currency');
+
+call insert_update_hist_price('ADAUSD','Currency', NOW(), 35040, 11000, 12000, 11500, 1000000);
+call insert_update_hist_price('SOLEUR','Currency', NOW(), 32020, 52060, 43020, 12500, 2200000);
+call insert_update_hist_price('DOTGBP','Currency', NOW(), 33030, 53070, 44210, 12500, 3400000);
+call insert_update_hist_price('AVXAUD','Currency', NOW(), 34040, 54090, 45800, 13500, 4500000);
+call insert_update_hist_price('MTCCAD','Currency', NOW(), 35050, 41000, 12000, 11500, 1000000);
+call insert_update_hist_price('XLMCNY','Currency', NOW(), 36020, 52060, 43020, 12500, 2200000);
+call insert_update_hist_price('UNIJPY','Currency', NOW(), 37030, 53070, 44210, 12500, 3400000);
+call insert_update_hist_price('DAIUSD','Currency', NOW(), 3050, 4000, 2000, 1500, 1000000);
+call insert_update_hist_price('XLMEUR','Currency', NOW(), 2020, 2060, 3020, 2500, 2200000);
+call insert_update_hist_price('XRPGBP','Currency', NOW(), 3030, 3070, 4230, 2500, 3400000);
+call insert_update_hist_price('XMRAUD','Currency', NOW(), 4040, 4090, 5800, 3500, 4500000);
+call insert_update_hist_price('LUNCAD','Currency', NOW(), 5030, 5000, 2000, 4500, 1000000);
+call insert_update_hist_price('BCHCNY','Currency', NOW(), 6020, 2060, 3020, 2500, 2200000);
+call insert_update_hist_price('LTCJPY','Currency', NOW(), 7030, 3070, 4230, 2500, 3400000);
+
+call map_instrument_to_market('ADAUSD', 'OTHER_COIN_MARKET');
+call map_instrument_to_market('SOLEUR', 'OTHER_COIN_MARKET');
+call map_instrument_to_market('DOTGBP', 'OTHER_COIN_MARKET');
+call map_instrument_to_market('AVXAUD', 'OTHER_COIN_MARKET');
+call map_instrument_to_market('MTCCAD', 'OTHER_COIN_MARKET');
+call map_instrument_to_market('XLMCNY', 'OTHER_COIN_MARKET');
+call map_instrument_to_market('UNIJPY', 'OTHER_COIN_MARKET');
+call map_instrument_to_market('DAIUSD', 'OTHER_COIN_MARKET');
+call map_instrument_to_market('XLMEUR', 'OTHER_COIN_MARKET');
+call map_instrument_to_market('XRPGBP', 'OTHER_COIN_MARKET');
+call map_instrument_to_market('XMRAUD', 'OTHER_COIN_MARKET');
+call map_instrument_to_market('LUNCAD', 'OTHER_COIN_MARKET');
+call map_instrument_to_market('BCHCNY', 'OTHER_COIN_MARKET');
+call map_instrument_to_market('LTCJPY', 'OTHER_COIN_MARKET');
