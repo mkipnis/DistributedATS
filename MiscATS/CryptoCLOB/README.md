@@ -41,4 +41,4 @@ The first matching engine consumes and processes orders from the instrument grou
 
 ## Test client
 - [ReactJS and SpringBoot ](https://github.com/mkipnis/DistributedATS/tree/master/misc_clients/spring_reactjs)
-- [Username/Password]: [TRADER_1/TEST].  See **sample_users_data.sql** for details
+- [Username/Password]: [CRYPTO_TRADER_1/TEST]
