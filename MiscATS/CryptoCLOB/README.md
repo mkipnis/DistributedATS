@@ -3,7 +3,7 @@
 CryptoCLOB ATS consists of three Matching Engines, three FIX Gateways, and two Data Services.
 The first matching engine consumes and processes orders from the instrument group BTC_MARKET, the second from the instrument ETH_MARKET, and the third from OTHER_COIN_MARKET
 
-![N|Solid](https://raw.githubusercontent.com/mkipnis/DistributedATS/master/Diagrams/BasicATS.png?raw=true)
+![N|Solid](https://raw.githubusercontent.com/mkipnis/DistributedATS/master/Diagrams/CryptoCLOB.png?raw=true)
 
 
 ### Components
@@ -40,5 +40,5 @@ The first matching engine consumes and processes orders from the instrument grou
 ```
 
 ## Test client
-- [ReactJS and SpringBoot ](https://github.com/mkipnis/DistributedATS/tree/master/misc_clients/spring_reactjs)
-- [Username/Password]: [CRYPTO_TRADER_1/TEST]
+- [ReactJS and SpringBoot ](https://github.com/mkipnis/DistributedATS/tree/master/MiscClients/spring_reactjs)
+- Username/Password: CRYPTO_TRADER_1/TEST
