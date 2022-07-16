@@ -11,7 +11,7 @@ DistributedATS is a [**FIX Protocol-based**](https://www.fixtrading.org) alterna
 
 * [**Data Service**](https://github.com/mkipnis/DistributedATS/tree/master/DataService/src) authenticates users, provides reference data, services mass order status requests, and market data snapshots. Data Service services all non-critical to order flow DDS messages including *Logon*, *Logout*, *MassOrderStatusRequest*, *MarketDataSnapshot*.  Data Service can service one or more FIX Gateways and Matching Engines.
 
-![N|Solid](https://raw.githubusercontent.com/mkipnis/DistributedATS/master/Diagrams/CryptoCLOB.png?raw=true)
+![N|Solid](https://raw.githubusercontent.com/mkipnis/DistributedATS/master/docs/Diagrams/CryptoCLOB.png?raw=true)
 [See: CryptoCLOB](https://github.com/mkipnis/DistributedATS/tree/master/MiscATS/CryptoCLOB)
 
 ### Dependences
