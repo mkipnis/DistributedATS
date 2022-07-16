@@ -1,7 +1,0 @@
-
-LatencyTest correlates critical to order flow messages across DistributedATS hops by serving as a FIX and DDS IDL client.
-It sends NewOrderSingle to FIXGateway, captures converted by FIXGateway and published to Matching Engine NewOrderSingleIDL, captures published by Matching Engine to FIXGateway ExecutionReport IDL, captures published by FIXGateway ExecutionReport, then correlates timestamps, displays latency between hops as well as overall order flow latency. 
-
-Run latency test
------------------
-./LatencyTest  -c LatencyTest.cfg  -DCPSConfigFile $DATS_HOME/Protocols/tcp.ini

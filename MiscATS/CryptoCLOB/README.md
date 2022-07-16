@@ -1,9 +1,9 @@
-## Multiple Matching Engines
+## Crypto Central Limit Order Book
 
 CryptoCLOB ATS consists of three Matching Engines, three FIX Gateways, and two Data Services.
-The first matching engine consumes and processes orders from the instrument group BTC_MARKET, the second from the instrument ETH_MARKET, and the third from OTHER_COIN_MARKET
+The first matching engine consumes and processes orders from the instrument group BTC_MARKET, the second from the group ETH_MARKET, and the third from OTHER_COIN_MARKET
 
-![N|Solid](https://raw.githubusercontent.com/mkipnis/DistributedATS/master/Diagrams/CryptoCLOB.png?raw=true)
+![N|Solid](https://raw.githubusercontent.com/mkipnis/DistributedATS/master/docs/Diagrams/CryptoCLOB.png?raw=true)
 
 
 ### Components
