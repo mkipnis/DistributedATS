@@ -3,7 +3,7 @@
 MultipleMatchingEngine ATS consists of two Matching Engines, three FIX Gateways, and two Data Services.
 The first matching engine consumes and processes orders from the instrument group MARKET_Y, and the second from the instrument MARKET_Z
 
-![N|Solid](https://raw.githubusercontent.com/mkipnis/DistributedATS/master/Diagrams/BasicATS.png?raw=true)
+![N|Solid](https://raw.githubusercontent.com/mkipnis/DistributedATS/master/docs/Diagrams/BasicATS.png?raw=true)
 
 
 ### Components
