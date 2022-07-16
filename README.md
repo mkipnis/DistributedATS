@@ -45,4 +45,4 @@ DistributedATS is a [**FIX Protocol-based**](https://www.fixtrading.org) alterna
 [GenTools](https://github.com/mkipnis/DistributedATS/tree/master/GenTools) is a utility that generates DDS IDL, FIX to IDL, and IDL to FIX adapters and IDL logger helper classes from QuickFIX's XML data dictionary.
 
 ## Building Distributed ATS
-[Building ATS](https://github.com/mkipnis/DistributedATS/tree/master/docs/BuildingDistributedATS.md
+[Building ATS](https://github.com/mkipnis/DistributedATS/tree/master/docs/BuildingDistributedATS.md)
