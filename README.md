@@ -39,7 +39,8 @@ DistributedATS is a [**FIX Protocol-based**](https://www.fixtrading.org) alterna
 - [Python3/QuickFIX](https://github.com/mkipnis/DistributedATS/tree/master/MiscClients/python3)
 - [ReactJS and SpringBoot-QuickFIX/J](https://github.com/mkipnis/DistributedATS/tree/master/MiscClients/spring_reactjs)
 
-## Highlevel 
+## High Level Data Flow Overview
+[Overview](https://github.com/mkipnis/DistributedATS/tree/master/docs/HighLevelDesign.md)
 
 ### Autogeneration of IDL from QuickFIX XML
 [GenTools](https://github.com/mkipnis/DistributedATS/tree/master/GenTools) is a utility that generates DDS IDL, FIX to IDL, and IDL to FIX adapters and IDL logger helper classes from QuickFIX's XML data dictionary.
