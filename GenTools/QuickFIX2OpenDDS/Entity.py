@@ -55,7 +55,7 @@ class Entity:
             comp_str += group_idl;
 
         if self.item.tag == "message":
-            comp_str += "\tstruct " + self.entity_name + "\n\t{\n\tDistributedATS::Header m_Header;\n";
+            comp_str += "\t@topic\n\tstruct " + self.entity_name + "\n\t{\n\tDistributedATS::Header m_Header;\n";
         elif self.item.tag == 'group':
             comp_str += "\tstruct " + self.entity_name + "\n\t{\n";
         else:

@@ -14,9 +14,9 @@ The first matching engine consumes and processes orders from the instrument grou
 | Matching Engine | MARKET_Z | [matching_engine_MARKET_Z.ini](https://github.com/mkipnis/DistributedATS/blob/master/MiscATS/MultiMatchingEngineATS/config/matching_engine_MARKET_Z.ini) |
 | Data Service | DATA_SERVICE_A | [data_service_a.ini](https://github.com/mkipnis/DistributedATS/blob/master/MiscATS/MultiMatchingEngineATS/config/data_service_a.ini) |
 | Data Service | DATA_SERVICE_B | [data_service_b.ini](https://github.com/mkipnis/DistributedATS/blob/master/MiscATS/MultiMatchingEngineATS/config/data_service_b.ini) |
-| FIX Gateway | FIX_GWY_1 | [fix_gwy_1.cfg](https://github.com/mkipnis/DistributedATS/blob/master/MiscATS/CryptoCLOB/config/fix_gwy_1.cfg) |
-| FIX Gateway | FIX_GWY_2 | [fix_gwy_2.cfg](https://github.com/mkipnis/DistributedATS/blob/master/MiscATS/CryptoCLOB/config/fix_gwy_2.cfg) |
-| FIX Gateway | FIX_GWY_3 | [fix_gwy_3.cfg](https://github.com/mkipnis/DistributedATS/blob/master/MiscATS/CryptoCLOB/config/fix_gwy_3.cfg) |
+| FIX Gateway | FIX_GWY_1 | [fix_gwy_1.cfg](https://github.com/mkipnis/DistributedATS/blob/master/MiscATS/MultiMatchingEngineATS/config/fix_gwy_1.cfg) |
+| FIX Gateway | FIX_GWY_2 | [fix_gwy_2.cfg](https://github.com/mkipnis/DistributedATS/blob/master/MiscATS/MultiMatchingEngineATS/config/fix_gwy_2.cfg) |
+| FIX Gateway | FIX_GWY_3 | [fix_gwy_3.cfg](https://github.com/mkipnis/DistributedATS/blob/master/MiscATS/MultiMatchingEngineATS/config/fix_gwy_3.cfg) |
 
 
 ### Prerequisites

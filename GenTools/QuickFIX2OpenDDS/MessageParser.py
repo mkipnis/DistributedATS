@@ -141,7 +141,7 @@ class MessageParser:
 
         mpc_file = open("../idl/Adapters.mpc", "w")
         mpc_file.write("project( Adapters ) : dcps {\n\n");
-        after_list_str = "\tafter +=";
+        after_list_str = "";
 
         for message_name in message_list:
             after_list_str += " ";
@@ -149,11 +149,11 @@ class MessageParser:
 
         after_list_str += "\n";
 
-        mpc_file.write(after_list_str);
+        mpc_file.write("\tafter +=" + after_list_str);
 
         mpc_file.write(self.get_dds_export_statement());
 
-        mpc_file.write("\n\tincludes += $(QUICKFIX_HOME)/include \n\tlibpaths += $(QUICKFIX_HOME)/lib\n\tlibs += quickfix\n");
+        mpc_file.write("\n\tincludes += $(QUICKFIX_HOME)/include \n\tlibpaths += $(QUICKFIX_HOME)/lib\n\tlibs += quickfix "+ after_list_str +"\n");
 
         headers_str = "\tHeader_Files {\n\n\t";
         source_str = "\tSource_Files {\n\n\t";
@@ -183,12 +183,16 @@ class MessageParser:
         idl_file.write("\n");
 
         idl_file.write("module DistributedATS_" + message_name + "\n");
-        idl_file.write("{\n#pragma DCPS_DATA_TYPE \"DistributedATS_" + message_name + "::" + message_name + "\"\n\n");
+        #idl_file.write("{\n#pragma DCPS_DATA_TYPE \"DistributedATS_" + message_name + "::" + message_name + "\"\n\n");
 
-        idl_file.write(message_contexts.get_entity_idl());
-        idl_file.write("};\n");
+        #idl_file.write("{\n\t@topic\n");
 
-        idl_file.close();
+        idl_file.write("{\n\n");
+
+        idl_file.write(message_contexts.get_entity_idl())
+        idl_file.write("};\n")
+
+        idl_file.close()
 
     def store_logger(self, message_name, message_contexts, dependency_list):
 

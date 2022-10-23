@@ -3,8 +3,8 @@
 
 module DistributedATS_ExecutionReport
 {
-#pragma DCPS_DATA_TYPE "DistributedATS_ExecutionReport::ExecutionReport"
 
+	@topic
 	struct ExecutionReport
 	{
 	DistributedATS::Header m_Header;

@@ -1,6 +1,6 @@
 project( Adapters ) : dcps {
 
-	after += OrderCancelReject OrderMassStatusRequest MarketDataSnapshotFullRefresh SecurityListRequest OrderCancelReplaceRequest MarketDataRequest BusinessMessageReject MarketDataIncrementalRefresh NewOrderSingle ExecutionReport Logout OrderMassCancelRequest OrderCancelRequest SecurityList Heartbeat Logon OrderMassCancelReport
+	after += Heartbeat Logout ExecutionReport OrderCancelReject Logon NewOrderSingle OrderCancelRequest OrderCancelReplaceRequest MarketDataRequest MarketDataSnapshotFullRefresh MarketDataIncrementalRefresh BusinessMessageReject OrderMassCancelRequest OrderMassCancelReport SecurityListRequest SecurityList OrderMassStatusRequest
 	dynamicflags   = DISTRIBUTEDATS_BUILD_DLL 
 	libout         = $(DATS_HOME)/lib 
 	requires += tao_orbsvcs 
@@ -14,48 +14,49 @@ project( Adapters ) : dcps {
 
 	includes += $(QUICKFIX_HOME)/include 
 	libpaths += $(QUICKFIX_HOME)/lib
-	libs += quickfix
+	libs += quickfix  Heartbeat Logout ExecutionReport OrderCancelReject Logon NewOrderSingle OrderCancelRequest OrderCancelReplaceRequest MarketDataRequest MarketDataSnapshotFullRefresh MarketDataIncrementalRefresh BusinessMessageReject OrderMassCancelRequest OrderMassCancelReport SecurityListRequest SecurityList OrderMassStatusRequest
+
 	Header_Files {
 
 		HeaderAdapter.hpp
+	HeartbeatAdapter.hpp
+	LogoutAdapter.hpp
+	ExecutionReportAdapter.hpp
 	OrderCancelRejectAdapter.hpp
-	OrderMassStatusRequestAdapter.hpp
-	MarketDataSnapshotFullRefreshAdapter.hpp
-	SecurityListRequestAdapter.hpp
+	LogonAdapter.hpp
+	NewOrderSingleAdapter.hpp
+	OrderCancelRequestAdapter.hpp
 	OrderCancelReplaceRequestAdapter.hpp
 	MarketDataRequestAdapter.hpp
-	BusinessMessageRejectAdapter.hpp
+	MarketDataSnapshotFullRefreshAdapter.hpp
 	MarketDataIncrementalRefreshAdapter.hpp
-	NewOrderSingleAdapter.hpp
-	ExecutionReportAdapter.hpp
-	LogoutAdapter.hpp
+	BusinessMessageRejectAdapter.hpp
 	OrderMassCancelRequestAdapter.hpp
-	OrderCancelRequestAdapter.hpp
-	SecurityListAdapter.hpp
-	HeartbeatAdapter.hpp
-	LogonAdapter.hpp
 	OrderMassCancelReportAdapter.hpp
+	SecurityListRequestAdapter.hpp
+	SecurityListAdapter.hpp
+	OrderMassStatusRequestAdapter.hpp
 	}
 	Source_Files {
 
 		HeaderAdapter.cpp
+	HeartbeatAdapter.cpp
+	LogoutAdapter.cpp
+	ExecutionReportAdapter.cpp
 	OrderCancelRejectAdapter.cpp
-	OrderMassStatusRequestAdapter.cpp
-	MarketDataSnapshotFullRefreshAdapter.cpp
-	SecurityListRequestAdapter.cpp
+	LogonAdapter.cpp
+	NewOrderSingleAdapter.cpp
+	OrderCancelRequestAdapter.cpp
 	OrderCancelReplaceRequestAdapter.cpp
 	MarketDataRequestAdapter.cpp
-	BusinessMessageRejectAdapter.cpp
+	MarketDataSnapshotFullRefreshAdapter.cpp
 	MarketDataIncrementalRefreshAdapter.cpp
-	NewOrderSingleAdapter.cpp
-	ExecutionReportAdapter.cpp
-	LogoutAdapter.cpp
+	BusinessMessageRejectAdapter.cpp
 	OrderMassCancelRequestAdapter.cpp
-	OrderCancelRequestAdapter.cpp
-	SecurityListAdapter.cpp
-	HeartbeatAdapter.cpp
-	LogonAdapter.cpp
 	OrderMassCancelReportAdapter.cpp
+	SecurityListRequestAdapter.cpp
+	SecurityListAdapter.cpp
+	OrderMassStatusRequestAdapter.cpp
 	}
 }
 

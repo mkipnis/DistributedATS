@@ -22,7 +22,7 @@ project(MatchingEngine) : dcpsexe, dcps_tcp, svc_utils  {
 
 	after    += Svc_Utils
 
-        libs           +=       NewOrderSingle ExecutionReport MarketDataIncrementalRefresh OrderCancelRequest OrderCancelReject OrderMassCancelRequest OrderMassCancelReport SecurityListRequest SecurityList MarketDataRequest MarketDataSnapshotFullRefresh BusinessMessageReject OrderCancelReplaceRequest
+        libs           +=       NewOrderSingle ExecutionReport MarketDataIncrementalRefresh OrderCancelRequest OrderCancelReject OrderMassCancelRequest OrderMassCancelReport SecurityListRequest SecurityList MarketDataRequest MarketDataSnapshotFullRefresh BusinessMessageReject OrderCancelReplaceRequest Logon OrderMassStatusRequest
 
         Source_Files {
 		main.cpp

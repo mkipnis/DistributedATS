@@ -3,7 +3,6 @@
 
 module DistributedATS_MarketDataRequest
 {
-#pragma DCPS_DATA_TYPE "DistributedATS_MarketDataRequest::MarketDataRequest"
 
 	struct NoMDEntryTypes
 	{
@@ -18,6 +17,7 @@ module DistributedATS_MarketDataRequest
 	};
 	typedef sequence<NoRelatedSym> NoRelatedSymSeq;
 
+	@topic
 	struct MarketDataRequest
 	{
 	DistributedATS::Header m_Header;

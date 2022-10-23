@@ -3,8 +3,8 @@
 
 module DistributedATS_Logout
 {
-#pragma DCPS_DATA_TYPE "DistributedATS_Logout::Logout"
 
+	@topic
 	struct Logout
 	{
 	DistributedATS::Header m_Header;

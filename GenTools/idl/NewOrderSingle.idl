@@ -3,8 +3,8 @@
 
 module DistributedATS_NewOrderSingle
 {
-#pragma DCPS_DATA_TYPE "DistributedATS_NewOrderSingle::NewOrderSingle"
 
+	@topic
 	struct NewOrderSingle
 	{
 	DistributedATS::Header m_Header;

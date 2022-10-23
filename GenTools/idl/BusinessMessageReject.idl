@@ -3,8 +3,8 @@
 
 module DistributedATS_BusinessMessageReject
 {
-#pragma DCPS_DATA_TYPE "DistributedATS_BusinessMessageReject::BusinessMessageReject"
 
+	@topic
 	struct BusinessMessageReject
 	{
 	DistributedATS::Header m_Header;
