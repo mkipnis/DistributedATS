@@ -8,7 +8,7 @@ The following environmental variables along with DDS variables must be set prior
 
 Example of an environmental variable file where all dependences were built under $HOME and MySQL was installed in its default location:
 ```
-. $HOME/OpenDDS-3.9/setenv.sh # OpenDDS and it's dependences
+. $HOME/OpenDDS-3.22/setenv.sh # OpenDDS and it's dependences
 
 export DATS_HOME=$HOME/DistributedATS # DistributedATS home
 
