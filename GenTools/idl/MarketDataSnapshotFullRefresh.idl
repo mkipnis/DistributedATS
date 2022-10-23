@@ -3,7 +3,6 @@
 
 module DistributedATS_MarketDataSnapshotFullRefresh
 {
-#pragma DCPS_DATA_TYPE "DistributedATS_MarketDataSnapshotFullRefresh::MarketDataSnapshotFullRefresh"
 
 	struct NoMDEntries
 	{
@@ -14,6 +13,7 @@ module DistributedATS_MarketDataSnapshotFullRefresh
 	};
 	typedef sequence<NoMDEntries> NoMDEntriesSeq;
 
+	@topic
 	struct MarketDataSnapshotFullRefresh
 	{
 	DistributedATS::Header m_Header;

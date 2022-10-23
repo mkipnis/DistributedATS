@@ -3,8 +3,8 @@
 
 module DistributedATS_OrderMassStatusRequest
 {
-#pragma DCPS_DATA_TYPE "DistributedATS_OrderMassStatusRequest::OrderMassStatusRequest"
 
+	@topic
 	struct OrderMassStatusRequest
 	{
 	DistributedATS::Header m_Header;

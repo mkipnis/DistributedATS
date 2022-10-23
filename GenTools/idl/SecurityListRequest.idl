@@ -3,8 +3,8 @@
 
 module DistributedATS_SecurityListRequest
 {
-#pragma DCPS_DATA_TYPE "DistributedATS_SecurityListRequest::SecurityListRequest"
 
+	@topic
 	struct SecurityListRequest
 	{
 	DistributedATS::Header m_Header;

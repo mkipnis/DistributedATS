@@ -3,7 +3,6 @@
 
 module DistributedATS_SecurityList
 {
-#pragma DCPS_DATA_TYPE "DistributedATS_SecurityList::SecurityList"
 
 	struct NoRelatedSym
 	{
@@ -13,6 +12,7 @@ module DistributedATS_SecurityList
 	};
 	typedef sequence<NoRelatedSym> NoRelatedSymSeq;
 
+	@topic
 	struct SecurityList
 	{
 	DistributedATS::Header m_Header;

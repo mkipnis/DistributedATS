@@ -3,8 +3,8 @@
 
 module DistributedATS_OrderCancelReject
 {
-#pragma DCPS_DATA_TYPE "DistributedATS_OrderCancelReject::OrderCancelReject"
 
+	@topic
 	struct OrderCancelReject
 	{
 	DistributedATS::Header m_Header;

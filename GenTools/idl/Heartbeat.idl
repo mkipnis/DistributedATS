@@ -3,8 +3,8 @@
 
 module DistributedATS_Heartbeat
 {
-#pragma DCPS_DATA_TYPE "DistributedATS_Heartbeat::Heartbeat"
 
+	@topic
 	struct Heartbeat
 	{
 	DistributedATS::Header m_Header;

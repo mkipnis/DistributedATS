@@ -3,8 +3,8 @@
 
 module DistributedATS_Logon
 {
-#pragma DCPS_DATA_TYPE "DistributedATS_Logon::Logon"
 
+	@topic
 	struct Logon
 	{
 	DistributedATS::Header m_Header;

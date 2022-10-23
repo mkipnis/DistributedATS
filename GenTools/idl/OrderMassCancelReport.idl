@@ -3,8 +3,8 @@
 
 module DistributedATS_OrderMassCancelReport
 {
-#pragma DCPS_DATA_TYPE "DistributedATS_OrderMassCancelReport::OrderMassCancelReport"
 
+	@topic
 	struct OrderMassCancelReport
 	{
 	DistributedATS::Header m_Header;
