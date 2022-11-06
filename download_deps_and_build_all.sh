@@ -29,12 +29,13 @@ LIQUIBOOK_PKG=2.0.0
 [[ ! -f $DEPS_BUILD_DIR/sqlite-$SQLITE_PKG.tar.gz ]] && curl -L "https://github.com/sqlite/sqlite/archive/refs/tags/version-$SQLITE_PKG.tar.gz"  -o $DEPS_BUILD_DIR/sqlite-$SQLITE_PKG.tar.gz
 [[ ! -f $DEPS_BUILD_DIR/liquibook-$LIQUIBOOK_PKG.tar.gz ]] && curl -L "https://github.com/enewhuis/liquibook/archive/refs/tags/$LIQUIBOOK_PKG.tar.gz"  -o $DEPS_BUILD_DIR/liquibook-$LIQUIBOOK_PKG.tar.gz
 
+export INSTALL_PREFIX=$INSTALL_DIR
+
 if [[ ! -f $INSTALL_DIR/include/dds/Version.h ]]
 then
 
 cd $DEPS_BUILD_DIR
 [[ ! -d $OPENDDS_PKG ]] && tar xvf $OPENDDS_PKG.tar.gz
-export INSTALL_PREFIX=$INSTALL_DIR
 cd $OPENDDS_PKG
 ./configure --std=c++11
 make install -j 10
@@ -91,13 +92,15 @@ fi
 export QUICKFIX_HOME=$INSTALL_DIR
 export LIQUIDBOOK_HOME=$INSTALL_DIR/liquibook-$LIQUIBOOK_PKG
 export SQLITE_HOME=$INSTALL_DIR
+export DATS_HOME=$CURRENT_DIR
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$DATS_HOME/lib:$QUICKFIX_HOME/lib
 
 EOM
 
 . ./distributed_ats_env.sh
 $ACE_ROOT/bin/mwc.pl -type gnuace
 make realclean
-make -j 10
+make 
 
 cd DataService/sql/sqlite 
 ./create_database.sh

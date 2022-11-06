@@ -18,7 +18,7 @@ project(FIXGateway) : dcpsexe, dcps_tcp, svc_utils  {
 
         after    += Svc_Utils
 
-        libs           +=       quickfix Adapters Logon Logout NewOrderSingle ExecutionReport MarketDataIncrementalRefresh OrderCancelRequest OrderCancelReject OrderMassCancelRequest OrderMassCancelReport SecurityListRequest SecurityList MarketDataRequest MarketDataSnapshotFullRefresh OrderMassStatusRequest OrderCancelReplaceRequest
+        libs           +=       quickfix Adapters Logon Logout NewOrderSingle ExecutionReport MarketDataIncrementalRefresh OrderCancelRequest OrderCancelReject OrderMassCancelRequest OrderMassCancelReport SecurityListRequest SecurityList MarketDataRequest MarketDataSnapshotFullRefresh OrderMassStatusRequest OrderCancelReplaceRequest BusinessMessageReject Heartbeat
 
         Source_Files {
                 main.cpp
