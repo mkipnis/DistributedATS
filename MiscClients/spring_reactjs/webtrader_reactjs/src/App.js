@@ -19,7 +19,8 @@ function App()
   const histRef = React.useRef();
   const marketDataAndPositionsRef = React.useRef();
 
-  const url = "http://localhost:8080/";
+  //const url = "http://localhost:8080/";
+  const url = "https://dats.ustreasuries.online/";
 
   const last_sequence_number = useRef(0); // sequence number between front-end and rest controller
   const last_session_state = useRef(null);
@@ -36,7 +37,14 @@ function App()
   {
     const requestOptionsResults = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(logon_value) };
     fetch(url + '/Login', requestOptionsResults) .then(res => res.json())
-    .then(result => setSessionToken(result));
+    .then(result => setSessionToken(result))
+    .catch(err => {
+
+        var invalid_state = {};
+        invalid_state["text"] = 'Unable to connect to the server';
+        setLoginState(invalid_state);
+
+      });
   }
 
   const Populate_ticket = ( ticket_data ) =>
@@ -66,7 +74,8 @@ function App()
     const requestOptionsResults = { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(cancel_out) };
     fetch(url + '/CancelOrder', requestOptionsResults) .then(res => res.json())
-    .then(result => setOrderCancelData(result));
+    .then(result => setOrderCancelData(result))
+    .catch(err => {console.log(err)});
   }
 
   useEffect(() => {
@@ -99,14 +108,20 @@ function App()
 
         const requestOptionsResults = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(session_state_request) };
         fetch(url + '/SessionState', requestOptionsResults) .then(res => res.json())
-        .then(result => setSessionState(result));
+        .then(result => setSessionState(result))
+        .catch(err => {
+          var invalid_state = {};
+          invalid_state["text"] = 'Disconnected from the server';
+          setLoginState(invalid_state);
+          setSessionState(null);
+        });
     }
 
   }, [sessionToken]);
 
   useEffect(() => {
 
-    if ( sessionState !== null )
+    if ( sessionState !== null  )
     {
       last_session_state.current = sessionState;
 
@@ -124,15 +139,26 @@ function App()
 
       setHistData(session_state_wrapper.get_hist_data(histData, last_sequence_number));
 
-      const intervalId = setInterval(() => {
+      if ( sessionState.sessionState != 3 )
+      {
+        const intervalId = setInterval(() => {
                 const requestOptionsResults = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(session_state_request) };
                 fetch(url + '/SessionState', requestOptionsResults) .then(res => res.json())
-                .then(result => setSessionState(result));
+                .then(result => setSessionState(result))
+                .catch(err => {
+                  var invalid_state = {};
+                  invalid_state["text"] = 'Disconnected from the server';
+                  setLoginState(invalid_state);
+                  setSessionState(null);
+                });
               }, 500)
 
               return () => {
                 clearInterval(intervalId);
               }
+        } else {
+
+        }
     } else {
       console.log("Session State is Null");
     }
@@ -142,8 +168,9 @@ function App()
   return (
     <div className="App">
       <nav>
-        <Login loginState={loginState} logonCallback={Logon_callback}/>
+        <Login loginState={loginState} logonCallback={Logon_callback} sessionState={sessionState}/>
       </nav>
+      <div style={ ( sessionState == null || sessionState.sessionState != 1 ) ? {pointerEvents: "none", opacity: "0.4"} : {}}>
       <div>
         <PositionsAndMarketData blotterData={blotterData} ticketState={ticketState} marketDataCallback={Populate_ticket} ref={marketDataAndPositionsRef}/>
       </div>
@@ -152,6 +179,7 @@ function App()
       </div>
       <div>
         <History histData={histData} ref={histRef} orderCancelCallback={Submit_cancel}/>
+      </div>
       </div>
     </div>
   );

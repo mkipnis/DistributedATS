@@ -104,7 +104,7 @@ void AuthService::createLogoutTopic( const std::string& data_service_filter_expr
 
 int AuthService::svc (void)
 {
-    std::shared_ptr<FIX::MySQLConnection> mySqlConnectionPtr = std::make_shared<FIX::MySQLConnection>( m_dbConnectionID );
+    std::shared_ptr<DistributedATS::SQLiteConnection> mySqlConnectionPtr = std::make_shared<DistributedATS::SQLiteConnection>( m_dbConnectionID );
     
 	while(1)
 	{
@@ -132,11 +132,11 @@ int AuthService::svc (void)
 }
 
 
-bool AuthService::authenticate( std::shared_ptr<FIX::MySQLConnection> mySqlConnectionPtr,  DistributedATS_Logon::Logon* logonPtr )
+bool AuthService::authenticate( std::shared_ptr<DistributedATS::SQLiteConnection> sqliteConnectionPtr,  DistributedATS_Logon::Logon* logonPtr )
 {
     std::string textOut = "";
     
-    if ( authenticate( mySqlConnectionPtr, logonPtr->Username.in(), logonPtr->Password.in(), textOut ) )
+    if ( authenticate( sqliteConnectionPtr, logonPtr->Username.in(), logonPtr->Password.in(), textOut ) )
     {
         DistributedATS_Logon::Logon logon = *logonPtr;
         logon.m_Header.TargetCompID = logonPtr->m_Header.SenderCompID;
@@ -186,6 +186,7 @@ bool AuthService::authenticate( std::shared_ptr<FIX::MySQLConnection> mySqlConne
 }
 
 
+/*
 bool AuthService::authenticate( std::shared_ptr<FIX::MySQLConnection> mySqlConnectionPtr, const char* username_in, const char* password_in, std::string& textOut )
 {
     std::stringstream user_logon_call;
@@ -206,3 +207,26 @@ bool AuthService::authenticate( std::shared_ptr<FIX::MySQLConnection> mySqlConne
     
     return result == 0 ? true : false;
 };
+ */
+
+
+bool AuthService::authenticate( std::shared_ptr<DistributedATS::SQLiteConnection> sqliteConnect, const char* username_in, const char* password_in, std::string& textOut )
+{
+    std::stringstream auth_query_stream;
+    
+    auth_query_stream << "select * from user_code where user_name='" << username_in <<
+                    "' and json_extract(properties, \"$.password\")='" << password_in << "'";
+    
+    DistributedATS::SQLiteQuery auth_query(auth_query_stream.str().c_str());
+    
+    sqliteConnect->execute(auth_query);
+    
+    if ( auth_query.rows() == 0 )
+    {
+        textOut = "Invalid username or password";
+        return false;
+    } else {
+        return true;
+    }
+};
+

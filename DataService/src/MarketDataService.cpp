@@ -43,11 +43,10 @@ MarketDataService::MarketDataService( std::shared_ptr<distributed_ats_utils::Bas
 		ACE_Thread_Manager *thr_mgr) :
 		ACE_Task <ACE_MT_SYNCH> (thr_mgr), m_basicDomainParticipantPtr( basicDomainParticipantPtr )
 {
-	// TODO Auto-generated constructor stub
     
     _incrementalRefreshMapPtr = std::make_shared<IncrementalRefreshMap>();
-
-    m_pMySqlConnectionPtr.reset( new FIX::MySQLConnection(dbConnectionID) );
+    
+    m_sqliteConnection.reset( new DistributedATS::SQLiteConnection(dbConnectionID) );
 
     initialize();
 
@@ -60,17 +59,26 @@ MarketDataService::~MarketDataService() {
 void MarketDataService::initialize()
 {
 
-    FIX::MySQLQuery mySQLQuery("select i.symbol, m.market_name, hp.open from hist_price hp, instrument i, market m, instrument_market_map imm where hp.instrument_id=i.instrument_id and imm.instrument_id=i.instrument_id and m.market_id=imm.market_id and hp.price_date=(select max(price_date) from hist_price where instrument_id=i.instrument_id)");
+    DistributedATS::SQLiteQuery query("select i.instrument_name, m.market_name, json_extract(hp.properties,\"$.open\") as open_price " \
+                               " from " \
+                               " hist_price hp, " \
+                               " instrument i, " \
+                               " market m, " \
+                               " instrument_market_map imm " \
+                               " where hp.instrument_name=i.instrument_name and " \
+                               " imm.instrument_name=i.instrument_name and " \
+                               " m.market_name=imm.market_name and " \
+                               " hp.business_date=(select max(business_date) from hist_price where instrument_name=i.instrument_name)");
     
     ACE_DEBUG ((LM_INFO, ACE_TEXT("(%P|%t|%D) Populating hist stats\n")));
 
-    m_pMySqlConnectionPtr->execute(mySQLQuery);
+    m_sqliteConnection->execute(query);
     
-    for ( int instrument_index =0; instrument_index<mySQLQuery.rows(); instrument_index++)
+    for ( int instrument_index =0; instrument_index<query.rows(); instrument_index++)
     {
-        std::string symbol = mySQLQuery.getValue(instrument_index,0);
-        std::string market = mySQLQuery.getValue(instrument_index,1);
-        int last_trade_price = ACE_OS::atoi(mySQLQuery.getValue(instrument_index,2));
+        std::string symbol = query.getValue(instrument_index,0);
+        std::string market = query.getValue(instrument_index,1);
+        int last_trade_price = ACE_OS::atoi(query.getValue(instrument_index,2).c_str());
 
         std::cout << "Last traded Price : " << symbol << "|" << market << "|" << last_trade_price << std::endl;
 

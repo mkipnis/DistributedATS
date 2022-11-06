@@ -45,7 +45,7 @@ RefDataService::RefDataService(std::shared_ptr<distributed_ats_utils::BasicDomai
 				   ACE_Thread_Manager *thr_mgr ) :  ACE_Task<ACE_MT_SYNCH> (thr_mgr)
 {
     m_basicDomainParticipantPtr = basicDomainParticipantPtr;
-    m_pMySqlConnectionPtr = std::make_shared<FIX::MySQLConnection>(dbConnectionID);
+    m_sqliteConnection = std::make_shared<DistributedATS::SQLiteConnection>(dbConnectionID);
     
     m_pInstrumentMapPtr = std::make_shared< InstrumentMap >();
     m_pUserInstruments = std::make_shared< UserInstrumentList >();
@@ -62,7 +62,7 @@ void RefDataService::initialize()
 {
     try
     {
-        populateInstrumentIdToRefDataMap();
+        //populateInstrumentIdToRefDataMap();
         populateUserGroupInstrumentMap();
     } catch ( ... )
     {
@@ -72,27 +72,36 @@ void RefDataService::initialize()
 
 void RefDataService::populateUserGroupInstrumentMap()
 {
-    FIX::MySQLQuery mySQLQuery("select i.instrument_id, u.username, i.symbol, m.market_name from user u, instrument i, market m, instrument_market_map im_map, user_group_market_map ugm_map where im_map.instrument_id=i.instrument_id and u.user_group_id=ugm_map.user_group_id and m.market_id=im_map.market_id and im_map.market_id=ugm_map.market_id");
+    DistributedATS::SQLiteQuery sqliteQuery("select i.instrument_name, i.properties, u.user_name, m.market_name from "
+                               " user_code u, " \
+                               " instrument i, " \
+                               " market m, " \
+                               " instrument_market_map im_map, " \
+                               " user_group_market_map ugm_map " \
+                               " where im_map.instrument_name=i.instrument_name and " \
+                               " u.user_group=ugm_map.user_group and " \
+                               " m.market_name=im_map.market_name and " \
+                               " im_map.market_name=ugm_map.market_name");
 
     ACE_DEBUG ((LM_INFO, ACE_TEXT("(%P|%t|%D) Populating security list\n")));
     
-    m_pMySqlConnectionPtr->execute(mySQLQuery);
+    m_sqliteConnection->execute(sqliteQuery);
         
-    for ( int instrument_index =0; instrument_index<mySQLQuery.rows(); instrument_index++)
+    for ( int instrument_index =0; instrument_index<sqliteQuery.rows(); instrument_index++)
     {
-        uint32_t instrument_id = std::atoi(mySQLQuery.getValue(instrument_index,0));
-        std::string username = mySQLQuery.getValue(instrument_index,1);
-        std::string symbol = mySQLQuery.getValue(instrument_index,2);
-        std::string market = mySQLQuery.getValue(instrument_index,3);
+        std::string symbol = sqliteQuery.getValue(instrument_index,0);
+        std::string properties = sqliteQuery.getValue(instrument_index,1);
+        std::string username = sqliteQuery.getValue(instrument_index,2);
+        std::string market = sqliteQuery.getValue(instrument_index,3);
         
-        auto instrumentPtr = m_pInstrumentMapPtr->find(instrument_id);
+        auto instrumentPtr = m_pInstrumentMapPtr->find(symbol);
         
         if ( instrumentPtr == m_pInstrumentMapPtr->end() )
         {
-            instrumentPtr = m_pInstrumentMapPtr->emplace( instrument_id,
-                                                         std::make_shared<Instrument>( market, symbol ) ).first;
+            instrumentPtr = m_pInstrumentMapPtr->emplace( symbol,
+                                                         std::make_shared<Instrument>( market, symbol, properties ) ).first;
             // find should always find something for a given instrument id because of outer join when populating m_instrumentIdToRefDataMap
-            instrumentPtr->second->ref_data = m_instrumentIdToRefDataMap.find(instrument_id)->second;
+           // instrumentPtr->second->ref_data = m_instrumentIdToRefDataMap.find(symbol)->second;
         }
             
         auto instrumentList = m_pUserInstruments->find( username );
@@ -106,6 +115,7 @@ void RefDataService::populateUserGroupInstrumentMap()
     }
 }
 
+/*
 void RefDataService::populateInstrumentIdToRefDataMap()
 {
     FIX::MySQLQuery mySQLQuery("select i.instrument_id, case when ird.ref_data is null then '' else ird.ref_data end from instrument as i LEFT OUTER JOIN instrument_ref_data ird ON i.instrument_id = ird.instrument_id");
@@ -123,7 +133,7 @@ void RefDataService::populateInstrumentIdToRefDataMap()
         
         m_instrumentIdToRefDataMap.emplace( instrument_id, std::make_shared<std::string>(ref_data) );
     }
-}
+}*/
 
 
 void RefDataService::createSecurityListRequestListener( const std::string& data_service_filter_expression )
@@ -204,7 +214,7 @@ bool RefDataService::processRefDataRequest( DistributedATS_SecurityListRequest::
         
         securityList.c_NoRelatedSym[ instrument_index ].Symbol = CORBA::string_dup(instrument->symbol.c_str());
         securityList.c_NoRelatedSym[ instrument_index ].SecurityExchange = CORBA::string_dup(instrument->marketName.c_str());
-        securityList.c_NoRelatedSym[ instrument_index ].Text = CORBA::string_dup( instrument->ref_data->c_str() );
+        securityList.c_NoRelatedSym[ instrument_index ].Text = CORBA::string_dup( instrument->properties.c_str() );
         
         instrument_index++;
     };

@@ -37,9 +37,12 @@
 
 #include <vector>
 
-#include <quickfix/Exceptions.h>
+//#include <quickfix/Exceptions.h>
+//#include <quickfix/DatabaseConnectionID.h>
+//#include <quickfix/MySQLConnection.h>
 #include <quickfix/DatabaseConnectionID.h>
-#include <quickfix/MySQLConnection.h>
+#include "SQLiteConnection.hpp"
+
 
 #include <iostream>
 
@@ -75,9 +78,14 @@ public:
     
 private:
 
+    /*
     bool authenticate( std::shared_ptr<FIX::MySQLConnection> mySqlConnect, DistributedATS_Logon::Logon* logonPtr );
 
-    bool authenticate( std::shared_ptr<FIX::MySQLConnection> mySqlConnect, const char* username_in, const char* password_in, std::string& textOut );
+    bool authenticate( std::shared_ptr<FIX::MySQLConnection> mySqlConnect, const char* username_in, const char* password_in, std::string& textOut );*/
+    
+    bool authenticate( std::shared_ptr<DistributedATS::SQLiteConnection> sqliteConnect, DistributedATS_Logon::Logon* logonPtr );
+
+    bool authenticate( std::shared_ptr<DistributedATS::SQLiteConnection> sqliteConnect, const char* username_in, const char* password_in, std::string& textOut );
 
     FIX::DatabaseConnectionID m_dbConnectionID;
 

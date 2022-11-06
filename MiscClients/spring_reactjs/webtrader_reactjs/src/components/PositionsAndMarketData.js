@@ -16,6 +16,13 @@ const Blotter = React.forwardRef ((props, ref) => {
 
   const gridRef = useRef();
 
+  function number_formatter(params) {
+           if (params.value == 0 )
+           {
+             return "";
+           }
+       };
+
 
   useImperativeHandle(ref, () => ({
       update_data() {
@@ -48,18 +55,18 @@ const Blotter = React.forwardRef ((props, ref) => {
   }));
 
 const [columnDefs, setColumnDefs] = useState([
-   { headerName: 'Instrument', field: 'instrumentName', flex: 2, filter: 'agTextColumnFilter', },
+   { headerName: 'Instrument', field: 'instrumentName', filter: 'agTextColumnFilter', cellStyle: {'textAlign': 'left'}, sortable: true, },
    { headerName: 'Position', field: 'position', flex: 2, filter: 'agTextColumnFilter',  },
-   { headerName: 'VWAP', field: 'vwap', sortable: true, flex: 2 },
-   { headerName: 'PNL', field: 'pnl', sortable: true, flex: 2 },
-   { headerName: 'BidPrice', field: 'bid_price', sortable: true, flex: 2 },
-   { headerName: 'AskPrice', field: 'ask_price', sortable: true, flex: 2 },
-   { headerName: 'BidSize', field: 'bid_size', sortable: true, flex: 2 },
-   { headerName: 'AskSize', field: 'ask_size', sortable: true, flex: 2 },
-   { headerName: 'Volume', field: 'volume', sortable: true, flex: 2 },
-   { headerName: 'OpenPrice', field: 'openPrice', sortable: true, flex: 2 },
-   { headerName: 'LastPrice', field: 'lastTradedPrice', sortable: true, flex: 2 },
-   { headerName: 'PriceChange', field: 'priceChange', sortable: true, flex: 2 },
+   { headerName: 'VWAP', field: 'vwap', sortable: true, flex: 2 , valueFormatter:number_formatter},
+   { headerName: 'PNL', field: 'pnl', sortable: true, flex: 2 , valueFormatter:number_formatter},
+   { headerName: 'BidPrice', field: 'bid_price', sortable: true, flex: 2, valueFormatter:number_formatter},
+   { headerName: 'AskPrice', field: 'ask_price', sortable: true, flex: 2, valueFormatter:number_formatter},
+   { headerName: 'BidSize', field: 'bid_size', sortable: true, flex: 2 , valueFormatter:number_formatter},
+   { headerName: 'AskSize', field: 'ask_size', sortable: true, flex: 2 , valueFormatter:number_formatter},
+   { headerName: 'Volume', field: 'volume', sortable: true, flex: 2 , valueFormatter:number_formatter},
+   { headerName: 'OpenPrice', field: 'openPrice', sortable: true, flex: 2 , valueFormatter:number_formatter},
+   { headerName: 'LastPrice', field: 'lastTradedPrice', sortable: true, flex: 2 , valueFormatter:number_formatter},
+   { headerName: 'PriceChange', field: 'priceChange', sortable: true, flex: 2 , valueFormatter:number_formatter},
  ]);
 
  const gridOptions = {

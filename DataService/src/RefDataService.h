@@ -41,7 +41,7 @@
 
 #include <quickfix/Exceptions.h>
 #include <quickfix/DatabaseConnectionID.h>
-#include <quickfix/MySQLConnection.h>
+#include "SQLiteConnection.hpp"
 
 #include <iostream>
 
@@ -64,22 +64,23 @@ struct Instrument
     Instrument& operator=(Instrument&&) = default;
     virtual ~Instrument() = default;
     
-	Instrument( const char* marketNameIn, const char* symbolIn )
-		: marketName( marketNameIn ),  symbol( symbolIn )
+	Instrument( const char* marketNameIn, const char* symbolIn, const char* propertiesIn = "" )
+		: marketName( marketNameIn ),  symbol( symbolIn ), properties( propertiesIn )
 	{
-        ref_data.reset();
+        //ref_data.reset();
 	};
 
-	Instrument( std::string& marketNameIn, std::string& symbolIn )
-		: marketName( marketNameIn  ),  symbol( symbolIn )
+	Instrument( std::string& marketNameIn, std::string& symbolIn,  std::string propertiesIn = "" )
+		: marketName( marketNameIn  ),  symbol( symbolIn ), properties( propertiesIn )
 	{
-        ref_data.reset();
+        //ref_data.reset();
 	};
 
     uint32_t instrument_id;
 	std::string symbol;
 	std::string marketName; // FIX SecurityExchange
-    std::shared_ptr<std::string> ref_data;
+    std::string properties;
+    //std::shared_ptr<std::string> ref_data;
 
 	friend bool operator<( const Instrument& i1, const Instrument& i2 )
 	{
@@ -93,7 +94,7 @@ struct Instrument
 };
 
 typedef std::shared_ptr<Instrument> InstrumentPtr;
-typedef std::map<uint32_t, InstrumentPtr> InstrumentMap;
+typedef std::map<std::string, InstrumentPtr> InstrumentMap;
 typedef std::shared_ptr<InstrumentMap> InstrumentMapPtr;
 typedef std::list<InstrumentPtr> InstrumentList;
 typedef std::shared_ptr<InstrumentList> InstrumentListPtr;
@@ -131,15 +132,15 @@ public:
 
 protected:
     void populateUserGroupInstrumentMap();
-    void populateInstrumentIdToRefDataMap();
+    //void populateInstrumentIdToRefDataMap();
     
 private:
 
-	std::shared_ptr<FIX::MySQLConnection> m_pMySqlConnectionPtr;
+    std::shared_ptr<DistributedATS::SQLiteConnection> m_sqliteConnection;
     std::shared_ptr<distributed_ats_utils::BasicDomainParticipant> m_basicDomainParticipantPtr;
     
     // instrument_id to ref_data
-    std::map<uint32_t,std::shared_ptr<std::string>> m_instrumentIdToRefDataMap;
+    std::map<std::string,std::shared_ptr<std::string>> m_instrumentIdToRefDataMap;
 
 	UserInstrumentListPtr m_pUserInstruments;
     

@@ -80,6 +80,7 @@ const Login = React.forwardRef ((props, ref) => {
               {infoMessage()}
             </div>
         </div>
+        <div style={ ( props.sessionState != null && props.sessionState.sessionState == 1 ) ? {pointerEvents: "none", opacity: "0.4"} : {}}>
       <div className="App-Cell-Right">
       <form className="Form-Login">
         <label className="label" style={{marginRight: '10px'}} >Username</label>
@@ -92,6 +93,7 @@ const Login = React.forwardRef ((props, ref) => {
           Login
         </button>
       </form>
+      </div>
       </div>
     </div>
   );

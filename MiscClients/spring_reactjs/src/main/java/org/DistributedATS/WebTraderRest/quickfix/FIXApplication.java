@@ -34,9 +34,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.json.JSONObject;
@@ -61,6 +62,7 @@ import quickfix.field.Symbol;
 import quickfix.field.Text;
 
 import org.DistributedATS.WebTraderRest.entity.Instrument;
+import org.apache.mina.util.CopyOnWriteMap;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -122,7 +124,9 @@ public class FIXApplication implements ApplicationExtended {
         quickfix.field.NoRelatedSym numberOfInstruments =
             new quickfix.field.NoRelatedSym();
         message.getField(numberOfInstruments);
-        securtiesList.clear();
+        //securtiesList.clear();
+        
+        ArrayList<Instrument> currentSecurityList = new ArrayList<Instrument>();
 
         for (int symbol_index = 0;
              symbol_index < numberOfInstruments.getValue(); ++symbol_index) {
@@ -152,8 +156,11 @@ public class FIXApplication implements ApplicationExtended {
         	  }
           }
                  
-          securtiesList.add(instrument);
+          currentSecurityList.add(instrument);
         }
+        
+        m_userSecuritesMap.put(sessionID, currentSecurityList);
+        
       } else if (msgType.getValue().equals(
                      MsgType.MARKET_DATA_SNAPSHOT_FULL_REFRESH) ||
                  msgType.getValue().equals(
@@ -272,8 +279,12 @@ public class FIXApplication implements ApplicationExtended {
     // TODO Auto-generated method stub
   }
 
-  public List<Instrument> getSecurities() { return securtiesList; }
+  public List<Instrument> getSecurities(SessionID sessionId) {
+	  
+	  return m_userSecuritesMap.get(sessionId);
+	 
+  }
 
-  private CopyOnWriteArrayList<Instrument> securtiesList =
-      new CopyOnWriteArrayList<Instrument>();
+  private ConcurrentHashMap<SessionID, ArrayList<Instrument>> m_userSecuritesMap =
+      new ConcurrentHashMap<SessionID, ArrayList<Instrument>>();
 }

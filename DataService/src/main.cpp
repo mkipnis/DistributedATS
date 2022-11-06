@@ -33,11 +33,12 @@
 #include "RefDataService.h"
 #include "MarketDataService.h"
 #include "MassOrderStatusService.h"
-#include <quickfix/DatabaseConnectionID.h>
+#include "SQLiteConnection.hpp"
 #include <memory>
 #include <ace/Message_Queue_T.h>
 #include <quickfix/FixValues.h>
 #include <Common.h>
+
 
 #include <atomic>
 
@@ -125,6 +126,7 @@ int main(int argc, char* argv[] )
         ACE_DEBUG ((LM_INFO, ACE_TEXT("(%P|%t|%D) INFO: DataService:[%s]\n"), data_service_name.c_str()));
 
 
+        /*
      	int port = 0;
      	if (configFileHelper.get_integer_value (ACE_TEXT ("database"), ACE_TEXT ("portnumber"), &port))
      	{
@@ -157,12 +159,21 @@ int main(int argc, char* argv[] )
         
         ACE_DEBUG ((LM_INFO, ACE_TEXT("(%P|%t|%D) INFO: Database settings : Hostname : [%s]|Port : [%d]|Username : [%s]|Password : [%s]|Database : [%s]\n"), hostname.c_str(),
                    port, username.c_str(), password.c_str(), database.c_str()));
+         */
 
 
-     	FIX::DatabaseConnectionID databaseConnectionID(database.c_str(), username.c_str(), password.c_str(), hostname.c_str(), port);
+     	//FIX::DatabaseConnectionID databaseConnectionID(database.c_str(), username.c_str(), password.c_str(), hostname.c_str(), port);
         
-        std::shared_ptr<FIX::MySQLConnection> mySqlConnectionPtr =
-            std::make_shared<FIX::MySQLConnection>( databaseConnectionID );
+        ACE_TString database_file;
+        if (configFileHelper.get_string_value (ACE_TEXT ("database"), ACE_TEXT ("database_file"), database_file))
+        {
+           ACE_ERROR ((LM_CRITICAL, ACE_TEXT("(%P|%t|%D) ERROR: Unable to get database hostname from ini file %d.\n"), ACE_OS::last_error() ));
+        };
+        
+        FIX::DatabaseConnectionID databaseConnectionID(database_file.c_str(),"", "", "", 0);
+        
+       std::shared_ptr<DistributedATS::SQLiteConnection> mySqlConnectionPtr =
+            std::make_shared<DistributedATS::SQLiteConnection>( databaseConnectionID );
         
         if ( !mySqlConnectionPtr->connected() )
         {
