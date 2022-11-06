@@ -11,24 +11,27 @@ const Ticket = React.forwardRef ((props, ref) => {
   const [size, setSize] = useState(null);
   const [orderSubmitResults, setOrderSubmitResults] = useState({});
   const [cancelAllResults, setCancelAllResults] = useState({});
+  const [isTicketing, setIsTicketing] = useState(false);
 
   function submit_buy( e )
   {
     e.preventDefault();
     props.ticketState.side = "BUY";
-    Submit_trade(props.ticketState);
+    Submit_order(props.ticketState);
   }
 
   function submit_sell( e )
   {
     e.preventDefault();
     props.ticketState.side = "SELL";
-    Submit_trade(props.ticketState);
+    Submit_order(props.ticketState);
   }
 
-  const Submit_trade = ( trade ) =>
+  const Submit_order = ( trade ) =>
   {
     var ticket = {};
+
+    setIsTicketing(true);
 
     ticket["symbol"] = trade.symbol;
     ticket["securityExchange"] = trade.securityExchange;
@@ -49,6 +52,8 @@ const Ticket = React.forwardRef ((props, ref) => {
     const handleCancellAll = (e) => {
       e.preventDefault();
 
+      setIsTicketing(true);
+
       var cancel_all = {};
 
       cancel_all["username"] = props.ticketState.username;
@@ -62,10 +67,12 @@ const Ticket = React.forwardRef ((props, ref) => {
   };
 
   useEffect(() => {
+    setIsTicketing(false);
     console.log("Order Submit Results : " + orderSubmitResults );
   },[orderSubmitResults]);
 
   useEffect(() => {
+    setIsTicketing(false);
     console.log("Cancel All Results : " + cancelAllResults );;
   },[cancelAllResults]);
 
@@ -74,6 +81,7 @@ const Ticket = React.forwardRef ((props, ref) => {
        <div className="App-Cell-Left" style={{width:"30%"}}>
            Trade : {props.ticketState.instrumentName}
        </div>
+       <div style={ ( isTicketing == true ) ? {pointerEvents: "none", opacity: "0.4"} : {}}>
        <div className="App-Cell-Center" style={{width:"70%"}}>
             <form>
              <div className="App-Cell-Center">
@@ -109,6 +117,7 @@ const Ticket = React.forwardRef ((props, ref) => {
               Cancel All
             </button>
             </form>
+      </div>
       </div>
       </div>
    );

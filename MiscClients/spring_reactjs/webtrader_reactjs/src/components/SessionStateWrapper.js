@@ -84,7 +84,7 @@ class SessionStateWrapper
 
   process_logout_state()
   {
-    this.login_state = {text:"Session Logged out"}
+    this.login_state = {text:"Disconnected : " + this.session_state.sessionStateText}
   }
 
   get_logon_state()

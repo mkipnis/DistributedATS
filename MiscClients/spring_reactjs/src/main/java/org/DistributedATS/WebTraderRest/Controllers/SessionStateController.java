@@ -31,6 +31,7 @@ package org.DistributedATS.WebTraderRest.Controllers;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -86,7 +87,8 @@ public class SessionStateController {
 	            sessionState.username, session_state_request.token);
 	        
 	        System.out.println("Session SessionId:TokenSession : " + 
-	        		session_state_request.token + ":" +  sessionID.toString() );
+	        		session_state_request.token + ":" +  sessionID.toString() + ":" 
+	        		+  session_state_request.maxOrderSequenceNumber + ":" + session_state_request.marketDataSequenceNumber );
 
 	        if ((session_state_request.stateMask &
 	             (1 << FIXUserSession.LOGON_STATE_BIT)) != 0) {
@@ -103,12 +105,20 @@ public class SessionStateController {
 
 	        if ((session_state_request.stateMask &
 	             (1 << FIXUserSession.SECURITY_LIST_BIT)) != 0) {
-	          sessionState.activeSecurityList = 
-	        		  new ArrayList<Instrument>( fix_session_bean.getApplication().getSecurities() );
+	        	
+	        	sessionState.activeSecurityList = new ArrayList<Instrument>();
+	        	
+	        	List<Instrument> userSecurities = fix_session_bean.getApplication().getSecurities(sessionID); 
+	        	
+	        	if ( userSecurities != null )
+	        	{
+	        		sessionState.activeSecurityList =  new ArrayList<Instrument>(userSecurities);
+	  	          	submitMarketDataRequest(sessionState.username, sessionState.token,
+                          sessionState.activeSecurityList);
+			        submitMassOrderStatusRequest(sessionState.username, sessionState.token);
+	        	} 
+	        
 
-	          submitMarketDataRequest(sessionState.username, sessionState.token,
-	                                  sessionState.activeSecurityList);
-	          submitMassOrderStatusRequest(sessionState.username, sessionState.token);
 	        }
 
 	        if ((session_state_request.stateMask &

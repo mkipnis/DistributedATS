@@ -38,9 +38,9 @@
 #include "MarketDataRequestDataReaderListenerImpl.h"
 
 #include "RefDataService.h"
+#include "SQLiteConnection.hpp"
 
 #include <Common.h>
-
 
 
 namespace DistributedATS {
@@ -72,7 +72,7 @@ public:
 private:
     IncrementalRefreshMapPtr _incrementalRefreshMapPtr;
     
-	std::unique_ptr<FIX::MySQLConnection> m_pMySqlConnectionPtr;
+    std::shared_ptr<DistributedATS::SQLiteConnection> m_sqliteConnection;
     std::shared_ptr<distributed_ats_utils::BasicDomainParticipant> m_basicDomainParticipantPtr;
     
     DistributedATS_MarketDataSnapshotFullRefresh::MarketDataSnapshotFullRefreshDataWriter_var _market_data_shapshot_full_refresh_dw;

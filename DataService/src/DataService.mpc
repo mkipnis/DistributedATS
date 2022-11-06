@@ -17,12 +17,12 @@ project(DataService) : dcpsexe, dcps_tcp, svc_utils  {
         exename         =       * 
 	requires       +=       tao_orbsvcs
 
-        includes       +=       $(TAO_ROOT)/orbsvcs $(DATS_HOME)/GenTools/idl/ $(DATS_HOME)/Common $(MYSQL_INCLUDE) $(QUICKFIX_HOME)/include
-        libpaths       +=       $(DATS_HOME)/lib $(QUICKFIX_HOME)/lib $(MYSQL_CLIENT_LIB_HOME)
+        includes       +=       $(TAO_ROOT)/orbsvcs $(DATS_HOME)/GenTools/idl/ $(DATS_HOME)/Common $(QUICKFIX_HOME)/include $(SQLITE_HOME)/include
+        libpaths       +=       $(DATS_HOME)/lib $(QUICKFIX_HOME)/lib $(SQLITE_HOME)/lib
 
 	after    += Svc_Utils
 
-        libs           +=       Logon Logout mysqlclient SecurityList SecurityListRequest ExecutionReport MarketDataSnapshotFullRefresh OrderMassStatusRequest MarketDataIncrementalRefresh ExecutionReport MarketDataRequest
+        libs           +=       Logon Logout SecurityList SecurityListRequest ExecutionReport MarketDataSnapshotFullRefresh OrderMassStatusRequest MarketDataIncrementalRefresh ExecutionReport MarketDataRequest sqlite3
 
         Source_Files {
 		MassOrderStatusRequestDataReaderListenerImpl.cpp

@@ -49,8 +49,7 @@ public class ExecutionReportProcessorThread implements Runnable {
   private OrderMan orderMan = null;
   private PositionMan positionMan = null;
 
-  private long sequenceNumber =
-      -1; // for client side to query for execution reports, since the last one,
+  private long sequenceNumber = 0; // for client side to query for execution reports, since the last one,
           // client will pass last sequence number it received
 
   ExecutionReportProcessorThread(OrderMan orderMan, PositionMan positionMan) {

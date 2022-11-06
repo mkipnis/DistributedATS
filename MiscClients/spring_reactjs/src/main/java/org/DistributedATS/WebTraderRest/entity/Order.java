@@ -76,7 +76,7 @@ public class Order implements Serializable, Comparable<Order> {
 	public String username;
 	public String token;
 	
-	public long sequenceNumber; // reference number between client and a server, so that client get only latest updated(updates since last sequnce)
+	public long sequenceNumber = -1; // reference number between client and a server, so that client get only latest updated(updates since last sequnce)
 	
 	private HashMap<String, ExecutionReport> executionReports = new  HashMap<String, ExecutionReport>();
 

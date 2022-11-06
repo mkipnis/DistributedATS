@@ -35,24 +35,25 @@ import org.json.JSONObject;
 
 public class RefDataUtils {
 	
-	public static boolean poulateRefData( Instrument instrument, String ref_data_text )
+	public static boolean poulateRefData( Instrument instrument, String props )
 	{
 		 try {
 			 
 	          SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-
-			 
-       	      // TODO: deal with unset data 
-       		  JSONObject ref_data = new JSONObject(ref_data_text);
-         
-       		  instrument.setCusip( ref_data.getString("cusip") );
+	          
+	          JSONObject instrument_props = new JSONObject(props);
+	          String ref_data = instrument_props.getString("ref_data");
+	          JSONObject instrument_ref_data =  new JSONObject(ref_data);
+	          
+       		  instrument.setCusip( instrument_ref_data.getString("cusip") );
        		  instrument.setIssueDate( ConvertUtils.dateToInt(
-       				  formatter.parse( ref_data.getString("issue_date") ) ) );
+       				  formatter.parse( instrument_ref_data.getString("issueDate") ) ) );
        		  instrument.setMaturityDate( ConvertUtils.dateToInt(
-       				  formatter.parse( ref_data.getString("maturity_date") ) ) );
-  
-       		  instrument.setTickSize( ref_data.getInt("tick_size")  );
-       	  } catch (Exception exp )
+       				  formatter.parse( instrument_ref_data.getString("maturityDate") ) ) );
+       		    
+       		  instrument.setTickSize( instrument_props.getInt("tick_size")  );
+       	  
+		 } catch (Exception exp )
        	  {
        		  System.out.println("Exception while processing Ref Data" + exp.toString() );
        		  return false;
