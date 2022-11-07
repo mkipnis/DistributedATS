@@ -1,7 +1,7 @@
 ## Distributed ATS
 
 
-DistributedATS is a [**FIX Protocol-based**](https://www.fixtrading.org) alternative trading system that integrates [QuickFIX](http://www.quickfixengine.org) and [LiquiBook](https://portal.ociweb.com/products/liquibook) over [OpenDDS](https://www.opendds.org). This project simplifies the process of communication between multiple FIX gateways and multiple matching engines(CLOB) in real-time. FIX Gateways communicate with clients via FIX and Matching Engines and Middleware(Data Service) components via topic-based DDS IDL Pub/Sub mechanism.
+DistributedATS is a [**FIX Protocol-based**](https://www.fixtrading.org) alternative trading system that integrates [QuickFIX](https://github.com/quickfix/quickfix) and [LiquiBook](https://github.com/enewhuis/liquibook) over [OpenDDS](https://github.com/objectcomputing/OpenDDS). This project simplifies the process of communication between multiple FIX gateways and multiple matching engines(CLOB) in real-time. FIX Gateways communicate with clients via FIX and Matching Engines and Middleware(Data Service) components via topic-based DDS IDL Pub/Sub mechanism.
 
 ### Components
 
@@ -14,14 +14,14 @@ DistributedATS is a [**FIX Protocol-based**](https://www.fixtrading.org) alterna
 ![N|Solid](https://raw.githubusercontent.com/mkipnis/DistributedATS/master/docs/Diagrams/CryptoCLOB.png?raw=true)
 [See: CryptoCLOB](https://github.com/mkipnis/DistributedATS/tree/master/MiscATS/CryptoCLOB)
 
-### Dependences
+### Dependencies
 
 |Dependency|Component|
 |----------|---------|
 |[OpenDDS](https://www.opendds.org)|[DDS/Middleware](https://www.dds-foundation.org/what-is-dds-3/)|
-|[QuickFIX](http://www.quickfixengine.org)|[FIXGateway](https://github.com/mkipnis/DistributedATS/tree/master/FIXGateway)|
-|[LiquiBook](https://portal.ociweb.com/products/liquibook)|[MatchingEngine](https://github.com/mkipnis/DistributedATS/tree/master/MatchingEngine)|
-|[MySQL](https://www.mysql.com)|[DataService](https://github.com/mkipnis/DistributedATS/tree/master/DataService)|
+|[QuickFIX](https://github.com/quickfix/quickfix)|[FIXGateway](https://github.com/mkipnis/DistributedATS/tree/master/FIXGateway)|
+|[LiquiBook](https://github.com/enewhuis/liquibook)|[MatchingEngine](https://github.com/mkipnis/DistributedATS/tree/master/MatchingEngine)|
+|[SQLite3](https://github.com/sqlite/sqlite)|[DataService](https://github.com/mkipnis/DistributedATS/tree/master/DataService)|
 
 
 ### Sample Exchanges
@@ -71,5 +71,7 @@ DistributedATS is a [**FIX Protocol-based**](https://www.fixtrading.org) alterna
 ### Autogeneration of IDL from QuickFIX XML
 [GenTools](https://github.com/mkipnis/DistributedATS/tree/master/GenTools) is a utility that generates DDS IDL, FIX to IDL, and IDL to FIX adapters and IDL logger helper classes from QuickFIX's XML data dictionary.
 
-### Building Distributed ATS
-[Building ATS](https://github.com/mkipnis/DistributedATS/tree/master/docs/BuildingDistributedATS.md)
+### Building Distributed ATS and it's dependencies
+```
+download_deps_and_build_all.sh
+```
