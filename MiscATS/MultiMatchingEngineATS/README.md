@@ -19,16 +19,6 @@ The first matching engine consumes and processes orders from the instrument grou
 | FIX Gateway | FIX_GWY_3 | [fix_gwy_3.cfg](https://github.com/mkipnis/DistributedATS/blob/master/MiscATS/MultiMatchingEngineATS/config/fix_gwy_3.cfg) |
 
 
-### Prerequisites
-- [Building Distributed ATS](https://github.com/mkipnis/DistributedATS#Building-Distributed-ATS)
-- [DataService Setup](https://github.com/mkipnis/DistributedATS/tree/master/DataService/sql/mysql)
-
-### Loading Data
-```
-    cd $DATS_HOME/MiscATS/MultiMatchingEngineATS/sql
-    $ mysql -u dataservice distributed_ats -p
-
-    mysql> source load_sample_data.sql;
 ```
 
 ### Starting ATS
