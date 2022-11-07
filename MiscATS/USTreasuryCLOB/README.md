@@ -17,21 +17,9 @@ The matching engine consumes and processes orders from the instrument group MARK
 | FIX Gateway | FIX_GWY_2 | [fix_gwy_2.cfg](https://github.com/mkipnis/DistributedATS/blob/master/MiscATS/USTreasuryCLOB/config/fix_gwy_2.cfg) |
 
 
-### Prerequisites
-- [Building Distributed ATS](https://github.com/mkipnis/DistributedATS#Building-Distributed-ATS)
-- [DataService Setup](https://github.com/mkipnis/DistributedATS/tree/master/DataService/sql/mysql)
-
-### Loading Data
-```
-    cd $DATS_HOME/MiscATS/USTreasuryCLOB/sql
-    $ mysql -u dataservice distributed_ats -p
-
-    mysql> source load_sample_data.sql;    
-```
-
 ### Setup US Treasury Instruments
 ```
-    $DATS_HOME/MiscATS/USTreasuryCLOB/StaticData/USTDataSaver
+    $DATS_HOME/MiscATS/USTreasuryCLOB/StaticData/USTDataSaverPY
 ```
 
 ### Starting ATS
