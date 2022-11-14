@@ -32,16 +32,32 @@
 
 namespace DistributedATS {
 
-/*OrderCancelReportDataReaderListenerImpl::OrderCancelReportDataReaderListenerImpl()
+auto const order_mass_cencel_report_processor = [] (DistributedATS::DATSApplication &application, DistributedATS_OrderMassCancelReport::OrderMassCancelReport& orderMassCancelReport)
 {
-        // TODO Auto-generated constructor stub
 
-}*/
+    std::stringstream ss;
+    OrderMassCancelReportLogger::log(ss, orderMassCancelReport);
+    ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%t) OrderMassCancelReport : %s\n"),
+               ss.str().c_str()));
 
-OrderMassCancelReportDataReaderListenerImpl::
-    ~OrderMassCancelReportDataReaderListenerImpl() {
-  // TODO Auto-generated destructor stub
-}
+    FIX::Message orderMassCancelReportMessage;
+
+    orderMassCancelReport.m_Header.BeginString =
+        CORBA::string_dup("FIX.4.4");
+    orderMassCancelReport.m_Header.SendingTime = 0; // this is precision;
+    orderMassCancelReport.m_Header.SenderCompID =
+        orderMassCancelReport.m_Header.TargetSubID;
+
+    OrderMassCancelReportAdapter::DDS2FIX(orderMassCancelReport,
+                                          orderMassCancelReportMessage);
+
+    DistributedATS::DATSApplication::publishToClient(
+        orderMassCancelReportMessage);
+};
+
+
+OrderMassCancelReportDataReaderListenerImpl::OrderMassCancelReportDataReaderListenerImpl(DistributedATS::DATSApplication &application) : _processor(application, order_mass_cencel_report_processor, 500 )
+{};
 
 void OrderMassCancelReportDataReaderListenerImpl::on_data_available(
     DDS::DataReader_ptr reader) throw(CORBA::SystemException) {
@@ -68,24 +84,7 @@ void OrderMassCancelReportDataReaderListenerImpl::on_data_available(
         if (!si.valid_data)
           continue;
 
-        std::stringstream ss;
-        OrderMassCancelReportLogger::log(ss, orderMassCancelReport);
-        ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%t) OrderMassCancelReport : %s\n"),
-                   ss.str().c_str()));
-
-        FIX::Message orderMassCancelReportMessage;
-
-        orderMassCancelReport.m_Header.BeginString =
-            CORBA::string_dup("FIX.4.4");
-        orderMassCancelReport.m_Header.SendingTime = 0; // this is precision;
-        orderMassCancelReport.m_Header.SenderCompID =
-            orderMassCancelReport.m_Header.TargetSubID;
-
-        OrderMassCancelReportAdapter::DDS2FIX(orderMassCancelReport,
-                                              orderMassCancelReportMessage);
-
-        DistributedATS::DATSApplication::publishToClient(
-            orderMassCancelReportMessage);
+          _processor.enqueue_dds_message(orderMassCancelReport);
 
       } else if (status == DDS::RETCODE_NO_DATA) {
         break;

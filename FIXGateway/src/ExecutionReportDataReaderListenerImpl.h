@@ -29,17 +29,23 @@
 #define EXECUTIONREPORTDATAREADERLISTENERIMPL_H_
 
 #include <ExecutionReportTypeSupportImpl.h>
+//#include <quickfix/Queue.h>
+#include <ExecutionReportAdapter.hpp>
+
+//#include <thread>
 
 //#include "Application.hpp"
+
+#include "FIXMsgComposerThread.h"
 
 namespace DistributedATS {
 
 class ExecutionReportDataReaderListenerImpl
     : public virtual OpenDDS::DCPS::LocalObject<DDS::DataReaderListener> {
 public:
-  virtual ~ExecutionReportDataReaderListenerImpl();
+  ExecutionReportDataReaderListenerImpl(DistributedATS::DATSApplication &application);
+  virtual ~ExecutionReportDataReaderListenerImpl() {};
 
-  ExecutionReportDataReaderListenerImpl(){};
 
   virtual void
   on_data_available(DDS::DataReader_ptr reader) throw(CORBA::SystemException);
@@ -71,6 +77,9 @@ public:
   virtual void on_sample_lost(
       DDS::DataReader_ptr reader,
       const DDS::SampleLostStatus &status) throw(CORBA::SystemException){};
+        
+    private:
+        fix_message_composer_thread<DistributedATS_ExecutionReport::ExecutionReport> _processor;
 };
 
 } // namespace DistributedATS

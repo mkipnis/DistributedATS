@@ -1,9 +1,12 @@
 // DistributedATS - Mike Kipnis (c) 2022
 import React from 'react';
 import { useEffect, useState } from 'react';
-import NumericInput from 'react-numeric-input';
+import { Container, Row, Col, Button, Form } from 'react-bootstrap/';
+import PriceLevels from './PriceLevels';
+
 
 const { forwardRef, useRef, useImperativeHandle } = React;
+
 
 const Ticket = React.forwardRef ((props, ref) => {
 
@@ -12,6 +15,11 @@ const Ticket = React.forwardRef ((props, ref) => {
   const [orderSubmitResults, setOrderSubmitResults] = useState({});
   const [cancelAllResults, setCancelAllResults] = useState({});
   const [isTicketing, setIsTicketing] = useState(false);
+
+  const [ticketPrice, setTicketPrice] = useState(0);
+  const [ticketSize, setTicketSize] = useState(0);
+
+  const priceLevelsRef = React.useRef();
 
   function submit_buy( e )
   {
@@ -35,8 +43,8 @@ const Ticket = React.forwardRef ((props, ref) => {
 
     ticket["symbol"] = trade.symbol;
     ticket["securityExchange"] = trade.securityExchange;
-    ticket["quantity"] = trade.quantity;
-    ticket["price_in_ticks"] = trade.price;
+    ticket["quantity"] = ticketSize;
+    ticket["price_in_ticks"] = (ticketPrice * props.ticketState.tickSize)|0;
     ticket["side"] = trade.side;
     ticket["username"] = trade.username;
     ticket["token"] = trade.token;
@@ -66,6 +74,12 @@ const Ticket = React.forwardRef ((props, ref) => {
       .then(result => setCancelAllResults(result));
   };
 
+  useEffect(() =>
+  {
+    setTicketPrice(props.ticketState.price);
+    setTicketSize(props.ticketState.quantity);
+  }, [props.ticketState.price]);
+
   useEffect(() => {
     setIsTicketing(false);
     console.log("Order Submit Results : " + orderSubmitResults );
@@ -77,49 +91,53 @@ const Ticket = React.forwardRef ((props, ref) => {
   },[cancelAllResults]);
 
   return (
-    <div className="App-Row">
-       <div className="App-Cell-Left" style={{width:"30%"}}>
-           Trade : {props.ticketState.instrumentName}
-       </div>
+    <Row style={{margin: 'auto'}}>
+       <Row style={{marginTop: '10px'}}>
+          <Col>
+            <h6>Trade : {props.ticketState.instrumentName}</h6>
+          </Col>
+       </Row>
+       <Row style={{marginTop: '10px'}}>
+          <PriceLevels priceLevels={props.priceLevels} ticketState={props.ticketState} ref={priceLevelsRef}/>
+       </Row>
+       <Row style={{marginTop: '10px'}}>
        <div style={ ( isTicketing == true ) ? {pointerEvents: "none", opacity: "0.4"} : {}}>
-       <div className="App-Cell-Center" style={{width:"70%"}}>
-            <form>
-             <div className="App-Cell-Center">
-             <label className="label" style={{marginRight: '10px'}} >Price</label>
-           <div style={{marginRight: '10px'}}  >
-           <NumericInput step={5} precision={0} initValue={props.ticketState.price}
-           value={props.ticketState.price}
-            onChange={(value) => { props.ticketState.price = value } }
-            onEdit={(value) => { props.ticketState.price = value } }
-           />
-           </div>
-           </div>
-              <div className="App-Cell-Center">
-           <label className="label">
-            Quantity
-            </label>
-            <div style={{marginRight: '10px'}}>
-            <NumericInput
-                   min={1}
-                   onChange={(value) => { props.ticketState.quantity = value } }
-                   onEdit={(value) => { props.ticketState.quantity = value } }
-                   value={props.ticketState.quantity}
-                 />
-            </div>
-            </div>
-            <button onClick={submit_buy} className="btn" type="submit" style={{marginRight: '10px'}} >
-              Buy
-            </button>
-            <button onClick={submit_sell} className="btn" type="submit" style={{marginRight: '10px'}} >
-              Sell
-            </button>
-            <button onClick={handleCancellAll} className="btn" type="submit" style={{marginRight: '10px'}} >
-              Cancel All
-            </button>
-            </form>
-      </div>
-      </div>
-      </div>
+          <form>
+            <h6>
+            <Row>
+              <Col> <label className="label" style={{marginRight: '10px'}} >Price</label> </Col>
+              <Col> <label className="label">Quantity</label> </Col>
+            </Row>
+            <Row>
+              <Col>
+                <input type="number"
+                      step={0.01}
+                      value={ticketPrice}
+                      onChange={(value) => { setTicketPrice(value.target.value); } }/>
+                  </Col>
+              <Col>
+                <input type="number"
+                      min={1}
+                      value={ticketSize}
+                      onChange={(value) => { setTicketSize(value.target.value); } }/>
+              </Col>
+            </Row>
+            <Row style={{marginTop: '10px'}}>
+              <Col>
+                <button onClick={submit_buy} className="btn btn-secondary" type="submit"  style={{marginRight: '10px'}} > Buy </button>
+              </Col>
+              <Col>
+                <button onClick={submit_sell} className="btn btn-secondary" type="submit"  style={{marginRight: '10px'}} > Sell </button>
+              </Col>
+              <Col>
+                <button onClick={handleCancellAll} className="btn btn-info" type="submit"  style={{marginRight: '10px'}} > Cancel All </button>
+              </Col>
+              </Row>
+              </h6>
+          </form>
+          </div>
+      </Row>
+      </Row>
    );
 });
 

@@ -7,6 +7,8 @@ import {AgGridColumn, AgGridReact} from 'ag-grid-react';
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham-dark.css';
 
+import helpers from './helpers';
+
 const { forwardRef, useRef, useImperativeHandle } = React;
 
 const Blotter = React.forwardRef ((props, ref) => {
@@ -16,12 +18,25 @@ const Blotter = React.forwardRef ((props, ref) => {
 
   const gridRef = useRef();
 
-  function number_formatter(params) {
+  function price_formatter(params)
+  {
            if (params.value == 0 )
            {
              return "";
+           } else {
+
+             return helpers.get_display_price(params.value, params.data.tickSize);
            }
+
        };
+
+  function size_formatter(params)
+  {
+    if (params.value == 0 )
+    {
+      return "";
+    }
+  };
 
 
   useImperativeHandle(ref, () => ({
@@ -29,12 +44,15 @@ const Blotter = React.forwardRef ((props, ref) => {
 
           gridRef.current.api.forEachNode(node =>
           {
+            if (node.data == null )
+              return;
+
             var instrument_name = node.data.instrumentName;
             var last_market_data_sequence_number = node.data.marketDataSequenceNumber;
 
             var instrument_update = props.blotterData[instrument_name];
 
-            if ( instrument_update!== null )
+            if ( instrument_update!== undefined && instrument_update!== null )
             {
                 if ( instrument_update.marketDataSequenceNumber > last_market_data_sequence_number )
                 {
@@ -55,18 +73,22 @@ const Blotter = React.forwardRef ((props, ref) => {
   }));
 
 const [columnDefs, setColumnDefs] = useState([
-   { headerName: 'Instrument', field: 'instrumentName', filter: 'agTextColumnFilter', cellStyle: {'textAlign': 'left'}, sortable: true, },
+   { headerName: 'symbol', field: 'symbol', filter: 'agTextColumnFilter', cellStyle: {'textAlign': 'left'}, sortable: true, },
    { headerName: 'Position', field: 'position', flex: 2, filter: 'agTextColumnFilter',  },
-   { headerName: 'VWAP', field: 'vwap', sortable: true, flex: 2 , valueFormatter:number_formatter},
-   { headerName: 'PNL', field: 'pnl', sortable: true, flex: 2 , valueFormatter:number_formatter},
-   { headerName: 'BidPrice', field: 'bid_price', sortable: true, flex: 2, valueFormatter:number_formatter},
-   { headerName: 'AskPrice', field: 'ask_price', sortable: true, flex: 2, valueFormatter:number_formatter},
-   { headerName: 'BidSize', field: 'bid_size', sortable: true, flex: 2 , valueFormatter:number_formatter},
-   { headerName: 'AskSize', field: 'ask_size', sortable: true, flex: 2 , valueFormatter:number_formatter},
-   { headerName: 'Volume', field: 'volume', sortable: true, flex: 2 , valueFormatter:number_formatter},
-   { headerName: 'OpenPrice', field: 'openPrice', sortable: true, flex: 2 , valueFormatter:number_formatter},
-   { headerName: 'LastPrice', field: 'lastTradedPrice', sortable: true, flex: 2 , valueFormatter:number_formatter},
-   { headerName: 'PriceChange', field: 'priceChange', sortable: true, flex: 2 , valueFormatter:number_formatter},
+   { headerName: 'VWAP', field: 'vwap', sortable: true, flex: 2 },
+   { headerName: 'PNL', field: 'pnl', sortable: true, flex: 2 },
+   { headerName: 'BidPrice', field: 'bid_price', sortable: true, flex: 2, valueFormatter:price_formatter, cellStyle: {'textAlign': 'right'}},
+   { headerName: 'AskPrice', field: 'ask_price', sortable: true, flex: 2, valueFormatter:price_formatter, cellStyle: {'textAlign': 'right'}},
+   { headerName: 'BidSize', field: 'bid_size', sortable: true, flex: 2, valueFormatter:size_formatter, cellStyle: {'textAlign': 'right'}},
+   { headerName: 'AskSize', field: 'ask_size', sortable: true, flex: 2, valueFormatter:size_formatter, cellStyle: {'textAlign': 'right'}},
+   { headerName: 'Volume', field: 'volume', sortable: true, flex: 2, valueFormatter:size_formatter, cellStyle: {'textAlign': 'right'}},
+   { headerName: 'OpenPrice', field: 'openPrice', sortable: true, flex: 2 , valueFormatter:price_formatter, cellStyle: {'textAlign': 'right'}},
+   { headerName: 'LastPrice', field: 'lastTradedPrice', sortable: true, flex: 2 , valueFormatter:price_formatter, cellStyle: {'textAlign': 'right'}},
+   { headerName: 'PriceChange', field: 'priceChange', sortable: true, flex: 2 , valueFormatter:price_formatter, cellStyle: {'textAlign': 'right'}},
+   { headerName: 'MaturityDate', field: 'maturityDate', sortable: true, flex: 2 ,  hide:true },
+   { headerName: 'TickSize', field: 'tickSize', sortable: true, flex: 2, hide:true },
+
+
  ]);
 
  const gridOptions = {
@@ -80,9 +102,36 @@ const [columnDefs, setColumnDefs] = useState([
        else
           props.ticketState.price = event.data.openPrice;
 
+       props.ticketState.price = props.ticketState.price / event.data.tickSize;
+
        props.ticketState.quantity = 100;
        props.ticketState.securityExchange = event.data.securityExchange;
        props.ticketState.symbol = event.data.symbol;
+
+       /*let price_levels = [];
+
+       for (let i = 0; i < 5; i++)
+       {
+         var level = {"bidPrice":0,"askPrice":0,"bidSize":0,"askSize":0};
+
+         if (event.data.bidSide[i]!=null)
+         {
+           level["bidPrice"] = event.data.bidSide[i].price;
+           level["bidSize"] = event.data.bidSide[i].size;
+         }
+
+         if (event.data.askSide[i]!=null)
+         {
+           level["askPrice"] = event.data.askSide[i].price;
+           level["askSize"] = event.data.askSide[i].size;
+         }
+
+         price_levels.push(level);
+       }*/
+
+       //props.ticketState.priceLevels = price_levels;
+       props.ticketState.instrumentData = event.data;
+       props.ticketState.tickSize = event.data.tickSize;
 
        props.marketDataCallback(props.ticketState);
      },
@@ -91,7 +140,7 @@ const [columnDefs, setColumnDefs] = useState([
 
     onRowDataChanged: event => {
       var defaultSortModel = [
-        { /* colId: 'instrument_name', sort: 'asc', sortIndex: 0*/ }
+        {  colId: 'maturityDate', sort: 'asc', sortIndex: 0 }
       ];
       gridRef.current.columnApi.applyColumnState({ state: defaultSortModel });
     },
@@ -111,13 +160,11 @@ const [columnDefs, setColumnDefs] = useState([
  }, []);
 
   return (
-      <div>
        <div className="ag-theme-balham-dark" style={{height:"40vh", width: "95%", display: "inline-block", margin: "auto"}}>
            <AgGridReact
                rowData={blotterData} ref={gridRef} columnDefs={columnDefs} gridOptions={gridOptions}>
            </AgGridReact>
        </div>
-      </div>
    );
 });
 

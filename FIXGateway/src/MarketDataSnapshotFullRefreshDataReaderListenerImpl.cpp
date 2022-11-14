@@ -34,10 +34,66 @@
 
 namespace DistributedATS {
 
-MarketDataSnapshotFullRefreshDataReaderListenerImpl::
-    ~MarketDataSnapshotFullRefreshDataReaderListenerImpl() {
-  // TODO Auto-generated destructor stub
+auto const market_data_full_snapshot_processor = [] (DistributedATS::DATSApplication &application, DistributedATS_MarketDataSnapshotFullRefresh::MarketDataSnapshotFullRefresh&
+                                               marketDataSnapshotFullRefresh)
+{
+
+    std::stringstream ss;
+    MarketDataSnapshotFullRefreshLogger::log(ss,
+                                             marketDataSnapshotFullRefresh);
+    ACE_DEBUG(
+        (LM_INFO,
+         ACE_TEXT("(%P|%t) DATSMarketDataSnapshotFullRefreshLogger : %s\n"),
+         ss.str().c_str()));
+
+    FIX::Message marketDataSnapshotFullRefreshMessage;
+
+    marketDataSnapshotFullRefresh.m_Header.SendingTime =
+        0; // this is precision;
+    marketDataSnapshotFullRefresh.m_Header.SenderCompID =
+        marketDataSnapshotFullRefresh.m_Header.TargetSubID;
+
+    HeaderAdapter::DDS2FIX(
+        marketDataSnapshotFullRefresh.m_Header,
+        marketDataSnapshotFullRefreshMessage.getHeader());
+
+    FIX::Symbol symbol(marketDataSnapshotFullRefresh.Symbol.in());
+    FIX::SecurityExchange securityExchange(
+        marketDataSnapshotFullRefresh.SecurityExchange.in());
+
+    marketDataSnapshotFullRefreshMessage.setField(symbol);
+    marketDataSnapshotFullRefreshMessage.setField(securityExchange);
+
+    for (int snapshot_refresh = 0;
+         snapshot_refresh <
+         marketDataSnapshotFullRefresh.c_NoMDEntries.length();
+         ++snapshot_refresh) {
+        DistributedATS_MarketDataSnapshotFullRefresh::NoMDEntries mdEntry =
+          marketDataSnapshotFullRefresh.c_NoMDEntries[snapshot_refresh];
+
+      FIX50::MarketDataSnapshotFullRefresh::NoMDEntries fixMDEntry;
+
+      FIX::MDEntryType entryType(mdEntry.MDEntryType);
+      FIX::MDEntryPx entryPx(mdEntry.MDEntryPx);
+      FIX::MDEntrySize entrySize(mdEntry.MDEntrySize);
+
+      fixMDEntry.setField(entryType);
+      fixMDEntry.setField(entryPx);
+      fixMDEntry.setField(entrySize);
+
+      marketDataSnapshotFullRefreshMessage.addGroup(fixMDEntry);
+    }
+
+    DistributedATS::DATSApplication::publishToClient(
+        marketDataSnapshotFullRefreshMessage);
+};
+
+
+
+MarketDataSnapshotFullRefreshDataReaderListenerImpl::MarketDataSnapshotFullRefreshDataReaderListenerImpl(DistributedATS::DATSApplication &application) : _processor(application, market_data_full_snapshot_processor )
+{
 }
+
 
 void MarketDataSnapshotFullRefreshDataReaderListenerImpl::on_data_available(
     DDS::DataReader_ptr reader) throw(CORBA::SystemException) {
@@ -67,54 +123,7 @@ void MarketDataSnapshotFullRefreshDataReaderListenerImpl::on_data_available(
         if (!si.valid_data)
           continue;
 
-        std::stringstream ss;
-        MarketDataSnapshotFullRefreshLogger::log(ss,
-                                                 marketDataSnapshotFullRefresh);
-        ACE_DEBUG(
-            (LM_INFO,
-             ACE_TEXT("(%P|%t) DATSMarketDataSnapshotFullRefreshLogger : %s\n"),
-             ss.str().c_str()));
-
-        FIX::Message marketDataSnapshotFullRefreshMessage;
-
-        marketDataSnapshotFullRefresh.m_Header.SendingTime =
-            0; // this is precision;
-        marketDataSnapshotFullRefresh.m_Header.SenderCompID =
-            marketDataSnapshotFullRefresh.m_Header.TargetSubID;
-
-        HeaderAdapter::DDS2FIX(
-            marketDataSnapshotFullRefresh.m_Header,
-            marketDataSnapshotFullRefreshMessage.getHeader());
-
-        FIX::Symbol symbol(marketDataSnapshotFullRefresh.Symbol.in());
-        FIX::SecurityExchange securityExchange(
-            marketDataSnapshotFullRefresh.SecurityExchange.in());
-
-        marketDataSnapshotFullRefreshMessage.setField(symbol);
-        marketDataSnapshotFullRefreshMessage.setField(securityExchange);
-
-        for (int snapshot_refresh = 0;
-             snapshot_refresh <
-             marketDataSnapshotFullRefresh.c_NoMDEntries.length();
-             ++snapshot_refresh) {
-            DistributedATS_MarketDataSnapshotFullRefresh::NoMDEntries mdEntry =
-              marketDataSnapshotFullRefresh.c_NoMDEntries[snapshot_refresh];
-
-          FIX50::MarketDataSnapshotFullRefresh::NoMDEntries fixMDEntry;
-
-          FIX::MDEntryType entryType(mdEntry.MDEntryType);
-          FIX::MDEntryPx entryPx(mdEntry.MDEntryPx);
-          FIX::MDEntrySize entrySize(mdEntry.MDEntrySize);
-
-          fixMDEntry.setField(entryType);
-          fixMDEntry.setField(entryPx);
-          fixMDEntry.setField(entrySize);
-
-          marketDataSnapshotFullRefreshMessage.addGroup(fixMDEntry);
-        }
-
-        DistributedATS::DATSApplication::publishToClient(
-            marketDataSnapshotFullRefreshMessage);
+          _processor.enqueue_dds_message(marketDataSnapshotFullRefresh);
 
       } else if (status == DDS::RETCODE_NO_DATA) {
         break;

@@ -29,8 +29,9 @@
 #define ORDERMASSCANCELREPORTDATAREADERLISTENERIMPL_H_
 
 #include <OrderMassCancelReportTypeSupportImpl.h>
-
-//#include "Application.hpp"
+#include <thread>
+#include "Application.hpp"
+#include "FIXMsgComposerThread.h"
 
 namespace DistributedATS {
 
@@ -38,8 +39,8 @@ class OrderMassCancelReportDataReaderListenerImpl
     : public virtual OpenDDS::DCPS::LocalObject<DDS::DataReaderListener> {
 
 public:
-  OrderMassCancelReportDataReaderListenerImpl(){};
-  virtual ~OrderMassCancelReportDataReaderListenerImpl();
+        OrderMassCancelReportDataReaderListenerImpl(DistributedATS::DATSApplication &application);
+        virtual ~OrderMassCancelReportDataReaderListenerImpl() {};
 
   virtual void
   on_data_available(DDS::DataReader_ptr reader) throw(CORBA::SystemException);
@@ -71,6 +72,10 @@ public:
   virtual void on_sample_lost(
       DDS::DataReader_ptr reader,
       const DDS::SampleLostStatus &status) throw(CORBA::SystemException){};
+        
+    private:
+        fix_message_composer_thread<DistributedATS_OrderMassCancelReport::OrderMassCancelReport> _processor;
+
 };
 
 } /* namespace DistributedATS */

@@ -253,6 +253,7 @@ public class MarketDataProcessorThread implements Runnable {
     ConcurrentHashMap<Instrument, MarketDataSnapshot> sessionMarketData =
         userMarketData.get(sessionID);
 
+    //System.out.println("Active Security List: " + sessionStateRequest.activeSecurityList.size());
     if (sessionMarketData == null)
       return;
 
@@ -262,7 +263,12 @@ public class MarketDataProcessorThread implements Runnable {
     // Iterate through passed in by Session active instrument and populate the most recent market data
     for (Instrument instrument : sessionStateRequest.activeSecurityList) {
     	
+    	
+    	
       MarketDataSnapshot marketDataSnapshot = sessionMarketData.get(instrument);
+      
+      if ( marketDataSnapshot == null )
+    	  continue;
 
       // only include market data that was changed since the latest poll
       if (sessionStateRequest.marketDataSequenceNumber <

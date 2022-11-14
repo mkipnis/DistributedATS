@@ -31,10 +31,31 @@
 
 namespace DistributedATS {
 
-OrderCancelRejectDataReaderListenerImpl::
-    ~OrderCancelRejectDataReaderListenerImpl() {
-  // TODO Auto-generated destructor stub
-}
+auto const order_cancel_reject_processor = [] (DistributedATS::DATSApplication &application, DistributedATS_OrderCancelReject::OrderCancelReject& orderCancelReject)
+{
+
+    std::stringstream ss;
+    OrderCancelRejectLogger::log(ss, orderCancelReject);
+    ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%t) OrderCancelReject : %s\n"),
+               ss.str().c_str()));
+
+    FIX::Message orderCancelRejectMessage;
+
+    orderCancelReject.m_Header.SendingTime = 0; // this is precision;
+    HeaderAdapter::DDS2FIX(orderCancelReject.m_Header,
+                           orderCancelRejectMessage.getHeader());
+    OrderCancelRejectAdapter::DDS2FIX(orderCancelReject,
+                                      orderCancelRejectMessage);
+
+    DistributedATS::DATSApplication::publishToClient(
+        orderCancelRejectMessage);
+};
+
+OrderCancelRejectDataReaderListenerImpl::OrderCancelRejectDataReaderListenerImpl(DistributedATS::DATSApplication &application)
+    :_processor(application, order_cancel_reject_processor, 100 )
+{
+    
+};
 
 void OrderCancelRejectDataReaderListenerImpl::on_data_available(
     DDS::DataReader_ptr reader) throw(CORBA::SystemException) {
@@ -60,21 +81,7 @@ void OrderCancelRejectDataReaderListenerImpl::on_data_available(
         if (!si.valid_data)
           continue;
 
-        std::stringstream ss;
-        OrderCancelRejectLogger::log(ss, orderCancelReject);
-        ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%t) OrderCancelReject : %s\n"),
-                   ss.str().c_str()));
-
-        FIX::Message orderCancelRejectMessage;
-
-        orderCancelReject.m_Header.SendingTime = 0; // this is precision;
-        HeaderAdapter::DDS2FIX(orderCancelReject.m_Header,
-                               orderCancelRejectMessage.getHeader());
-        OrderCancelRejectAdapter::DDS2FIX(orderCancelReject,
-                                          orderCancelRejectMessage);
-
-        DistributedATS::DATSApplication::publishToClient(
-            orderCancelRejectMessage);
+          _processor.enqueue_dds_message(orderCancelReject);
 
       } else if (status == DDS::RETCODE_NO_DATA) {
         break;
