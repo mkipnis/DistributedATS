@@ -2,6 +2,7 @@
 import { useCallback, useMemo, useEffect, useState } from 'react';
 import React from 'react';
 import {AgGridColumn, AgGridReact} from 'ag-grid-react';
+import helpers from './helpers';
 
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham-dark.css';
@@ -40,6 +41,17 @@ const History = React.forwardRef ((props, ref) => {
 
   }));
 
+  function price_formatter(params)
+  {
+           if (params.value == 0 )
+           {
+             return "";
+           } else {
+             return helpers.get_display_price(params.value, params.data.instrument.tickSize);
+           }
+
+  };
+
 const [columnDefs, setColumnDefs] = useState([
    { headerName: 'Exec.Report Timestamp', field: 'lastUpdateTime', sortable: true,flex: 2, filter: 'agTextColumnFilter', },
    { headerName: 'Last.ExecReportID', field: 'lastExecutionReportId', sortable: true, flex: 2, filter: 'agTextColumnFilter',  },
@@ -47,11 +59,11 @@ const [columnDefs, setColumnDefs] = useState([
    { headerName: 'SecurityExchange', field: 'securityExchange', sortable: true, flex: 2 },
    { headerName: 'Symbol', field: 'symbol', sortable: true, flex: 2 },
    { headerName: 'OrderKey', field: 'orderKey', sortable: true, flex: 2 },
-   { headerName: 'Price', field: 'price', sortable: true, flex: 2 },
+   { headerName: 'Price', field: 'price', sortable: true, flex: 2, valueFormatter:price_formatter  },
    { headerName: 'Quantity', field: 'quantity', sortable: true, flex: 2 },
    { headerName: 'Side', field: 'side', sortable: true, flex: 2 },
-   { headerName: 'FilledAvgPrice', field: 'filled_avg_price', sortable: true, flex: 2 },
-   { headerName: 'FulledQty', field: 'filled_quantity', sortable: true, flex: 2 },
+   { headerName: 'FilledAvgPrice', field: 'filled_avg_price', sortable: true, flex: 2, valueFormatter:price_formatter },
+   { headerName: 'FulledQty', field: 'filled_quantity', sortable: true, flex: 2, valueFormatter:price_formatter },
       {
         headerName: 'Actions',
         field: 'value',
@@ -88,7 +100,7 @@ const [columnDefs, setColumnDefs] = useState([
 
   return (
       <div>
-       <div className="ag-theme-balham-dark" style={{height:"40vh", width: "95%", display: "inline-block", margin: "auto"}}>
+       <div className="ag-theme-balham-dark" style={{height:"40vh", width: "100%", display: "inline-block", margin: "auto"}}>
            <AgGridReact
                rowData={ Object.values(props.histData) } ref={gridRef} columnDefs={columnDefs} gridOptions={gridOptions}>
            </AgGridReact>

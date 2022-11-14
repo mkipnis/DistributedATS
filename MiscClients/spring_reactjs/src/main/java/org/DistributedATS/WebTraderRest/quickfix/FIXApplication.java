@@ -120,9 +120,9 @@ public class FIXApplication implements ApplicationExtended {
       quickfix.field.MsgType msgType = new MsgType();
       header.getField(msgType);
 
-      if (msgType.getValue().equals(MsgType.SECURITY_LIST)) {
-        quickfix.field.NoRelatedSym numberOfInstruments =
-            new quickfix.field.NoRelatedSym();
+      if (msgType.getValue().equals(MsgType.SECURITY_LIST)) 
+      {
+        quickfix.field.NoRelatedSym numberOfInstruments = new quickfix.field.NoRelatedSym();
         message.getField(numberOfInstruments);
         //securtiesList.clear();
         
@@ -161,6 +161,9 @@ public class FIXApplication implements ApplicationExtended {
         
         m_userSecuritesMap.put(sessionID, currentSecurityList);
         
+		//sessionState.activeSecurityList =  new ArrayList<Instrument>(userSecurities);
+        	submitMarketDataRequest(sessionID, currentSecurityList);
+        
       } else if (msgType.getValue().equals(
                      MsgType.MARKET_DATA_SNAPSHOT_FULL_REFRESH) ||
                  msgType.getValue().equals(
@@ -185,6 +188,67 @@ public class FIXApplication implements ApplicationExtended {
             e.printStackTrace();
     }*/
   }
+  
+	 public String submitMarketDataRequest(SessionID sessionID, ArrayList<Instrument> instruments) 
+	 {
+
+		 //QuickFixRunnableBean fix_session_bean = applicationContext.getBean(QuickFixRunnableBean.class);
+
+		 //SessionID sessionID =
+		//		 fix_session_bean.getSessionID(username, token);
+
+		 Session session = Session.lookupSession(sessionID);
+
+		 if (session != null) {
+			 String requestID = FIXServiceInterfaceImpl.getNextRequestID(sessionID);
+			 quickfix.field.MDReqID mdRequestID =
+					 new quickfix.field.MDReqID(requestID);
+			 quickfix.field.SubscriptionRequestType subscriptionRequestType =
+					 new quickfix.field.SubscriptionRequestType(
+							 quickfix.field.SubscriptionRequestType.SNAPSHOT_UPDATES);
+
+			 quickfix.field.MarketDepth marketDepth =
+					 new quickfix.field.MarketDepth(0);
+
+			 quickfix.fix44.MarketDataRequest marketDataRequest =
+					 new quickfix.fix44.MarketDataRequest(
+							 mdRequestID, subscriptionRequestType, marketDepth);
+
+			 quickfix.fix44.MarketDataRequest.NoMDEntryTypes noMDEntryTypeBid =
+					 new quickfix.fix44.MarketDataRequest.NoMDEntryTypes();
+			 quickfix.field.MDEntryType entryTypeBid =
+					 new quickfix.field.MDEntryType(quickfix.field.MDEntryType.BID);
+			 noMDEntryTypeBid.setField(entryTypeBid);
+			 marketDataRequest.addGroup(noMDEntryTypeBid);
+
+			 quickfix.fix44.MarketDataRequest.NoMDEntryTypes noMDEntryTypeAsk =
+					 new quickfix.fix44.MarketDataRequest.NoMDEntryTypes();
+			 quickfix.field.MDEntryType entryTypeAsk =
+					 new quickfix.field.MDEntryType(quickfix.field.MDEntryType.OFFER);
+			 noMDEntryTypeAsk.setField(entryTypeAsk);
+			 marketDataRequest.addGroup(noMDEntryTypeAsk);
+
+			 for (Instrument instrument : instruments) {
+				 quickfix.field.Symbol fixSymbol =
+						 new quickfix.field.Symbol(instrument.getSymbol());
+				 quickfix.field.SecurityExchange fixSecurityExchange =
+						 new quickfix.field.SecurityExchange(
+								 instrument.getSecurityExchange());
+
+				 quickfix.fix44.MarketDataRequest.NoRelatedSym fixSymbolGroup =
+						 new quickfix.fix44.MarketDataRequest.NoRelatedSym();
+				 fixSymbolGroup.setField(fixSymbol);
+				 fixSymbolGroup.setField(fixSecurityExchange);
+				 marketDataRequest.addGroup(fixSymbolGroup);
+			 }
+
+			 session.send(marketDataRequest);
+
+			 return requestID;
+		 }
+
+		 return null;
+	 }
 
   @Override
   public void onCreate(SessionID arg0) {
@@ -213,8 +277,24 @@ public class FIXApplication implements ApplicationExtended {
               new quickfix.field.SecurityReqID(requestID),
               new quickfix.field.SecurityListRequestType(
                   quickfix.field.SecurityListRequestType.ALL_SECURITIES));
+      
+      m_userSecuritesMap.put((FIXSessionID)sessionID, new ArrayList<Instrument>());
 
       session.send(securitiesListRequest);
+      
+		 requestID = FIXServiceInterfaceImpl.getNextRequestID(sessionID);
+
+
+		 quickfix.field.MassStatusReqID massStatusRequestID =
+				 new quickfix.field.MassStatusReqID(requestID);
+
+		 quickfix.fix44.OrderMassStatusRequest orderMassStatusRequest =
+				 new quickfix.fix44.OrderMassStatusRequest(
+						 massStatusRequestID,
+						 new quickfix.field.MassStatusReqType(
+								 quickfix.field.MassStatusReqType.STATUS_FOR_ALL_ORDERS));
+
+		 session.send(orderMassStatusRequest);
     }
   }
 
@@ -253,7 +333,7 @@ public class FIXApplication implements ApplicationExtended {
         message.setField(password);
 
         System.out.println(message);
-      }
+      } 
 
     } catch (FieldNotFound e) {
       // TODO Auto-generated catch block
@@ -279,7 +359,7 @@ public class FIXApplication implements ApplicationExtended {
     // TODO Auto-generated method stub
   }
 
-  public List<Instrument> getSecurities(SessionID sessionId) {
+  public ArrayList<Instrument> getSecurities(SessionID sessionId) {
 	  
 	  return m_userSecuritesMap.get(sessionId);
 	 

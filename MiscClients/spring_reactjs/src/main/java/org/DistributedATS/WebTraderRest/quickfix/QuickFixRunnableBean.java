@@ -173,15 +173,15 @@ public class QuickFixRunnableBean implements InitializingBean, DisposableBean
 	      this.userSessionMap.put(token, fixUserSession);
 	    }
 
-	    public void setSecurities(List<String> securitiesList) {
-	      securtiesList.addAll(securitiesList);
-	    }
+	    //public void setSecurities(List<String> securitiesList) {
+	    //  securtiesList.addAll(securitiesList);
+	   // }
 
 	    private ConcurrentHashMap<String, FIXUserSession> userSessionMap =
 	        new ConcurrentHashMap<String, FIXUserSession>();
 
-	    private CopyOnWriteArrayList<String> securtiesList =
-	        new CopyOnWriteArrayList<String>();
+	    //private CopyOnWriteArrayList<String> securtiesList =
+	    //    new CopyOnWriteArrayList<String>();
 
 	    private String m_TargetCompID = "";
 	    private String m_BeginString = "";

@@ -47,7 +47,7 @@ class SessionStateWrapper
   {
     this.login_state = {text:"Ready to trade"};
 
-    if ( this.session_state.activeSecurityList.length == 0 )
+    if ( this.session_state.activeSecurityList == null || this.session_state.activeSecurityList.length == 0 )
     {
       this.stateMask = 0;
       this.stateMask |= 1 << SECURITY_LIST_BIT;
@@ -101,16 +101,20 @@ class SessionStateWrapper
   {
     var active_instruments = {};
 
+    if ( this.session_state.activeSecurityList == null || this.session_state.activeSecurityList.length == 0 )
+      return active_instruments;
+
     for (const [index, active_instrument] of Object.entries(this.session_state.activeSecurityList))
     {
       var market_data_entry = this.session_state.instrumentMarketDataSnapshot[active_instrument.instrumentName];
-      var tick_size = active_instrument.tick_size;
 
       if ( market_data_entry !== undefined )
       {
         market_data_entry["instrumentName"] = active_instrument.instrumentName;
         market_data_entry["securityExchange"] =  active_instrument.securityExchange;
         market_data_entry["symbol"] =  active_instrument.symbol;
+        market_data_entry["maturityDate"] = active_instrument.maturityDate;
+        market_data_entry["tickSize"] = active_instrument.tickSize;
 
         if ( Object.values(market_data_entry.bidSide).length > 0  )
         {
@@ -150,6 +154,7 @@ class SessionStateWrapper
       }
 
       active_instruments[active_instrument.instrumentName] = market_data_entry;
+
     }
 
     return active_instruments;

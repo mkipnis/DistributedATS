@@ -33,7 +33,8 @@ import datetime
 import sqlite3
 import math
 
-UST_TICK_SIZE = 256
+#UST_TICK_SIZE = 256
+UST_TICK_SIZE = 100
 UST_COUPON_TICK_SIZE = 8
 
 def print_help():
@@ -93,7 +94,7 @@ def main(argv):
 
         instrument_name = "UST " + coupon_str + " " + marutity_date
 
-        insert_statement = "REPLACE into instrument(instrument_name, properties) values('" + str(instrument_name)  + "','{\"type\":\"UST\", \"tick_size\":256}')" #', '{\"type\":\"Equity\"}'")
+        insert_statement = "REPLACE into instrument(instrument_name, properties) values('" + str(instrument_name)  + "','{\"type\":\"UST\", \"tick_size\":" + str(UST_TICK_SIZE) +"}')" #', '{\"type\":\"Equity\"}'")
         print(insert_statement)
         cursor.execute(insert_statement)
 

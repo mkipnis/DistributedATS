@@ -87,8 +87,8 @@ public class SessionStateController {
 	            sessionState.username, session_state_request.token);
 	        
 	        System.out.println("Session SessionId:TokenSession : " + 
-	        		session_state_request.token + ":" +  sessionID.toString() + ":" 
-	        		+  session_state_request.maxOrderSequenceNumber + ":" + session_state_request.marketDataSequenceNumber );
+	        		session_state_request.token + ":" +  sessionID.toString() + ": Order State Sequence Number : " 
+	        		+  session_state_request.maxOrderSequenceNumber + ": Market Data Sequence Number :" + session_state_request.marketDataSequenceNumber );
 
 	        if ((session_state_request.stateMask &
 	             (1 << FIXUserSession.LOGON_STATE_BIT)) != 0) {
@@ -105,24 +105,14 @@ public class SessionStateController {
 
 	        if ((session_state_request.stateMask &
 	             (1 << FIXUserSession.SECURITY_LIST_BIT)) != 0) {
+	        		        	
+	        	sessionState.activeSecurityList = fix_session_bean.getApplication().getSecurities(sessionID);
 	        	
-	        	sessionState.activeSecurityList = new ArrayList<Instrument>();
-	        	
-	        	List<Instrument> userSecurities = fix_session_bean.getApplication().getSecurities(sessionID); 
-	        	
-	        	if ( userSecurities != null )
-	        	{
-	        		sessionState.activeSecurityList =  new ArrayList<Instrument>(userSecurities);
-	  	          	submitMarketDataRequest(sessionState.username, sessionState.token,
-                          sessionState.activeSecurityList);
-			        submitMassOrderStatusRequest(sessionState.username, sessionState.token);
-	        	} 
-	        
 
-	        }
+	        } else {
 
-	        if ((session_state_request.stateMask &
-	             (1 << FIXUserSession.MARKET_DATA_BIT)) != 0) {
+	        	if ((session_state_request.stateMask &
+	        			(1 << FIXUserSession.MARKET_DATA_BIT)) != 0) {
 	        	fix_session_bean.getMarketDataProcessorThread().populateMarketDataSnapshots(
 	              sessionID, session_state_request, sessionState);
 	        }
@@ -142,6 +132,7 @@ public class SessionStateController {
 	            if (positions != null)
 	            	sessionState.positionsMap.putAll(positions);
 	          }
+	        }
 	        }
 	        
 	        fix_session_bean.getSessionManagerThread().setSessionTimestamp(sessionID);
@@ -168,6 +159,7 @@ public class SessionStateController {
 	    return orderID;
 	  }
 	
+	  /*
 	 public String submitMarketDataRequest(String username, String token,
              ArrayList<Instrument> instruments) 
 	 {
@@ -228,9 +220,10 @@ public class SessionStateController {
 		 }
 
 		 return null;
-	 }
+	 }*/
 	 
 
+	 /*
 	 public String submitMassOrderStatusRequest(String username, String token) {
 		 // TODO Auto-generated method stub
 
@@ -261,7 +254,7 @@ public class SessionStateController {
 	 }
 
 	 return null;
-	}
+	}*/
  
 	@PostMapping(value = "/SubmitOrder", consumes = "application/json", produces = "application/json")
 	public Object submitOrder(

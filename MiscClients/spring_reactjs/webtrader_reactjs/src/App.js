@@ -2,13 +2,19 @@
 // DistributedATS - Mike Kipnis (c) 2022
 import logo from './logo.svg';
 import './App.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
 import Login from './components/Login';
 import PositionsAndMarketData from './components/PositionsAndMarketData';
 import Ticket from './components/Ticket';
 import History from './components/History';
+import PriceLevels from './components/PriceLevels';
 import SessionStateWrapper from './components/SessionStateWrapper';
 import React from 'react';
 import { useEffect, useState, useMemo } from 'react';
+import { Container, Row, Col } from 'react-bootstrap/';
+
+import helpers from './components/helpers';
+
 
 
 const { forwardRef, useRef, useImperativeHandle } = React;
@@ -19,11 +25,13 @@ function App()
   const histRef = React.useRef();
   const marketDataAndPositionsRef = React.useRef();
 
-  //const url = "http://localhost:8080/";
-  const url = "https://dats.ustreasuries.online/";
+  const url = "http://localhost:8080/";
+  //const url = "https://dats.ustreasuries.online/";
 
   const last_sequence_number = useRef(0); // sequence number between front-end and rest controller
   const last_session_state = useRef(null);
+  const current_ticket = useRef(null);
+
 
   const [sessionToken, setSessionToken] = useState(null);
   const [sessionState, setSessionState] = useState(null);
@@ -32,6 +40,8 @@ function App()
   const [blotterData, setBlotterData] = useState([]);
   const [orderCancelData, setOrderCancelData] = useState({});
   const [histData, setHistData] = useState([]);
+  const [priceLevels, setPriceLevels] = useState([]);
+
 
   const Logon_callback = (logon_value) =>
   {
@@ -55,9 +65,17 @@ function App()
       {
         ticket_data.token = last_session_state.current.token;
         ticket_data.username = last_session_state.current.username;
+
+        current_ticket.current = ticket_data;
       }
 
       setTicketState( ticket_data );
+
+      if ( ticket_data.instrumentData != null  )
+      {
+        var price_levels = helpers.get_price_levels(ticket_data.instrumentData);
+        setPriceLevels(price_levels);
+      }
   }
 
   const Submit_cancel = (cancel_order) =>
@@ -128,16 +146,33 @@ function App()
       var session_state_request = {};
       session_state_request["token"] = sessionToken.Token;
 
-      const session_state_wrapper = new SessionStateWrapper(sessionState, session_state_request);
 
-      setLoginState(session_state_wrapper.get_logon_state());
+        const session_state_wrapper = new SessionStateWrapper(sessionState, session_state_request);
 
-      var blotter_data = session_state_wrapper.get_market_data_and_positions();
+        setLoginState(session_state_wrapper.get_logon_state());
 
-      setBlotterData(blotter_data);
-      marketDataAndPositionsRef.current.update_data();
+        if ( sessionState.sessionState == 1 ) // This session is active
+        {
+          var blotter_data = session_state_wrapper.get_market_data_and_positions();
 
-      setHistData(session_state_wrapper.get_hist_data(histData, last_sequence_number));
+          setBlotterData(blotter_data);
+
+          marketDataAndPositionsRef.current.update_data();
+
+          setHistData(session_state_wrapper.get_hist_data(histData, last_sequence_number));
+
+          if ( current_ticket.current != null )
+          {
+
+            var instrument_data = blotter_data[current_ticket.current.instrumentName];
+            if ( instrument_data != null )
+            {
+              var price_levels = helpers.get_price_levels(instrument_data);
+              setPriceLevels(price_levels);
+            }
+          }
+
+      }
 
       if ( sessionState.sessionState != 3 )
       {
@@ -151,7 +186,7 @@ function App()
                   setLoginState(invalid_state);
                   setSessionState(null);
                 });
-              }, 500)
+              }, 1000)
 
               return () => {
                 clearInterval(intervalId);
@@ -166,22 +201,29 @@ function App()
   }, [sessionState]);
 
   return (
-    <div className="App">
+    <div className="body">
+    <div className="ag-theme-balham-dark">
       <nav>
         <Login loginState={loginState} logonCallback={Logon_callback} sessionState={sessionState}/>
       </nav>
-      <div style={ ( sessionState == null || sessionState.sessionState != 1 ) ? {pointerEvents: "none", opacity: "0.4"} : {}}>
-      <div>
-        <PositionsAndMarketData blotterData={blotterData} ticketState={ticketState} marketDataCallback={Populate_ticket} ref={marketDataAndPositionsRef}/>
+      <Container fluid style={{marginTop:20}}>
+      <div style={( sessionState == null || sessionState.sessionState != 1 || sessionState.activeSecurityList == null ) ? {pointerEvents: "none", opacity: "0.4"} : {}}>
+        <Row>
+        <Col  sm={8}>
+          <PositionsAndMarketData blotterData={blotterData} ticketState={ticketState} marketDataCallback={Populate_ticket} ref={marketDataAndPositionsRef}/>
+        </Col>
+        <Col  sm={4}>
+            <Ticket ticketState={ticketState} priceLevels={priceLevels} ref={ticketRef}/>
+        </Col>
+
+        </Row>
+      <div style={{marginTop: '10px'}}>
+        <History histData={histData} blotterData={blotterData} ref={histRef} orderCancelCallback={Submit_cancel}/>
       </div>
-      <div>
-        <Ticket ticketState={ticketState} ref={ticketRef}/>
       </div>
-      <div>
-        <History histData={histData} ref={histRef} orderCancelCallback={Submit_cancel}/>
+      </Container>
+        </div>
       </div>
-      </div>
-    </div>
   );
 }
 
