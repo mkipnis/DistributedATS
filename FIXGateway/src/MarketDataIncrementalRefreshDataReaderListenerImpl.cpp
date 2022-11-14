@@ -33,36 +33,8 @@
 
 namespace DistributedATS {
 
-MarketDataIncrementalRefreshDataReaderListenerImpl::
-    ~MarketDataIncrementalRefreshDataReaderListenerImpl() {
-  // TODO Auto-generated destructor stub
-}
-
-void MarketDataIncrementalRefreshDataReaderListenerImpl::on_data_available(
-    DDS::DataReader_ptr reader) throw(CORBA::SystemException) {
-  try {
-      DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefreshDataReader_var
-        market_data_incremental_refresh_dr = DistributedATS_MarketDataIncrementalRefresh::
-            MarketDataIncrementalRefreshDataReader::_narrow(reader);
-
-    if (CORBA::is_nil(market_data_incremental_refresh_dr.in())) {
-      std::cerr << "MarketDataIncrementalRefreshDataReaderListenerImpl::on_"
-                   "data_available: _narrow failed."
-                << std::endl;
-      ACE_OS::exit(1);
-    }
-
-    while (true) {
-        DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefresh
-          marketDataRefresh;
-      DDS::SampleInfo si;
-      DDS::ReturnCode_t status =
-          market_data_incremental_refresh_dr->take_next_sample(
-              marketDataRefresh, si);
-
-      if (status == DDS::RETCODE_OK) {
-        if (!si.valid_data)
-          continue;
+auto const market_data_refresh_processor = [] (DistributedATS::DATSApplication &application, DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefresh& marketDataRefresh)
+{
 
         std::stringstream ss;
         MarketDataIncrementalRefreshLogger::log(ss, marketDataRefresh);
@@ -104,8 +76,42 @@ void MarketDataIncrementalRefreshDataReaderListenerImpl::on_data_available(
           marketDataIncementalRefreshMessage.addGroup(fixMDEntry);
         }
 
-        DistributedATS::DATSApplication::broadcastToClients(
-            marketDataIncementalRefreshMessage);
+        DistributedATS::DATSApplication::broadcastToClients(marketDataIncementalRefreshMessage);
+};
+
+
+MarketDataIncrementalRefreshDataReaderListenerImpl::MarketDataIncrementalRefreshDataReaderListenerImpl(DistributedATS::DATSApplication &application) : _processor(application, market_data_refresh_processor )
+{
+}
+
+
+void MarketDataIncrementalRefreshDataReaderListenerImpl::on_data_available(
+    DDS::DataReader_ptr reader) throw(CORBA::SystemException) {
+  try {
+      DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefreshDataReader_var
+        market_data_incremental_refresh_dr = DistributedATS_MarketDataIncrementalRefresh::
+            MarketDataIncrementalRefreshDataReader::_narrow(reader);
+
+    if (CORBA::is_nil(market_data_incremental_refresh_dr.in())) {
+      std::cerr << "MarketDataIncrementalRefreshDataReaderListenerImpl::on_"
+                   "data_available: _narrow failed."
+                << std::endl;
+      ACE_OS::exit(1);
+    }
+
+    while (true) {
+        DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefresh
+          marketDataRefresh;
+      DDS::SampleInfo si;
+      DDS::ReturnCode_t status =
+          market_data_incremental_refresh_dr->take_next_sample(
+              marketDataRefresh, si);
+
+      if (status == DDS::RETCODE_OK) {
+        if (!si.valid_data)
+          continue;
+          
+          _processor.enqueue_dds_message(marketDataRefresh);
 
       } else if (status == DDS::RETCODE_NO_DATA) {
         break;

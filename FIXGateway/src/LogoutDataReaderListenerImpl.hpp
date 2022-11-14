@@ -31,6 +31,8 @@
 #include <stdio.h>
 
 #include <LogoutTypeSupportImpl.h>
+#include <thread>
+#include "FIXMsgComposerThread.h"
 
 #include "Application.hpp"
 
@@ -39,8 +41,8 @@ namespace DistributedATS {
 class LogoutDataReaderListenerImpl
     : public virtual OpenDDS::DCPS::LocalObject<DDS::DataReaderListener> {
 public:
-  LogoutDataReaderListenerImpl(DistributedATS::DATSApplication &application)
-      : _application(application){};
+        LogoutDataReaderListenerImpl(DistributedATS::DATSApplication &application);
+        ~LogoutDataReaderListenerImpl(){};
 
   virtual void
   on_data_available(DDS::DataReader_ptr reader) throw(CORBA::SystemException);
@@ -73,8 +75,9 @@ public:
       DDS::DataReader_ptr reader,
       const DDS::SampleLostStatus &status) throw(CORBA::SystemException){};
 
-private:
-  DistributedATS::DATSApplication &_application;
+private:        
+        fix_message_composer_thread<DistributedATS_Logout::Logout> _processor;
+        
 };
 
 }; // namespace DistributedATS

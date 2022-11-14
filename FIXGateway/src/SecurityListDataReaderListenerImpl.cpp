@@ -33,9 +33,69 @@
 
 namespace DistributedATS {
 
-SecurityListDataReaderListenerImpl::~SecurityListDataReaderListenerImpl() {
-  // TODO Auto-generated destructor stub
-}
+auto const security_list_processor = [] (DistributedATS::DATSApplication &application, DistributedATS_SecurityList::SecurityList& securityList)
+{
+
+    std::stringstream ss;
+    SecurityListLogger::log(ss, securityList);
+    ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%t) SecurityList : %s\n"),
+               ss.str().c_str()));
+
+    FIX44::SecurityList securityListMessage;
+
+    securityList.m_Header.SendingTime = 0; // this is precision;
+
+    securityList.m_Header.SenderCompID =
+        securityList.m_Header
+            .TargetSubID; // security_list.m_Header.TargetCompID;
+    HeaderAdapter::DDS2FIX(securityList.m_Header,
+                           securityListMessage.getHeader());
+
+    FIX::SecurityReqID securityReqID(securityList.SecurityReqID.in());
+    securityListMessage.setField(securityReqID);
+
+    FIX::SecurityResponseID securityResponseID(
+        securityList.SecurityResponseID.in());
+    securityListMessage.setField(securityResponseID);
+
+    FIX::SecurityRequestResult securityRequestResult(
+        securityList.SecurityRequestResult);
+    securityListMessage.setField(securityRequestResult);
+
+    for (int sec_index = 0;
+         sec_index < securityList.c_NoRelatedSym.length(); sec_index++) {
+      FIX44::SecurityList::NoRelatedSym relatedSymbol;
+
+      std::string instrument =
+          securityList.c_NoRelatedSym[sec_index].Symbol.in();
+      std::string exchange =
+          securityList.c_NoRelatedSym[sec_index].SecurityExchange.in();
+
+  std::string ref_data = securityList.c_NoRelatedSym[sec_index].Text.in();
+
+      FIX::Symbol symbol(instrument);
+      relatedSymbol.setField(symbol);
+
+      FIX::SecurityExchange securityExchange(exchange);
+      relatedSymbol.setField(securityExchange);
+
+  if ( ref_data.size() > 0 )
+  {
+        FIX::Text text(ref_data);
+        relatedSymbol.setField(text);
+      }
+
+      securityListMessage.addGroup(relatedSymbol);
+    }
+
+    DistributedATS::DATSApplication::publishToClient(securityListMessage);
+
+
+};
+
+SecurityListDataReaderListenerImpl::SecurityListDataReaderListenerImpl(DistributedATS::DATSApplication &application) :
+    _processor(application, security_list_processor ) {};
+
 
 void SecurityListDataReaderListenerImpl::on_data_available(
     DDS::DataReader_ptr reader) throw(CORBA::SystemException) {
@@ -59,60 +119,8 @@ void SecurityListDataReaderListenerImpl::on_data_available(
       if (status == DDS::RETCODE_OK) {
         if (!si.valid_data)
           continue;
-
-        std::stringstream ss;
-        SecurityListLogger::log(ss, securityList);
-        ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%t) SecurityList : %s\n"),
-                   ss.str().c_str()));
-
-        FIX44::SecurityList securityListMessage;
-
-        securityList.m_Header.SendingTime = 0; // this is precision;
-
-        securityList.m_Header.SenderCompID =
-            securityList.m_Header
-                .TargetSubID; // security_list.m_Header.TargetCompID;
-        HeaderAdapter::DDS2FIX(securityList.m_Header,
-                               securityListMessage.getHeader());
-
-        FIX::SecurityReqID securityReqID(securityList.SecurityReqID.in());
-        securityListMessage.setField(securityReqID);
-
-        FIX::SecurityResponseID securityResponseID(
-            securityList.SecurityResponseID.in());
-        securityListMessage.setField(securityResponseID);
-
-        FIX::SecurityRequestResult securityRequestResult(
-            securityList.SecurityRequestResult);
-        securityListMessage.setField(securityRequestResult);
-
-        for (int sec_index = 0;
-             sec_index < securityList.c_NoRelatedSym.length(); sec_index++) {
-          FIX44::SecurityList::NoRelatedSym relatedSymbol;
-
-          std::string instrument =
-              securityList.c_NoRelatedSym[sec_index].Symbol.in();
-          std::string exchange =
-              securityList.c_NoRelatedSym[sec_index].SecurityExchange.in();
-
-	  std::string ref_data = securityList.c_NoRelatedSym[sec_index].Text.in();
-
-          FIX::Symbol symbol(instrument);
-          relatedSymbol.setField(symbol);
-
-          FIX::SecurityExchange securityExchange(exchange);
-          relatedSymbol.setField(securityExchange);
-
-	  if ( ref_data.size() > 0 )
-	  {
-            FIX::Text text(ref_data);
-            relatedSymbol.setField(text);
-          }
-
-          securityListMessage.addGroup(relatedSymbol);
-        }
-
-        DistributedATS::DATSApplication::publishToClient(securityListMessage);
+          
+          _processor.enqueue_dds_message(securityList);
 
       } else if (status == DDS::RETCODE_NO_DATA) {
         break;

@@ -33,6 +33,38 @@
 
 namespace DistributedATS {
 
+
+auto const logout_processor = [] (DistributedATS::DATSApplication &application, DistributedATS_Logout::Logout& logout)
+{
+    std::stringstream ss;
+    LogoutLogger::log(ss, logout);
+    ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%t|%D) Data Reader Logout : %s\n"),
+               ss.str().c_str()));
+
+    FIX::Message logoutMessage;
+    logout.m_Header.SendingTime = 0;
+
+    LogoutAdapter::DDS2FIX(logout, logoutMessage);
+
+    std::string connectionToken =
+        logout.m_Header.TargetSubID
+            .in(); // Kludge : Connection token is populated in RawData in
+                   // Logon message, but because there is no RawData in
+                   // Logout message, DataService populates TargetSubID with
+                   // the Connection Token of the session that needs to be
+                   // Logged out and disconnected in case of invalid
+                   // credentials.
+    application.processDDSLogout(connectionToken, logoutMessage);
+};
+
+
+
+LogoutDataReaderListenerImpl::LogoutDataReaderListenerImpl(DistributedATS::DATSApplication &application)
+    : _processor(application, logout_processor)
+{
+};
+
+
 void LogoutDataReaderListenerImpl::on_data_available(
     DDS::DataReader_ptr reader) throw(CORBA::SystemException) {
   try {
@@ -54,26 +86,8 @@ void LogoutDataReaderListenerImpl::on_data_available(
       if (status == DDS::RETCODE_OK) {
         if (!si.valid_data)
           continue;
-
-        std::stringstream ss;
-        LogoutLogger::log(ss, logout);
-        ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%t|%D) Data Reader Logout : %s\n"),
-                   ss.str().c_str()));
-
-        FIX::Message logoutMessage;
-        logout.m_Header.SendingTime = 0;
-
-        LogoutAdapter::DDS2FIX(logout, logoutMessage);
-
-        std::string connectionToken =
-            logout.m_Header.TargetSubID
-                .in(); // Kludge : Connection token is populated in RawData in
-                       // Logon message, but because there is no RawData in
-                       // Logout message, DataService populates TargetSubID with
-                       // the Connection Token of the session that needs to be
-                       // Logged out and disconnected in case of invalid
-                       // credentials.
-        _application.processDDSLogout(connectionToken, logoutMessage);
+          
+          _processor.enqueue_dds_message(logout);
 
       } else if (status == DDS::RETCODE_NO_DATA) {
         break;

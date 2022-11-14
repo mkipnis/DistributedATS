@@ -33,6 +33,32 @@
 
 namespace DistributedATS {
 
+
+auto const logon_processor = [] (DistributedATS::DATSApplication &application, DistributedATS_Logon::Logon& logon)
+{
+    std::stringstream ss;
+    LogonLogger::log(ss, logon);
+    ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%t|%D) Data Reader Logon : %s\n"),
+               ss.str().c_str()));
+
+    FIX::Message logonMessage;
+    logon.m_Header.SendingTime = 0; // this is precision;
+    std::string logonSenderCompID = logon.m_Header.TargetSubID.in();
+
+    logon.m_Header.SenderCompID = logon.m_Header.TargetCompID;
+    logon.m_Header.TargetCompID = logonSenderCompID.c_str();
+
+    LogonAdapter::DDS2FIX(logon, logonMessage);
+    application.processDDSLogon(logonMessage);
+};
+
+
+
+LogonDataReaderListenerImpl::LogonDataReaderListenerImpl(DistributedATS::DATSApplication &application)
+    : _processor(application, logon_processor)
+{
+};
+
 void LogonDataReaderListenerImpl::on_data_available(
     DDS::DataReader_ptr reader) throw(CORBA::SystemException) {
   try {
@@ -55,20 +81,7 @@ void LogonDataReaderListenerImpl::on_data_available(
         if (!si.valid_data)
           continue;
 
-        std::stringstream ss;
-        LogonLogger::log(ss, logon);
-        ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%t|%D) Data Reader Logon : %s\n"),
-                   ss.str().c_str()));
-
-        FIX::Message logonMessage;
-        logon.m_Header.SendingTime = 0; // this is precision;
-        std::string logonSenderCompID = logon.m_Header.TargetSubID.in();
-
-        logon.m_Header.SenderCompID = logon.m_Header.TargetCompID;
-        logon.m_Header.TargetCompID = logonSenderCompID.c_str();
-
-        LogonAdapter::DDS2FIX(logon, logonMessage);
-        _application.processDDSLogon(logonMessage);
+          _processor.enqueue_dds_message(logon);
 
       } else if (status == DDS::RETCODE_NO_DATA) {
         break;

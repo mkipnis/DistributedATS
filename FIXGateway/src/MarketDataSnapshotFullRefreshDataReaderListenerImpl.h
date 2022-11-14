@@ -29,16 +29,18 @@
 #define MARKETDATASNAPSHOTFULLREFRESHDATAREADERLISTENERIMPL_H_
 
 #include <MarketDataSnapshotFullRefreshTypeSupportImpl.h>
+#include <thread>
+#include "Application.hpp"
 
-//#include "Application.hpp"
+#include "FIXMsgComposerThread.h"
 
 namespace DistributedATS {
 
 class MarketDataSnapshotFullRefreshDataReaderListenerImpl
     : public virtual OpenDDS::DCPS::LocalObject<DDS::DataReaderListener> {
 public:
-  MarketDataSnapshotFullRefreshDataReaderListenerImpl(){};
-  virtual ~MarketDataSnapshotFullRefreshDataReaderListenerImpl();
+  MarketDataSnapshotFullRefreshDataReaderListenerImpl(DistributedATS::DATSApplication &application);
+        virtual ~MarketDataSnapshotFullRefreshDataReaderListenerImpl() {};
 
   virtual void
   on_data_available(DDS::DataReader_ptr reader) throw(CORBA::SystemException);
@@ -71,8 +73,10 @@ public:
       DDS::DataReader_ptr reader,
       const DDS::SampleLostStatus &status) throw(CORBA::SystemException){};
 
-  // private:
-  //   FIXGateway::Application& _app;
+  private:
+
+        fix_message_composer_thread<DistributedATS_MarketDataSnapshotFullRefresh::MarketDataSnapshotFullRefresh> _processor;
+
 };
 
 } /* namespace DistributedATS */

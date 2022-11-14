@@ -35,17 +35,29 @@
 
 #include <ExecutionReportLogger.hpp>
 
+auto const exec_report_processor = [] (DistributedATS::DATSApplication &application, DistributedATS_ExecutionReport::ExecutionReport& executionReport)
+{
+    std::stringstream ss;
+
+    ExecutionReportLogger::log(ss, executionReport);
+
+    ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%t|%D) Execution Report : %s\n"), ss.str().c_str()));
+
+    FIX::Message executionReportMessage;
+    executionReport.m_Header.SendingTime = 0; // this is precision; -- TODO: move to auto gen
+    executionReport.m_Header.BeginString = CORBA::string_dup("FIX.4.4");
+    executionReport.m_Header.SenderCompID = executionReport.m_Header.SenderSubID;
+    ExecutionReportAdapter::DDS2FIX(executionReport, executionReportMessage);
+
+    DATSApplication::publishToClient(executionReportMessage);
+};
+
+
 namespace DistributedATS {
 
-/*ExecutionReportDataReaderListenerImpl::ExecutionReportDataReaderListenerImpl()
+ExecutionReportDataReaderListenerImpl::ExecutionReportDataReaderListenerImpl(DistributedATS::DATSApplication &application)
+    : _processor(application, exec_report_processor, 100)
 {
-        // TODO Auto-generated constructor stub
-
-}*/
-
-ExecutionReportDataReaderListenerImpl::
-    ~ExecutionReportDataReaderListenerImpl() {
-  // TODO Auto-generated destructor stub
 }
 
 void ExecutionReportDataReaderListenerImpl::on_data_available(
@@ -70,24 +82,8 @@ void ExecutionReportDataReaderListenerImpl::on_data_available(
       if (status == DDS::RETCODE_OK) {
         if (!si.valid_data)
           continue;
-
-        std::stringstream ss;
-
-        ExecutionReportLogger::log(ss, executionReport);
-
-        ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%t|%D) Execution Report : %s\n"),
-                   ss.str().c_str()));
-
-        FIX::Message executionReportMessage;
-        executionReport.m_Header.SendingTime =
-            0; // this is precision; -- TODO: move to auto gen
-        executionReport.m_Header.BeginString = CORBA::string_dup("FIX.4.4");
-        executionReport.m_Header.SenderCompID =
-            executionReport.m_Header.SenderSubID;
-        ExecutionReportAdapter::DDS2FIX(executionReport,
-                                        executionReportMessage);
-
-        DATSApplication::publishToClient(executionReportMessage);
+          
+          _processor.enqueue_dds_message(executionReport);
 
       } else if (status == DDS::RETCODE_NO_DATA) {
         break;

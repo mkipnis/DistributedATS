@@ -136,19 +136,19 @@ struct DataReaderContrainer {
     DDS::DataReaderListener_var logoutDataListener(
         new DistributedATS::LogoutDataReaderListenerImpl(application));
     DDS::DataReaderListener_var executionReportDataListener(
-        new DistributedATS::ExecutionReportDataReaderListenerImpl());
+        new DistributedATS::ExecutionReportDataReaderListenerImpl(application));
     DDS::DataReaderListener_var marketDataIncrementalRefreshtDataListener(
         new DistributedATS::
-            MarketDataIncrementalRefreshDataReaderListenerImpl());
+            MarketDataIncrementalRefreshDataReaderListenerImpl(application));
     DDS::DataReaderListener_var marketDataSnapdshotFullRefreshtDataListener(
         new DistributedATS::
-            MarketDataSnapshotFullRefreshDataReaderListenerImpl());
+            MarketDataSnapshotFullRefreshDataReaderListenerImpl(application));
     DDS::DataReaderListener_var orderCancelRejectDataListener(
-        new DistributedATS::OrderCancelRejectDataReaderListenerImpl());
+        new DistributedATS::OrderCancelRejectDataReaderListenerImpl(application));
     DDS::DataReaderListener_var orderMassCancelReportDataListener(
-        new DistributedATS::OrderMassCancelReportDataReaderListenerImpl());
+        new DistributedATS::OrderMassCancelReportDataReaderListenerImpl(application));
     DDS::DataReaderListener_var securityListReportDataListener(
-        new DistributedATS::SecurityListDataReaderListenerImpl());
+        new DistributedATS::SecurityListDataReaderListenerImpl(application));
 
     participantPtr->createDataReaderListener(cft_logon, logonDataListener);
     participantPtr->createDataReaderListener(cft_logout, logoutDataListener);

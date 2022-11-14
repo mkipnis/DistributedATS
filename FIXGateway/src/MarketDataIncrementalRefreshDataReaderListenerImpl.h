@@ -29,17 +29,20 @@
 #define MARKETDATAINCREMENTALREFRESHDATAREADERLISTENERIMPL_H_
 
 #include <MarketDataIncrementalRefreshTypeSupportImpl.h>
+#include <thread>
 
 #include "Application.hpp"
+
+#include "FIXMsgComposerThread.h"
 
 namespace DistributedATS {
 
 class MarketDataIncrementalRefreshDataReaderListenerImpl
     : public virtual OpenDDS::DCPS::LocalObject<DDS::DataReaderListener> {
 public:
-  virtual ~MarketDataIncrementalRefreshDataReaderListenerImpl();
+        virtual ~MarketDataIncrementalRefreshDataReaderListenerImpl() {};
 
-  MarketDataIncrementalRefreshDataReaderListenerImpl(){};
+        MarketDataIncrementalRefreshDataReaderListenerImpl(DistributedATS::DATSApplication &application);
 
   virtual void
   on_data_available(DDS::DataReader_ptr reader) throw(CORBA::SystemException);
@@ -72,11 +75,9 @@ public:
       DDS::DataReader_ptr reader,
       const DDS::SampleLostStatus &status) throw(CORBA::SystemException){};
 
-protected:
-  //    LogonDataReaderListenerImpl() {};
-
-  // private:
-  //   FIXGateway::Application& _app;
+private:
+        
+        fix_message_composer_thread<DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefresh> _processor;
 };
 
 } /* namespace DistributedATS */

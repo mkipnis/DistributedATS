@@ -28,16 +28,20 @@
 #ifndef SECURITYLISTDATAREADERLISTENERIMPL_H_
 #define SECURITYLISTDATAREADERLISTENERIMPL_H_
 
-// #include "Application.hpp"
+
 #include <SecurityListTypeSupportImpl.h>
+#include <thread>
+#include "Application.hpp"
+
+#include "FIXMsgComposerThread.h"
 
 namespace DistributedATS {
 
 class SecurityListDataReaderListenerImpl
     : public virtual OpenDDS::DCPS::LocalObject<DDS::DataReaderListener> {
 public:
-  SecurityListDataReaderListenerImpl(){};
-  virtual ~SecurityListDataReaderListenerImpl();
+        SecurityListDataReaderListenerImpl(DistributedATS::DATSApplication &application);
+        virtual ~SecurityListDataReaderListenerImpl() {};
 
   virtual void
   on_data_available(DDS::DataReader_ptr reader) throw(CORBA::SystemException);
@@ -69,6 +73,9 @@ public:
   virtual void on_sample_lost(
       DDS::DataReader_ptr reader,
       const DDS::SampleLostStatus &status) throw(CORBA::SystemException){};
+        
+    private:
+        fix_message_composer_thread<DistributedATS_SecurityList::SecurityList> _processor;
 };
 
 } /* namespace DistributedATS */
