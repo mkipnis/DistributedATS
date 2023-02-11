@@ -56,7 +56,8 @@ public:
             &client_order_id, // client order id from new order single
         bool buy_side, liquibook::book::Quantity quantity, std::string &symbol,
         std::string &security_exchange, liquibook::book::Price price,
-        liquibook::book::Price stopPrice, bool aon, bool ioc);
+        liquibook::book::Price stopPrice,
+        liquibook::book::OrderConditions conditions = liquibook::book::OrderCondition::oc_no_conditions );
 
   //////////////////////////
   // Implement the
@@ -86,6 +87,8 @@ public:
   /// @brief After generating as many trades as possible against
   /// orders already on the market, cancel any remaining quantity.
   virtual bool immediate_or_cancel() const;
+    
+  virtual liquibook::book::OrderConditions conditions() const;
   ///////////////////////////////////////////////////
 
   /// @brief instrument name
@@ -141,8 +144,7 @@ private:
   liquibook::book::Price price_;
   liquibook::book::Price stopPrice_;
 
-  bool aon_;
-  bool ioc_;
+  liquibook::book::OrderConditions conditions_;
 
   liquibook::book::Quantity quantityFilled_;
   int32_t quantityOnMarket_;

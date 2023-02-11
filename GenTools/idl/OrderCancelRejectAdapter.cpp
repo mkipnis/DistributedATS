@@ -21,6 +21,8 @@ void OrderCancelRejectAdapter::FIX2DDS(const FIX::Message& fixMsg, DistributedAT
 
 	if (fixMsg.isSetField(FIX::FIELD::TransactTime) )
 		ddsMsg.TransactTime = ((FIX::TransactTime)FIELD_GET_REF( fixMsg,TransactTime)).getValue().getJulianDate();
+	else 
+		ddsMsg.TransactTime = 0;
 
 	if (fixMsg.isSetField(FIX::FIELD::CxlRejResponseTo) )
 		ddsMsg.CxlRejResponseTo = FIELD_GET_REF( fixMsg,CxlRejResponseTo);

@@ -32,13 +32,22 @@ import java.util.Date;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 
+import org.DistributedATS.WebTraderRest.Controllers.SessionStateController;
 import org.DistributedATS.WebTraderRest.entity.ExecutionReport;
 import org.DistributedATS.WebTraderRest.entity.Instrument;
 import org.DistributedATS.WebTraderRest.entity.Order;
 import org.DistributedATS.WebTraderRest.entity.OrderKey;
+import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import quickfix.FieldNotFound;
 import quickfix.Message;
+import quickfix.field.ExecInst;
+import quickfix.field.OrdStatus;
+import quickfix.field.OrdType;
+import quickfix.field.TimeInForce;
 
 
 public class ExecutionReportProcessorThread implements Runnable {
@@ -48,6 +57,9 @@ public class ExecutionReportProcessorThread implements Runnable {
 
   private OrderMan orderMan = null;
   private PositionMan positionMan = null;
+  
+  ObjectMapper _mapper = new ObjectMapper();
+  private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(SessionStateController.class);
 
   private long sequenceNumber = 0; // for client side to query for execution reports, since the last one,
           // client will pass last sequence number it received
@@ -93,9 +105,6 @@ public class ExecutionReportProcessorThread implements Runnable {
       quickfix.field.SendingTime sendTime = new quickfix.field.SendingTime();
       message.getHeader().getField(sendTime);
 
-      // Date lastUpdateTime = new Date();
-      // //java.util.Date.from(sendTime.getValue().atZone(ZoneId.systemDefault()).toInstant());
-
       quickfix.field.Side side = new quickfix.field.Side();
       message.getField(side);
 
@@ -114,6 +123,9 @@ public class ExecutionReportProcessorThread implements Runnable {
       quickfix.field.Price price = new quickfix.field.Price();
       message.getField(price);
 
+      quickfix.field.StopPx stopPx = new quickfix.field.StopPx();
+      message.getField(stopPx);
+      
       quickfix.field.LastPx lastPrice = new quickfix.field.LastPx();
       if (message.isSetField(lastPrice))
         message.getField(lastPrice);
@@ -134,13 +146,13 @@ public class ExecutionReportProcessorThread implements Runnable {
 
       Date lastUpdateTime = Date.from(
           transactTime.getValue().atZone(ZoneId.systemDefault()).toInstant());
-      ;
-
-      System.out.println(
-          "Transact Times : " +
-          transactTime.getValue()); // ":" + transactTime.getValue() + ":" +
-                                    // lastUpdateTime + ":" + lastUpdateTime );
-
+     
+      quickfix.field.OrdType ordType = new quickfix.field.OrdType();
+      message.getField(ordType);
+      
+      quickfix.field.TimeInForce timeInForce = new quickfix.field.TimeInForce();
+      message.getField(timeInForce);
+      
       String orderID = fixOrderId.getValue();
       String executionReportId = execId.getValue();
 
@@ -159,18 +171,29 @@ public class ExecutionReportProcessorThread implements Runnable {
 
         order.instrument =
             new Instrument(securityExchange.getValue(), symbol.getValue());
-
-        order.status = ordStatus.getValue();
+        
+        order.side = FIXConvertUtils.getSide(side.getValue());
+        order.status = FIXConvertUtils.getStatusText(ordStatus.getValue());        
+        
+        quickfix.field.ExecInst execInst = new quickfix.field.ExecInst();
+        if ( message.isSetField(execInst))
+        {
+        	message.getField(execInst);
+        	order.allOrNone = FIXConvertUtils.getIsAON(execInst.getValue());
+        }
+        
+        order.orderCondition =  FIXConvertUtils.getTimeInForce(timeInForce.getValue());
+        order.orderType = FIXConvertUtils.getOrdType(ordType.getValue());
       }
-
-      if (order.status == ExecutionReport.PENDING_NEW ||
-          ordStatus.getValue() == ExecutionReport.CANCELLED)
-        order.status = ordStatus.getValue();
+      
+      if (ordStatus.getValue() == OrdStatus.PENDING_NEW ||
+    		  ordStatus.getValue() == OrdStatus.CANCELED)
+        order.status =  FIXConvertUtils.getStatusText(ordStatus.getValue());
 
       //
       // Lets make sure we process the latest execution report.
       // i.e. real-time fill may arrive before or during execution reports
-      // published for mass status request
+      // published for the mass status request
       if (order.filled_quantity <= cumQty.getValue()) // the latest fill
       {
         synchronized (positionMan) {
@@ -178,16 +201,18 @@ public class ExecutionReportProcessorThread implements Runnable {
                                      order.filled_quantity * -1,
                                      order.filled_avg_price);
 
-          order.price = price.getValue();
-          order.quantity = orderQuantity.getValue();
-          order.filled_quantity = cumQty.getValue();
+          // cast to int to convert to ticks
+          order.price = (int)price.getValue();
+          order.stop_price = (int)stopPx.getValue();
+          order.quantity = (int)orderQuantity.getValue();
+          order.filled_quantity = (int)cumQty.getValue();
           order.lastUpdateTime = lastUpdateTime;
-          order.side = side.getValue();
-          order.filled_avg_price = avgPx.getValue();
+          order.side = FIXConvertUtils.getSide(side.getValue()); 
+          order.filled_avg_price = (int)avgPx.getValue();
           order.lastExecutionReportId = executionReportId;
 
-          if (order.status != ExecutionReport.CANCELLED)
-            order.status = ordStatus.getValue(); // latest status
+          if (ordStatus.getValue() != OrdStatus.CANCELED)
+            order.status = FIXConvertUtils.getStatusText(ordStatus.getValue()); // latest status
 
           positionMan.updatePosition(fixSessionID, order, order.filled_quantity,
                                      order.filled_avg_price);
@@ -203,7 +228,9 @@ public class ExecutionReportProcessorThread implements Runnable {
       orderExecutionReport.leavedQty = leavesQty.getValue();
       orderExecutionReport.updateTime = lastUpdateTime;
       orderExecutionReport.status = ordStatus.getValue();
+     
 
+      /*
       System.out.println("Order Id : " + order.orderKey.getOrderKey() +
                          "| Execution Report : " + executionReportId + "|" +
                          orderExecutionReport.cumFilledQty + "|" +
@@ -212,7 +239,14 @@ public class ExecutionReportProcessorThread implements Runnable {
                          orderExecutionReport.fillQty + "|" +
                          orderExecutionReport.leavedQty +
                          "| Last Update Time : " + lastUpdateTime + " | " +
-                         orderExecutionReport.status);
+                         orderExecutionReport.status);*/
+      
+		try {
+			LOGGER.info(_mapper.writeValueAsString(orderExecutionReport) );
+			LOGGER.info(_mapper.writeValueAsString(order) );
+		} catch (JsonProcessingException e) {
+			LOGGER.error("Unable to convert order/execreport to JSON");
+		}
 
       order.insertExecutionReport(executionReportId, orderExecutionReport,
                                   ++sequenceNumber);

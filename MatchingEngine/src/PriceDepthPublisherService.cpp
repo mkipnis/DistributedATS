@@ -119,7 +119,7 @@ int PriceDepthPublisherService::svc(void) {
 
         std::cout << "Publishing chunk of "
                   << chunkedIncrementalMarketDataRefresh.c_NoMDEntries.length()
-                  << "updates" << std::endl;
+                  << " updates" << std::endl;
 
         std::stringstream ss;
         MarketDataIncrementalRefreshLogger::log(

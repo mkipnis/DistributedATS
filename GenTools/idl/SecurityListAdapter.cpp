@@ -15,6 +15,8 @@ void SecurityListAdapter::FIX2DDS(const FIX::Message& fixMsg, DistributedATS_Sec
 
 	if (fixMsg.isSetField(FIX::FIELD::SecurityRequestResult) )
 		ddsMsg.SecurityRequestResult = FIELD_GET_REF( fixMsg,SecurityRequestResult);
+	else 
+		ddsMsg.SecurityRequestResult = 0;
 
 // There is a group
 

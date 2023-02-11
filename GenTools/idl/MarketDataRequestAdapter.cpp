@@ -15,6 +15,8 @@ void MarketDataRequestAdapter::FIX2DDS(const FIX::Message& fixMsg, DistributedAT
 
 	if (fixMsg.isSetField(FIX::FIELD::MarketDepth) )
 		ddsMsg.MarketDepth = FIELD_GET_REF( fixMsg,MarketDepth);
+	else 
+		ddsMsg.MarketDepth = 0;
 
 // There is a group
 

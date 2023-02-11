@@ -51,6 +51,10 @@
         <field name='TransactTime' gen_cpp='Y' />
         <field name='SenderSubID' gen_cpp='N'/>
         <field name='TargetSubID' gen_cpp='N'/>
+        <field name='TimeInForce' gen_cpp='Y' />
+        <field name='ExecInst' gen_cpp='Y' />
+        <field name='StopPx' gen_cpp='Y'/>
+        <field name='OrdType' gen_cpp='Y'/>
 	</fields>
 	<types>
 		<type fix='INT' dds='long'/>	
@@ -63,6 +67,7 @@
 		<!-- <type fix='EXCHANGE' dds='string' to_dds='CORBA::string_dup(((FIX::%s)%s.getField(FIX::FIELD::%s)).getString().c_str())' to_fix='if ( ACE_OS::strlen(%s.%s) > 0 ) { FIX::%s %s ( %s.%s.in() ); %s.setField(%s);};' to_fix_type='string'/> -->
 		<!-- <type fix='DATA' dds='string' to_dds='CORBA::string_dup(((FIX::%s)%s.getField(FIX::FIELD::%s)).getString().c_str())' to_fix='if ( ACE_OS::strlen(%s.%s) > 0 ) { FIX::%s %s ( %s.%s.in() ); %s.setField(%s);};' to_fix_type='string'/> -->
 		<type fix='CHAR' dds='char'/>
+		<type fix='MULTIPLEVALUESTRING' dds='string' to_dds='CORBA::string_dup(((FIX::%s)%s.getField(FIX::FIELD::%s)).getString().c_str())' to_fix='DistributedATS::convert_dds_string_to_fix(%s.%s.in(), FIX::FIELD::%s, %s);' to_fix_type='string'/>
 		<type fix='SEQNUM' dds='long'/>
 		<type fix='QTY' dds='long'/>
 		<type fix='PRICE' dds='float'/>

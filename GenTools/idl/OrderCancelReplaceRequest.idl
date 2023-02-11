@@ -10,6 +10,7 @@ module DistributedATS_OrderCancelReplaceRequest
 	DistributedATS::Header m_Header;
 		string OrigClOrdID;
 		string ClOrdID;
+		string ExecInst;
 		string Symbol;
 		string SecurityExchange;
 		char Side;
@@ -17,6 +18,8 @@ module DistributedATS_OrderCancelReplaceRequest
 		long OrderQty;
 		char OrdType;
 		float Price;
+		float StopPx;
+		char TimeInForce;
 		string Text;
 	};
 };

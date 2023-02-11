@@ -80,32 +80,50 @@ void NewOrderSingleDataReaderListenerImpl::on_data_available(
         std::string symbol = new_order_single.Symbol.in();
         std::string securityExchange = new_order_single.SecurityExchange.in();
 
-        try {
-          auto book = _market->findBook(symbol);
-
-          if (!book) {
-            throw DistributedATS::OrderException(
-                new_order_single, FIX::OrdRejReason_UNKNOWN_SYMBOL);
-          }
-
-          std::string clientOrderId = new_order_single.ClOrdID.in();
-
-          bool buy_side = false;
-
-          if (new_order_single.Side == '1')
-            buy_side = true;
-
-          std::string gateway = new_order_single.m_Header.SenderCompID.in();
-          std::string dataService = new_order_single.m_Header.TargetSubID.in();
-          std::string contra_party = new_order_single.m_Header.SenderSubID.in();
-          auto quantity = new_order_single.OrderQty;
-          auto price = new_order_single.Price;
+          try {
+              auto book = _market->findBook(symbol);
+              
+              if (!book) {
+                  throw DistributedATS::OrderException(
+                                                       new_order_single, FIX::OrdRejReason_UNKNOWN_SYMBOL);
+              }
+              
+              std::string clientOrderId = new_order_single.ClOrdID.in();
+              
+              bool buy_side = false;
+              
+              if (new_order_single.Side == '1')
+                  buy_side = true;
+              
+              std::string gateway = new_order_single.m_Header.SenderCompID.in();
+              std::string dataService = new_order_single.m_Header.TargetSubID.in();
+              std::string contra_party = new_order_single.m_Header.SenderSubID.in();
+              auto quantity = new_order_single.OrderQty;
+              auto price = new_order_single.Price;
+              auto stop_price = new_order_single.StopPx;
+              
+              liquibook::book::OrderCondition order_condition = liquibook::book::OrderCondition::oc_no_conditions;
+              
+              // ExecInst is string in the data dictionary but char in quickfix/c++
+              // <field number='18' name='ExecInst' type='MULTIPLEVALUESTRING'>
+              if ( new_order_single.ExecInst.in() != NULL && new_order_single.ExecInst[0] == FIX::ExecInst_ALL_OR_NONE )
+              {
+                  order_condition = liquibook::book::OrderCondition::oc_all_or_none;
+              }
+              
+              if ( new_order_single.TimeInForce == FIX::TimeInForce_IMMEDIATE_OR_CANCEL)
+              {
+                  order_condition = liquibook::book::OrderCondition::oc_immediate_or_cancel;
+              } else if ( new_order_single.TimeInForce == FIX::TimeInForce_FILL_OR_KILL )
+              {
+                  order_condition = liquibook::book::OrderCondition::oc_fill_or_kill;
+              }
 
           DistributedATS::OrderPtr order =
               std::make_shared<DistributedATS::Order>(
                   _market->getDataWriterContainer(),
                   gateway, dataService, contra_party, clientOrderId, buy_side,
-                  quantity, symbol, securityExchange, price, 0, false, false);
+                  quantity, symbol, securityExchange, price, stop_price, order_condition);
 
           order->onSubmitted();
 
@@ -130,6 +148,9 @@ void NewOrderSingleDataReaderListenerImpl::on_data_available(
           executionReport.CumQty = 0;
           executionReport.LeavesQty = 0;
           executionReport.Price = 0;
+          executionReport.TimeInForce = new_order_single.TimeInForce;
+          executionReport.OrdType = new_order_single.OrdType;
+          executionReport.ExecInst = new_order_single.ExecInst;
 
           orderException.populateExecutionReportWithRejectCode(executionReport);
 

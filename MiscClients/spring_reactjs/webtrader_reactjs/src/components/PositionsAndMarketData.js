@@ -75,8 +75,8 @@ const Blotter = React.forwardRef ((props, ref) => {
 const [columnDefs, setColumnDefs] = useState([
    { headerName: 'symbol', field: 'symbol', filter: 'agTextColumnFilter', cellStyle: {'textAlign': 'left'}, sortable: true, },
    { headerName: 'Position', field: 'position', flex: 2, filter: 'agTextColumnFilter',  },
-   { headerName: 'VWAP', field: 'vwap', sortable: true, flex: 2 },
-   { headerName: 'PNL', field: 'pnl', sortable: true, flex: 2 },
+   { headerName: 'VWAP', field: 'vwap', sortable: true, flex: 2,valueFormatter:price_formatter },
+   { headerName: 'PNL', field: 'pnl', sortable: true, flex: 2,valueFormatter:price_formatter },
    { headerName: 'BidPrice', field: 'bid_price', sortable: true, flex: 2, valueFormatter:price_formatter, cellStyle: {'textAlign': 'right'}},
    { headerName: 'AskPrice', field: 'ask_price', sortable: true, flex: 2, valueFormatter:price_formatter, cellStyle: {'textAlign': 'right'}},
    { headerName: 'BidSize', field: 'bid_size', sortable: true, flex: 2, valueFormatter:size_formatter, cellStyle: {'textAlign': 'right'}},

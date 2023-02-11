@@ -12,6 +12,8 @@ void BusinessMessageRejectAdapter::FIX2DDS(const FIX::Message& fixMsg, Distribut
 
 	if (fixMsg.isSetField(FIX::FIELD::BusinessRejectReason) )
 		ddsMsg.BusinessRejectReason = FIELD_GET_REF( fixMsg,BusinessRejectReason);
+	else 
+		ddsMsg.BusinessRejectReason = 0;
 
 	if (fixMsg.isSetField(FIX::FIELD::Text) )
 		ddsMsg.Text = CORBA::string_dup(((FIX::Text)fixMsg.getField(FIX::FIELD::Text)).getString().c_str());

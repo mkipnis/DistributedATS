@@ -42,12 +42,12 @@ Order::Order( DataWriterContainerPtr dataWriterContainerPtr,
              const std::string &client_order_id, bool buy_side,
              liquibook::book::Quantity quantity, std::string &symbol,
              std::string &securityExchange, liquibook::book::Price price,
-             liquibook::book::Price stopPrice, bool aon, bool ioc)
+             liquibook::book::Price stopPrice, liquibook::book::OrderConditions conditions)
     : dataWriterContainerPtr_(dataWriterContainerPtr), gateway_(gateway),
       dataService_(dataService), contra_party_(contra_party),
       client_order_id_(client_order_id), buy_side_(buy_side), symbol_(symbol),
       securityExchange_(securityExchange), quantity_(quantity), price_(price),
-      stopPrice_(stopPrice), ioc_(ioc), aon_(aon), quantityFilled_(0),
+      stopPrice_(stopPrice), conditions_(conditions), quantityFilled_(0),
       quantityOnMarket_(0), fillCost_(0), verbose_(false)
 
 {}
@@ -60,9 +60,20 @@ bool Order::is_limit() const { return price() != 0; }
 
 bool Order::is_buy() const { return buy_side_; }
 
-bool Order::all_or_none() const { return aon_; }
+bool Order::all_or_none() const
+{
+    return (conditions_ & liquibook::book::OrderCondition::oc_all_or_none) != 0;
+}
 
-bool Order::immediate_or_cancel() const { return ioc_; }
+bool Order::immediate_or_cancel() const
+{
+    return (conditions_ & liquibook::book::OrderCondition::oc_immediate_or_cancel) != 0;
+}
+
+liquibook::book::OrderConditions Order::conditions() const
+{
+    return conditions_;
+}
 
 std::string Order::symbol() const { return symbol_; }
 
@@ -213,10 +224,33 @@ void Order::populateExecutionReport(
   executionReport.CumQty = quantityFilled();
   executionReport.LeavesQty = quantityOnMarket();
   executionReport.Price = price();
+  executionReport.StopPx = stop_price();
+  
+  if ( stop_price() !=0 )
+      executionReport.OrdType = FIX::OrdType_STOP;
+  else if ( price() !=0 )
+      executionReport.OrdType = FIX::OrdType_LIMIT;
+  else
+      executionReport.OrdType = FIX::OrdType_MARKET;
+
+  if ( all_or_none() )
+      executionReport.ExecInst = CORBA::string_dup("G");
+      
   executionReport.TransactTime =
       (ACE_OS::gettimeofday().sec() * 1000000) + ACE_OS::gettimeofday().usec();
   executionReport.LastPx = 0;
   executionReport.LastQty = 0;
+
+  if ( conditions_ == liquibook::book::OrderCondition::oc_immediate_or_cancel )
+  {
+      executionReport.TimeInForce = FIX::TimeInForce_IMMEDIATE_OR_CANCEL;
+  } else if ( conditions_ == liquibook::book::OrderCondition::oc_fill_or_kill )
+  {
+      executionReport.TimeInForce = FIX::TimeInForce_FILL_OR_KILL;
+  } else {
+      executionReport.TimeInForce = FIX::TimeInForce_DAY;
+  }
+
 
   // std::cout << "Transact Time : " << ACE_OS::gettimeofday().msec() << ":" <<
   // executionReport.TransactTime << std::endl;

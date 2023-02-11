@@ -9,6 +9,7 @@ module DistributedATS_NewOrderSingle
 	{
 	DistributedATS::Header m_Header;
 		string ClOrdID;
+		string ExecInst;
 		string Symbol;
 		string SecurityExchange;
 		char Side;
@@ -16,6 +17,8 @@ module DistributedATS_NewOrderSingle
 		long OrderQty;
 		char OrdType;
 		float Price;
+		float StopPx;
+		char TimeInForce;
 		string Text;
 	};
 };

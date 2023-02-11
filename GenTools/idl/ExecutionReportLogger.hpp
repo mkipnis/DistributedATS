@@ -27,7 +27,11 @@ class ExecutionReportLogger
 			 << "ddsMsg.SecurityExchange : " << ddsMsg.SecurityExchange << std::endl
 			 << "ddsMsg.Side : " << ddsMsg.Side << std::endl
 			 << "ddsMsg.OrderQty : " << ddsMsg.OrderQty << std::endl
+			 << "ddsMsg.OrdType : " << ddsMsg.OrdType << std::endl
 			 << "ddsMsg.Price : " << ddsMsg.Price << std::endl
+			 << "ddsMsg.StopPx : " << ddsMsg.StopPx << std::endl
+			 << "ddsMsg.TimeInForce : " << ddsMsg.TimeInForce << std::endl
+			 << "ddsMsg.ExecInst : " << ddsMsg.ExecInst << std::endl
 			 << "ddsMsg.LastQty : " << ddsMsg.LastQty << std::endl
 			 << "ddsMsg.LastPx : " << ddsMsg.LastPx << std::endl
 			 << "ddsMsg.LeavesQty : " << ddsMsg.LeavesQty << std::endl

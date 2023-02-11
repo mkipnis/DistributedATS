@@ -28,12 +28,19 @@
 package org.DistributedATS.WebTraderRest.Controllers;
 
 import org.DistributedATS.WebTraderRest.entity.Login;
+import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import quickfix.SessionStateListener;
 
 public class SessionState implements SessionStateListener {
 	
 	private Login login;
+	
+	  ObjectMapper _mapper = new ObjectMapper();
+	  private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(SessionStateController.class);
 	
 	public SessionState( Login login )
 	{
@@ -42,60 +49,95 @@ public class SessionState implements SessionStateListener {
 
 	@Override
 	public void onConnect() {
-		// TODO Auto-generated method stub
-		System.out.println("OnConnect : " + this.login.username );
+		
+		try {
+			LOGGER.info("OnConnect : " + _mapper.writeValueAsString(this.login) );
+
+		} catch (JsonProcessingException e) {
+			LOGGER.error("Unable to convert obejct to JSON : " + e.toString());
+		}
 	}
 
 	@Override
 	public void onDisconnect() {
-		// TODO Auto-generated method stub
-		// TODO Auto-generated method stub
-		System.out.println("onDisconnect : " + this.login.username );
+
+		try {
+			LOGGER.info("onDisconnect : " + _mapper.writeValueAsString(this.login) );
+
+		} catch (JsonProcessingException e) {
+			LOGGER.error("Unable to convert obejct to JSON : " + e.toString());
+		}
 
 	}
 
 	@Override
 	public void onLogon() {
-		// TODO Auto-generated method stub
-		System.out.println("onLogon : " + this.login.username );
+		
+		try {
+			LOGGER.info("onLogon : " + _mapper.writeValueAsString(this.login) );
 
-
+		} catch (JsonProcessingException e) {
+			LOGGER.error("Unable to convert obejct to JSON : " + e.toString());
+		}
 	}
 
 	@Override
 	public void onLogout() {
-		// TODO Auto-generated method stub
-		System.out.println("onLogout : " + this.login.username );
+
+		try {
+			LOGGER.info("onLogout : " + _mapper.writeValueAsString(this.login) );
+
+		} catch (JsonProcessingException e) {
+			LOGGER.error("Unable to convert obejct to JSON : " + e.toString());
+		}
 
 	}
 
 	@Override
 	public void onReset() {
-		// TODO Auto-generated method stub
-		System.out.println("onReset : " + this.login.username );
 
+		try {
+			LOGGER.info("onReset : " + _mapper.writeValueAsString(this.login) );
+
+		} catch (JsonProcessingException e) {
+			LOGGER.error("Unable to convert obejct to JSON : " + e.toString());
+		}
 
 	}
 
 	@Override
 	public void onRefresh() {
-		// TODO Auto-generated method stub
-		System.out.println("onRefresh : " + this.login.username );
+		
+		try {
+			LOGGER.info("onRefresh : " + _mapper.writeValueAsString(this.login) );
+
+		} catch (JsonProcessingException e) {
+			LOGGER.error("Unable to convert obejct to JSON : " + e.toString());
+		}
 
 	}
 
 	@Override
-	public void onMissedHeartBeat() {
-		// TODO Auto-generated method stub
-		System.out.println("onMissedHeartBeat : " + this.login.username );
+	public void onMissedHeartBeat() {	
+		
+		try {
+			LOGGER.info("onMissedHeartBeat : " + _mapper.writeValueAsString(this.login) );
 
+		} catch (JsonProcessingException e) {
+			LOGGER.error("Unable to convert obejct to JSON : " + e.toString());
+		}
 
 	}
 
 	@Override
 	public void onHeartBeatTimeout() {
-		// TODO Auto-generated method stub
-		System.out.println("onHeartBeatTimeout : " + this.login.username );
+
+		try {
+			LOGGER.info("onHeartBeatTimeout : " + _mapper.writeValueAsString(this.login) );
+
+		} catch (JsonProcessingException e) {
+			LOGGER.error("Unable to convert obejct to JSON : " + e.toString());
+		}
 
 	}
 

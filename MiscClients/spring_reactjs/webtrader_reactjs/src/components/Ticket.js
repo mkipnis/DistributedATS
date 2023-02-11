@@ -11,12 +11,16 @@ const { forwardRef, useRef, useImperativeHandle } = React;
 const Ticket = React.forwardRef ((props, ref) => {
 
   const [qty, setQty] = useState(1);
+  const [orderType, setOrderType] = useState('Limit');
+  const [allOrNone, setAllOrNone] = useState(false);
+  const [orderCondition, setOrderCondition] = useState('Day');
   const [size, setSize] = useState(null);
   const [orderSubmitResults, setOrderSubmitResults] = useState({});
   const [cancelAllResults, setCancelAllResults] = useState({});
   const [isTicketing, setIsTicketing] = useState(false);
 
   const [ticketPrice, setTicketPrice] = useState(0);
+  const [ticketStopPrice, setTicketStopPrice] = useState(0);
   const [ticketSize, setTicketSize] = useState(0);
 
   const priceLevelsRef = React.useRef();
@@ -44,8 +48,12 @@ const Ticket = React.forwardRef ((props, ref) => {
     ticket["symbol"] = trade.symbol;
     ticket["securityExchange"] = trade.securityExchange;
     ticket["quantity"] = ticketSize;
-    ticket["price_in_ticks"] = (ticketPrice * props.ticketState.tickSize)|0;
+    ticket["price_in_ticks"] = Math.round(ticketPrice * props.ticketState.tickSize);
+    ticket["stop_price_in_ticks"] = Math.round(ticketStopPrice * props.ticketState.tickSize);
     ticket["side"] = trade.side;
+    ticket["order_type"] = orderType;
+    ticket["order_condition"] = orderCondition;
+    ticket["all_or_none"] = allOrNone;
     ticket["username"] = trade.username;
     ticket["token"] = trade.token;
 
@@ -77,6 +85,7 @@ const Ticket = React.forwardRef ((props, ref) => {
   useEffect(() =>
   {
     setTicketPrice(props.ticketState.price);
+    setTicketStopPrice(props.ticketState.price);
     setTicketSize(props.ticketState.quantity);
   }, [props.ticketState.price]);
 
@@ -91,7 +100,7 @@ const Ticket = React.forwardRef ((props, ref) => {
   },[cancelAllResults]);
 
   return (
-    <Row style={{margin: 'auto'}}>
+    <Row style={( props.ticketState.instrumentName == undefined ) ? {pointerEvents: "none", opacity: "0.4"} : {}}>
        <Row style={{marginTop: '10px'}}>
           <Col>
             <h6>Trade : {props.ticketState.instrumentName}</h6>
@@ -110,17 +119,64 @@ const Ticket = React.forwardRef ((props, ref) => {
             </Row>
             <Row>
               <Col>
-                <input type="number"
+                <div style={ ( orderType == "Market" || orderType == "Stop") ? {pointerEvents: "none", opacity: "0.4"} : {}}>
+                  <input type="number"
                       step={0.01}
                       value={ticketPrice}
-                      onChange={(value) => { setTicketPrice(value.target.value); } }/>
-                  </Col>
+                      onChange={(value) => {
+                        setTicketPrice(value.target.value);
+                      } }/>
+                  </div>
+                </Col>
               <Col>
                 <input type="number"
                       min={1}
                       value={ticketSize}
                       onChange={(value) => { setTicketSize(value.target.value); } }/>
               </Col>
+            </Row>
+            <Row  style={{marginTop: '10px'}}>
+              <Col> <label className="label">OrderType</label> </Col>
+              <Col> <label className="label">Condition</label> </Col>
+            </Row>
+            <Row>
+            <Col>
+              <select style={{width:'180px'}} onChange={e => {
+                  console.log("e.target.value", e.target.value);
+                    setOrderType(e.target.value);
+                  }}>
+                <option value="Limit">Limit</option>
+                <option value="Market">Market</option>
+                <option value="Stop">Stop</option>
+              </select>
+            </Col>
+            <Col>
+              <select style={{width:'180px'}} onChange={e => {
+                  console.log("e.target.value", e.target.value);
+                    setOrderCondition(e.target.value);
+                  }}>
+                <option value="no_conditition">Days</option>
+                <option value="immediate_or_cancel">Immediate of Cancel</option>
+                <option value="fill_or_kill">Fill or Kill</option>
+              </select>
+            </Col>
+            </Row>
+            <Row  style={{marginTop: '10px'}}>
+              <Col> <label className="label">StopPx</label> </Col>
+              <Col> <label className="label"></label> </Col>
+            </Row>
+            <Row>
+            <Col>
+              <div style={ ( orderType != "Stop" ) ? {pointerEvents: "none", opacity: "0.4"} : {}}>
+                <input type="number"
+                    step={0.01}
+                    value={ticketStopPrice}
+                    onChange={(value) => { setTicketStopPrice(value.target.value); } }/>
+                </div>
+              </Col>
+              <Col> <label className="label"  style={{marginRight: '10px'}}>All or None</label>
+                  <input type="checkbox"   onChange={(event) => setAllOrNone(event.currentTarget.checked)}/>
+                </Col>
             </Row>
             <Row style={{marginTop: '10px'}}>
               <Col>

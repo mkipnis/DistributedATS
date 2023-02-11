@@ -60,10 +60,17 @@ const [columnDefs, setColumnDefs] = useState([
    { headerName: 'Symbol', field: 'symbol', sortable: true, flex: 2 },
    { headerName: 'OrderKey', field: 'orderKey', sortable: true, flex: 2 },
    { headerName: 'Price', field: 'price', sortable: true, flex: 2, valueFormatter:price_formatter  },
+   { headerName: 'StopPx', field: 'stop_price', sortable: true, flex: 2, valueFormatter:price_formatter  },
    { headerName: 'Quantity', field: 'quantity', sortable: true, flex: 2 },
    { headerName: 'Side', field: 'side', sortable: true, flex: 2 },
    { headerName: 'FilledAvgPrice', field: 'filled_avg_price', sortable: true, flex: 2, valueFormatter:price_formatter },
-   { headerName: 'FulledQty', field: 'filled_quantity', sortable: true, flex: 2, valueFormatter:price_formatter },
+   { headerName: 'FilledQty', field: 'filled_quantity', sortable: true, flex: 2 },
+   { headerName: 'All or None', field: 'allOrNone', sortable: true, flex: 2 },
+   { headerName: 'Condition', field: 'orderCondition', sortable: true, flex: 2 },
+   { headerName: 'OrdType', field: 'orderType', sortable: true, flex: 2 },
+
+
+
       {
         headerName: 'Actions',
         field: 'value',
@@ -85,7 +92,7 @@ const [columnDefs, setColumnDefs] = useState([
 
     onRowDataChanged: event => {
       var defaultSortModel = [
-        { colId: 'lastExecutionReportId', sort: 'desc', sortIndex: 0 }
+        { colId: 'lastUpdateTime', sort: 'desc', sortIndex: 0 }
       ];
       gridRef.current.columnApi.applyColumnState({ state: defaultSortModel });
     },

@@ -39,19 +39,6 @@ public class Order implements Serializable, Comparable<Order> {
 	{		
 	}
 	
-	public String getSide()
-	{
-		if ( side == '1')
-			return "Buy";
-		else 
-			return "Sell";
-	};
-	
-	public String getStatus()
-	{
-		return ExecutionReport.getStatusText(this.status);
-	}
-	
 	public void insertExecutionReport( String executionReportID, ExecutionReport executionReport, long sequenceNumber )
 	{
 		this.sequenceNumber = sequenceNumber;
@@ -64,19 +51,24 @@ public class Order implements Serializable, Comparable<Order> {
 	}
 	
 	public Instrument instrument;
-	public double price;
-	public double quantity;
-	public double filled_quantity;
-	public double filled_avg_price;
-	public char side;
-	public char orderType;
-	public char status;
+	// ticks
+	public int price;
+	public int stop_price;
+	public int quantity;
+	public int filled_quantity;
+	public int filled_avg_price;
+	
+	public String side;
+	public String orderType;
+	public String status;
 	public String lastExecutionReportId;
 	public Date lastUpdateTime;
 	public String username;
 	public String token;
+	public String orderCondition;
+	public Boolean allOrNone;
 	
-	public long sequenceNumber = -1; // reference number between client and a server, so that client get only latest updated(updates since last sequnce)
+	public long sequenceNumber = -1; // reference number between client and server, so that client get only latest updated(updates since last sequnce)
 	
 	private HashMap<String, ExecutionReport> executionReports = new  HashMap<String, ExecutionReport>();
 

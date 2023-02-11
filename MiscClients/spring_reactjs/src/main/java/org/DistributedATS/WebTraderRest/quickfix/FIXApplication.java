@@ -29,21 +29,6 @@ package org.DistributedATS.WebTraderRest.quickfix;
 
 
 
-import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-
-import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-
 import quickfix.ApplicationExtended;
 import quickfix.DoNotSend;
 import quickfix.FieldNotFound;
@@ -54,18 +39,14 @@ import quickfix.Message.Header;
 import quickfix.RejectLogon;
 import quickfix.Session;
 import quickfix.SessionID;
-import quickfix.UnsupportedMessageType;
-
 import quickfix.field.MsgType;
 import quickfix.field.SecurityExchange;
 import quickfix.field.Symbol;
 import quickfix.field.Text;
+import java.util.ArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.DistributedATS.WebTraderRest.entity.Instrument;
-import org.apache.mina.util.CopyOnWriteMap;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 public class FIXApplication implements ApplicationExtended {
 
@@ -78,13 +59,13 @@ public class FIXApplication implements ApplicationExtended {
   public FIXApplication(QuickFixRunnableBean bean) 
   {	
 	  this.quick_fix_runnable_bean =  bean;
-   // this.quick_fix_runnable_bean = applicationContext.getBean(QuickFixRunnableBean.class);
   }
 
   @Override
   public void fromAdmin(Message message, SessionID sessionID)
       throws FieldNotFound, IncorrectDataFormat, IncorrectTagValue,
              RejectLogon {
+	  
     // TODO Auto-generated method stub
     Header header = message.getHeader();
     quickfix.field.MsgType msgType = new MsgType();
@@ -111,8 +92,9 @@ public class FIXApplication implements ApplicationExtended {
 
   @Override
   public void fromApp(Message message, SessionID sessionID)
-      throws FieldNotFound, IncorrectDataFormat, IncorrectTagValue,
-             UnsupportedMessageType {
+  //    throws FieldNotFound, IncorrectDataFormat, IncorrectTagValue,
+  //           UnsupportedMessageType 
+  {
     // TODO Auto-generated method stub
 
     try {
@@ -161,8 +143,7 @@ public class FIXApplication implements ApplicationExtended {
         
         m_userSecuritesMap.put(sessionID, currentSecurityList);
         
-		//sessionState.activeSecurityList =  new ArrayList<Instrument>(userSecurities);
-        	submitMarketDataRequest(sessionID, currentSecurityList);
+        submitMarketDataRequest(sessionID, currentSecurityList);
         
       } else if (msgType.getValue().equals(
                      MsgType.MARKET_DATA_SNAPSHOT_FULL_REFRESH) ||
@@ -191,12 +172,6 @@ public class FIXApplication implements ApplicationExtended {
   
 	 public String submitMarketDataRequest(SessionID sessionID, ArrayList<Instrument> instruments) 
 	 {
-
-		 //QuickFixRunnableBean fix_session_bean = applicationContext.getBean(QuickFixRunnableBean.class);
-
-		 //SessionID sessionID =
-		//		 fix_session_bean.getSessionID(username, token);
-
 		 Session session = Session.lookupSession(sessionID);
 
 		 if (session != null) {
