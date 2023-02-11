@@ -12,6 +12,8 @@ void SecurityListRequestAdapter::FIX2DDS(const FIX::Message& fixMsg, Distributed
 
 	if (fixMsg.isSetField(FIX::FIELD::SecurityListRequestType) )
 		ddsMsg.SecurityListRequestType = FIELD_GET_REF( fixMsg,SecurityListRequestType);
+	else 
+		ddsMsg.SecurityListRequestType = 0;
 
 	if (fixMsg.isSetField(FIX::FIELD::Symbol) )
 		ddsMsg.Symbol = CORBA::string_dup(((FIX::Symbol)fixMsg.getField(FIX::FIELD::Symbol)).getString().c_str());

@@ -9,9 +9,13 @@ void LogonAdapter::FIX2DDS(const FIX::Message& fixMsg, DistributedATS_Logon::Log
 
 	if (fixMsg.isSetField(FIX::FIELD::EncryptMethod) )
 		ddsMsg.EncryptMethod = FIELD_GET_REF( fixMsg,EncryptMethod);
+	else 
+		ddsMsg.EncryptMethod = 0;
 
 	if (fixMsg.isSetField(FIX::FIELD::HeartBtInt) )
 		ddsMsg.HeartBtInt = FIELD_GET_REF( fixMsg,HeartBtInt);
+	else 
+		ddsMsg.HeartBtInt = 0;
 
 	if (fixMsg.isSetField(FIX::FIELD::RawData) )
 		ddsMsg.RawData = CORBA::string_dup(((FIX::RawData)fixMsg.getField(FIX::FIELD::RawData)).getString().c_str());

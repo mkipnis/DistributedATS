@@ -33,9 +33,19 @@ void MarketDataSnapshotFullRefreshAdapter::FIX2DDS(const FIX::Message& fixMsg, D
 
 	if (grp.isSetField(FIX::FIELD::MDEntryPx) )
 		ddsMsg.c_NoMDEntries[NoMDEntries_group_cnt_index].MDEntryPx = FIELD_GET_REF( grp,MDEntryPx);
+	else 
+		ddsMsg.c_NoMDEntries[NoMDEntries_group_cnt_index].MDEntryPx = 0;
 
 	if (grp.isSetField(FIX::FIELD::MDEntrySize) )
 		ddsMsg.c_NoMDEntries[NoMDEntries_group_cnt_index].MDEntrySize = FIELD_GET_REF( grp,MDEntrySize);
+	else 
+		ddsMsg.c_NoMDEntries[NoMDEntries_group_cnt_index].MDEntrySize = 0;
+
+	if (grp.isSetField(FIX::FIELD::TimeInForce) )
+		ddsMsg.c_NoMDEntries[NoMDEntries_group_cnt_index].TimeInForce = FIELD_GET_REF( grp,TimeInForce);
+
+	if (grp.isSetField(FIX::FIELD::ExecInst) )
+		ddsMsg.c_NoMDEntries[NoMDEntries_group_cnt_index].ExecInst = CORBA::string_dup(((FIX::ExecInst)grp.getField(FIX::FIELD::ExecInst)).getString().c_str());
 
 	if (grp.isSetField(FIX::FIELD::Text) )
 		ddsMsg.c_NoMDEntries[NoMDEntries_group_cnt_index].Text = CORBA::string_dup(((FIX::Text)grp.getField(FIX::FIELD::Text)).getString().c_str());
@@ -69,6 +79,11 @@ void MarketDataSnapshotFullRefreshAdapter::DDS2FIX(const DistributedATS_MarketDa
 
 	FIX::MDEntrySize fixMDEntrySize(ddsMsg.c_NoMDEntries[NoMDEntries_group_cnt_index].MDEntrySize);
 	grp.setField(fixMDEntrySize);
+
+	FIX::TimeInForce fixTimeInForce(ddsMsg.c_NoMDEntries[NoMDEntries_group_cnt_index].TimeInForce);
+	grp.setField(fixTimeInForce);
+
+	DistributedATS::convert_dds_string_to_fix(ddsMsg.c_NoMDEntries[NoMDEntries_group_cnt_index].ExecInst.in(), FIX::FIELD::ExecInst, grp);
 
 	DistributedATS::convert_dds_string_to_fix(ddsMsg.c_NoMDEntries[NoMDEntries_group_cnt_index].Text.in(), FIX::FIELD::Text, grp);
 

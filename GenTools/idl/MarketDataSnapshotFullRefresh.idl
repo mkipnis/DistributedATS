@@ -9,6 +9,8 @@ module DistributedATS_MarketDataSnapshotFullRefresh
 		char MDEntryType;
 		float MDEntryPx;
 		long MDEntrySize;
+		char TimeInForce;
+		string ExecInst;
 		string Text;
 	};
 	typedef sequence<NoMDEntries> NoMDEntriesSeq;

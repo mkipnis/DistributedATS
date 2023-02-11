@@ -40,8 +40,8 @@ import quickfix.field.Side;
 //
 public class PositionMan {
 
-  public void updatePosition(SessionID sessionId, Order order, Double size,
-                             Double price) {
+  public void updatePosition(SessionID sessionId, Order order, Integer size,
+		  Integer price) {
     HashMap<Instrument, Position> customerPosition = positions.get(sessionId);
 
     if (customerPosition == null) {
@@ -56,7 +56,7 @@ public class PositionMan {
       customerPosition.put(order.instrument, instrumentPosition);
     }
 
-    if (order.side == Side.BUY) {
+    if ( order.side.compareToIgnoreCase("Buy") == 0 ) {
       if (instrumentPosition.buy_amt + size != 0.0) {
         instrumentPosition.buy_avg_price =
             ((instrumentPosition.buy_avg_price * instrumentPosition.buy_amt) +
@@ -65,24 +65,25 @@ public class PositionMan {
 
         instrumentPosition.buy_amt += size;
       } else {
-        instrumentPosition.buy_avg_price = 0.0;
-        instrumentPosition.buy_amt = 0.0;
+        instrumentPosition.buy_avg_price = 0;
+        instrumentPosition.buy_amt = 0;
       }
 
     } else {
 
       if (instrumentPosition.sell_amt + size != 0.0) {
         instrumentPosition.sell_avg_price =
-            ((instrumentPosition.sell_avg_price * instrumentPosition.sell_amt) +
+            (int) (((instrumentPosition.sell_avg_price * instrumentPosition.sell_amt) +
              (size * price)) /
-            (instrumentPosition.sell_amt + size);
+            (instrumentPosition.sell_amt + size));
 
         instrumentPosition.sell_amt += size;
       } else {
-        instrumentPosition.sell_avg_price = 0.0;
-        instrumentPosition.sell_amt = 0.0;
+        instrumentPosition.sell_avg_price = 0;
+        instrumentPosition.sell_amt = 0;
       }
     }
+    
   }
 
   public HashMap<SessionID, HashMap<Instrument, Position>> positions =

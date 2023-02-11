@@ -57,9 +57,16 @@ class Member:
         fix2dds_cpp_def += "\tif (" +  self.fixObj + ".isSetField(FIX::FIELD::" + member_name + ") )\n";
         if to_dds is not None:
             formatted_statement = (to_dds % (member_name, self.fixObj, member_name));
-            fix2dds_cpp_def += "\t\t"+self.ddsObj+"." + member_name + " = " + formatted_statement + ";\n\n";
+            fix2dds_cpp_def += "\t\t"+self.ddsObj+"." + member_name + " = " + formatted_statement + ";\n";
         else:
-            fix2dds_cpp_def += "\t\t"+self.ddsObj+"." + member_name + " = FIELD_GET_REF( "+ self.fixObj + "," + member_name + ");\n\n";
+            fix2dds_cpp_def += "\t\t"+self.ddsObj+"." + member_name + " = FIELD_GET_REF( "+ self.fixObj + "," + member_name + ");\n";
+
+        #print("DDS_TYOE : " + self.type.attrib['dds'])
+        if self.type.attrib['dds'] == 'float' or self.type.attrib['dds'] == 'long' or self.type.attrib['dds'] == 'unsigned long long':
+            fix2dds_cpp_def += '\telse \n'
+            fix2dds_cpp_def += "\t\t"+self.ddsObj+"." + member_name + " = 0;\n\n"
+        else:
+            fix2dds_cpp_def += "\n"
 
         to_fix = self.type.get("to_fix");
         if to_fix is not None:

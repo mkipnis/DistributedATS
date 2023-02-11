@@ -41,7 +41,7 @@ replace into instrument_market_map ( instrument_name, market_name ) values ('CCC
 replace into instrument_market_map ( instrument_name, market_name ) values ('DDD','MARKET_Z');
 
 replace into user_group_market_map ( user_group, market_name ) values ('MATCHING_ENGINE_Y','MARKET_Y');
-replace into user_group_market_map ( user_group, market_name ) values ('MATCHING_ENGINE_Z','MARKET_Y');
+replace into user_group_market_map ( user_group, market_name ) values ('MATCHING_ENGINE_Z','MARKET_Z');
 replace into user_group_market_map ( user_group, market_name ) values ('TRADER_GROUP_A','MARKET_Y');
 replace into user_group_market_map ( user_group, market_name ) values ('TRADER_GROUP_A','MARKET_Z');
 replace into user_group_market_map ( user_group, market_name ) values ('TRADER_GROUP_B','MARKET_Y');

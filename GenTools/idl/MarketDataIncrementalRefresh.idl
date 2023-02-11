@@ -12,6 +12,8 @@ module DistributedATS_MarketDataIncrementalRefresh
 		string SecurityExchange;
 		float MDEntryPx;
 		long MDEntrySize;
+		char TimeInForce;
+		string ExecInst;
 		string Text;
 	};
 	typedef sequence<NoMDEntries> NoMDEntriesSeq;

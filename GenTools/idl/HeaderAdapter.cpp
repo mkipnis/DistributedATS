@@ -12,6 +12,8 @@ void HeaderAdapter::FIX2DDS(const FIX::FieldMap& fixMsg, DistributedATS::Header&
 
 	if (fixMsg.isSetField(FIX::FIELD::BodyLength) )
 		ddsMsg.BodyLength = FIELD_GET_REF( fixMsg,BodyLength);
+	else 
+		ddsMsg.BodyLength = 0;
 
 	if (fixMsg.isSetField(FIX::FIELD::MsgType) )
 		ddsMsg.MsgType = CORBA::string_dup(((FIX::MsgType)fixMsg.getField(FIX::FIELD::MsgType)).getString().c_str());
@@ -24,9 +26,13 @@ void HeaderAdapter::FIX2DDS(const FIX::FieldMap& fixMsg, DistributedATS::Header&
 
 	if (fixMsg.isSetField(FIX::FIELD::MsgSeqNum) )
 		ddsMsg.MsgSeqNum = FIELD_GET_REF( fixMsg,MsgSeqNum);
+	else 
+		ddsMsg.MsgSeqNum = 0;
 
 	if (fixMsg.isSetField(FIX::FIELD::SendingTime) )
 		ddsMsg.SendingTime = ((FIX::SendingTime)FIELD_GET_REF( fixMsg,SendingTime)).getValue().getJulianDate();
+	else 
+		ddsMsg.SendingTime = 0;
 
 
 };

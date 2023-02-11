@@ -12,6 +12,8 @@ void OrderMassStatusRequestAdapter::FIX2DDS(const FIX::Message& fixMsg, Distribu
 
 	if (fixMsg.isSetField(FIX::FIELD::MassStatusReqType) )
 		ddsMsg.MassStatusReqType = FIELD_GET_REF( fixMsg,MassStatusReqType);
+	else 
+		ddsMsg.MassStatusReqType = 0;
 
 	if (fixMsg.isSetField(FIX::FIELD::Symbol) )
 		ddsMsg.Symbol = CORBA::string_dup(((FIX::Symbol)fixMsg.getField(FIX::FIELD::Symbol)).getString().c_str());

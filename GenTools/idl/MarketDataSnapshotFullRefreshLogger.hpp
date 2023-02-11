@@ -30,6 +30,8 @@ class MarketDataSnapshotFullRefreshLogger
 			 ;out << "ddsMsg.c_NoMDEntries[" << tt << "].MDEntryType : " << ddsMsg.c_NoMDEntries[tt].MDEntryType << std::endl;
 			 ;out << "ddsMsg.c_NoMDEntries[" << tt << "].MDEntryPx : " << ddsMsg.c_NoMDEntries[tt].MDEntryPx << std::endl;
 			 ;out << "ddsMsg.c_NoMDEntries[" << tt << "].MDEntrySize : " << ddsMsg.c_NoMDEntries[tt].MDEntrySize << std::endl;
+			 ;out << "ddsMsg.c_NoMDEntries[" << tt << "].TimeInForce : " << ddsMsg.c_NoMDEntries[tt].TimeInForce << std::endl;
+			 ;out << "ddsMsg.c_NoMDEntries[" << tt << "].ExecInst : " << ddsMsg.c_NoMDEntries[tt].ExecInst << std::endl;
 			 ;out << "ddsMsg.c_NoMDEntries[" << tt << "].Text : " << ddsMsg.c_NoMDEntries[tt].Text << std::endl;
 		};
 

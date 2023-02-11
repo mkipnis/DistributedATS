@@ -28,10 +28,9 @@
 
 package org.DistributedATS.WebTraderRest.Controllers;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
+
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -41,22 +40,30 @@ import org.DistributedATS.WebTraderRest.entity.Order;
 import org.DistributedATS.WebTraderRest.entity.OrderKey;
 import org.DistributedATS.WebTraderRest.entity.TradeTicket;
 import org.DistributedATS.WebTraderRest.quickfix.*;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import quickfix.Session;
 import quickfix.SessionID;
 import quickfix.field.ClOrdID;
+import quickfix.field.ExecInst;
 import quickfix.field.HandlInst;
+import quickfix.field.OrdStatus;
 import quickfix.field.OrdType;
 import quickfix.field.OrderQty;
 import quickfix.field.Price;
 import quickfix.field.SecurityExchange;
 import quickfix.field.Side;
+import quickfix.field.StopPx;
 import quickfix.field.Symbol;
+import quickfix.field.TimeInForce;
 import quickfix.field.TransactTime;
 
 @RestController
@@ -86,9 +93,11 @@ public class SessionStateController {
 	        SessionID sessionID = fix_session_bean.getSessionID(
 	            sessionState.username, session_state_request.token);
 	        
+	        /*
 	        System.out.println("Session SessionId:TokenSession : " + 
 	        		session_state_request.token + ":" +  sessionID.toString() + ": Order State Sequence Number : " 
 	        		+  session_state_request.maxOrderSequenceNumber + ": Market Data Sequence Number :" + session_state_request.marketDataSequenceNumber );
+			*/
 
 	        if ((session_state_request.stateMask &
 	             (1 << FIXUserSession.LOGON_STATE_BIT)) != 0) {
@@ -151,125 +160,29 @@ public class SessionStateController {
 	   */
 	  private static final long serialVersionUID = 1L;
 	  private static long _order_index = 0;
+	  ObjectMapper _mapper = new ObjectMapper();
 
 	  public static String getNextRequestID(SessionID sessionID) {
 	    String orderID = new Long(System.currentTimeMillis() / 1000).toString() +
 	                     ":" + sessionID.toString() + ":" + ++_order_index;
 
 	    return orderID;
-	  }
-	
-	  /*
-	 public String submitMarketDataRequest(String username, String token,
-             ArrayList<Instrument> instruments) 
-	 {
-
-		 QuickFixRunnableBean fix_session_bean = applicationContext.getBean(QuickFixRunnableBean.class);
-
-		 SessionID sessionID =
-				 fix_session_bean.getSessionID(username, token);
-
-		 Session session = Session.lookupSession(sessionID);
-
-		 if (session != null) {
-			 String requestID = getNextRequestID(sessionID);
-			 quickfix.field.MDReqID mdRequestID =
-					 new quickfix.field.MDReqID(requestID);
-			 quickfix.field.SubscriptionRequestType subscriptionRequestType =
-					 new quickfix.field.SubscriptionRequestType(
-							 quickfix.field.SubscriptionRequestType.SNAPSHOT_UPDATES);
-
-			 quickfix.field.MarketDepth marketDepth =
-					 new quickfix.field.MarketDepth(0);
-
-			 quickfix.fix44.MarketDataRequest marketDataRequest =
-					 new quickfix.fix44.MarketDataRequest(
-							 mdRequestID, subscriptionRequestType, marketDepth);
-
-			 quickfix.fix44.MarketDataRequest.NoMDEntryTypes noMDEntryTypeBid =
-					 new quickfix.fix44.MarketDataRequest.NoMDEntryTypes();
-			 quickfix.field.MDEntryType entryTypeBid =
-					 new quickfix.field.MDEntryType(quickfix.field.MDEntryType.BID);
-			 noMDEntryTypeBid.setField(entryTypeBid);
-			 marketDataRequest.addGroup(noMDEntryTypeBid);
-
-			 quickfix.fix44.MarketDataRequest.NoMDEntryTypes noMDEntryTypeAsk =
-					 new quickfix.fix44.MarketDataRequest.NoMDEntryTypes();
-			 quickfix.field.MDEntryType entryTypeAsk =
-					 new quickfix.field.MDEntryType(quickfix.field.MDEntryType.OFFER);
-			 noMDEntryTypeAsk.setField(entryTypeAsk);
-			 marketDataRequest.addGroup(noMDEntryTypeAsk);
-
-			 for (Instrument instrument : instruments) {
-				 quickfix.field.Symbol fixSymbol =
-						 new quickfix.field.Symbol(instrument.getSymbol());
-				 quickfix.field.SecurityExchange fixSecurityExchange =
-						 new quickfix.field.SecurityExchange(
-								 instrument.getSecurityExchange());
-
-				 quickfix.fix44.MarketDataRequest.NoRelatedSym fixSymbolGroup =
-						 new quickfix.fix44.MarketDataRequest.NoRelatedSym();
-				 fixSymbolGroup.setField(fixSymbol);
-				 fixSymbolGroup.setField(fixSecurityExchange);
-				 marketDataRequest.addGroup(fixSymbolGroup);
-			 }
-
-			 session.send(marketDataRequest);
-
-			 return requestID;
-		 }
-
-		 return null;
-	 }*/
-	 
-
-	 /*
-	 public String submitMassOrderStatusRequest(String username, String token) {
-		 // TODO Auto-generated method stub
-
-	 QuickFixRunnableBean fix_session_bean = applicationContext.getBean(QuickFixRunnableBean.class);
-
-
-	 SessionID sessionID =
-			 fix_session_bean.getSessionID(username, token);
-
-	 Session session = Session.lookupSession(sessionID);
-
-	 if (session != null) {
-		 String requestID = getNextRequestID(sessionID);
-
-
-		 quickfix.field.MassStatusReqID massStatusRequestID =
-				 new quickfix.field.MassStatusReqID(requestID);
-
-		 quickfix.fix44.OrderMassStatusRequest orderMassStatusRequest =
-				 new quickfix.fix44.OrderMassStatusRequest(
-						 massStatusRequestID,
-						 new quickfix.field.MassStatusReqType(
-								 quickfix.field.MassStatusReqType.STATUS_FOR_ALL_ORDERS));
-
-		 session.send(orderMassStatusRequest);
-
-		 return requestID;
 	 }
+	  
+	  private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(SessionStateController.class);
 
-	 return null;
-	}*/
  
 	@PostMapping(value = "/SubmitOrder", consumes = "application/json", produces = "application/json")
 	public Object submitOrder(
-			  /*String username, String token, String buy_or_sell,
-              Instrument instrument, Integer price_in_ticks,*/
               @RequestBody TradeTicket ticket, 
               HttpServletResponse response) 
 	{
-		
-        
-		// TODO Auto-generated method stub
-		System.out.println(ticket.username + " : "
-          + " : " + ticket.side + " : " +
-          ticket.securityExchange + " : " + ticket.symbol + " : " + ticket.price_in_ticks + " : " +
-          ticket.quantity);
+				
+		try {
+			LOGGER.info(_mapper.writeValueAsString(ticket) );
+		} catch (JsonProcessingException e) {
+			LOGGER.error("Unable to convert ticket to JSON");
+		}
 
 		 QuickFixRunnableBean fix_session_bean = applicationContext.getBean(QuickFixRunnableBean.class);
 
@@ -278,39 +191,73 @@ public class SessionStateController {
 
 		Order order = new Order();
 
-		Side side;
 
+		order.instrument = new Instrument(ticket.securityExchange, ticket.symbol);
+		order.orderKey = OrderKey.getNextOrderID(order.instrument);
+		order.orderType = ticket.order_type;
+		order.allOrNone = ticket.all_or_none;
+		order.orderCondition = ticket.order_condition;
+		order.side = ticket.side;
+		order.price = ticket.price_in_ticks;
+		order.stop_price = ticket.stop_price_in_ticks;
+
+		Side side;
 		
 		if (ticket.side.compareToIgnoreCase("BUY") == 0)
 			side = new Side(Side.BUY);
 		else
 			side = new Side(Side.SELL);
-
-
-		order.instrument = new Instrument(ticket.securityExchange, ticket.symbol);
-		order.orderKey = OrderKey.getNextOrderID(order.instrument);
-		order.orderType = OrdType.LIMIT;
+		
+		OrdType orderType = new quickfix.field.OrdType();
+		
+		if ( ticket.order_type.compareToIgnoreCase("MARKET") == 0 ) 
+			orderType.setValue(OrdType.MARKET);
+		else if ( ticket.order_type.compareToIgnoreCase("STOP") == 0  )
+			orderType.setValue(OrdType.STOP_STOP_LOSS);
+		else
+			orderType.setValue(OrdType.LIMIT);
+		
+		TimeInForce timeInForce = new TimeInForce();
+		
+		if ( ticket.order_condition.compareToIgnoreCase("immediate_or_cancel") == 0 )
+			timeInForce.setValue( TimeInForce.IMMEDIATE_OR_CANCEL );
+		else if ( ticket.order_condition.compareToIgnoreCase("fill_or_kill") == 0 )
+			timeInForce.setValue(TimeInForce.FILL_OR_KILL );
+		else
+			timeInForce.setValue( TimeInForce.DAY );
+			
 
 		quickfix.fix44.NewOrderSingle newOrderSingle =
 				new quickfix.fix44.NewOrderSingle(
 						new ClOrdID(order.orderKey.getOrderKey()), side, new TransactTime(),
-						new OrdType(order.orderType));
+						orderType);
 
 		newOrderSingle.set(new OrderQty(ticket.quantity));
 		newOrderSingle.set(new Symbol(ticket.symbol));
 		newOrderSingle.set(new SecurityExchange(ticket.securityExchange));
 		newOrderSingle.set(new HandlInst('1'));
-		newOrderSingle.set(new Price(ticket.price_in_ticks));
-
-		order.status = ExecutionReport.PENDING_NEW;
+		
+		if (ticket.all_or_none == true)
+			newOrderSingle.set(new ExecInst(new Character(ExecInst.ALL_OR_NONE_AON).toString()));
+		
+		if ( orderType.getValue() == OrdType.LIMIT )
+			newOrderSingle.set(new Price(ticket.price_in_ticks));
+		
+		if (orderType.getValue() == OrdType.STOP_STOP_LOSS )
+			newOrderSingle.set(new StopPx(ticket.stop_price_in_ticks));
+		
+		newOrderSingle.set(timeInForce);
 
 		ExecutionReport execReport = new ExecutionReport();
 		execReport.updateTime = new Date();
-		execReport.status = ExecutionReport.PENDING_NEW;
+		execReport.status = OrdStatus.PENDING_NEW;
+		execReport.stopPrice = ticket.stop_price_in_ticks;
+		
+		order.status = FIXConvertUtils.getStatusText(execReport.status);
+
 		order.insertExecutionReport("0", execReport, 1);
 
-		fix_session_bean.getOrderMan().insertUpdateOrder(sessionID,
-                                           order.orderKey, order);
+		fix_session_bean.getOrderMan().insertUpdateOrder(sessionID, order.orderKey, order);
 
 		Session session = Session.lookupSession(sessionID);
 
@@ -346,11 +293,9 @@ public class SessionStateController {
 			 quickfix.field.Side side;
 			 if (cancel_order.get("side").compareToIgnoreCase("BUY") == 0)
 				side = new Side(Side.BUY);
-			else
+			 else
 				side = new Side(Side.SELL);
-			 
-			 //quickfix.field.Side side = new quickfix.field.Side(cancel_order.order.side);
-			
+			 			
 			 quickfix.field.TransactTime transactTime =
 					 new quickfix.field.TransactTime();
 

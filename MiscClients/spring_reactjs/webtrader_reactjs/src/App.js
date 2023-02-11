@@ -210,12 +210,16 @@ function App()
       <div style={( sessionState == null || sessionState.sessionState != 1 || sessionState.activeSecurityList == null ) ? {pointerEvents: "none", opacity: "0.4"} : {}}>
         <Row>
         <Col  sm={8}>
-          <PositionsAndMarketData blotterData={blotterData} ticketState={ticketState} marketDataCallback={Populate_ticket} ref={marketDataAndPositionsRef}/>
+          <div>
+            <PositionsAndMarketData blotterData={blotterData} ticketState={ticketState} marketDataCallback={Populate_ticket} ref={marketDataAndPositionsRef}/>
+          </div>
+          <div>
+            Click on the instrument to trade.
+          </div>
         </Col>
         <Col  sm={4}>
             <Ticket ticketState={ticketState} priceLevels={priceLevels} ref={ticketRef}/>
         </Col>
-
         </Row>
       <div style={{marginTop: '10px'}}>
         <History histData={histData} blotterData={blotterData} ref={histRef} orderCancelCallback={Submit_cancel}/>

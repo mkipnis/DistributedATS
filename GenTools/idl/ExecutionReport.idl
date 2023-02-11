@@ -18,7 +18,11 @@ module DistributedATS_ExecutionReport
 		string SecurityExchange;
 		char Side;
 		long OrderQty;
+		char OrdType;
 		float Price;
+		float StopPx;
+		char TimeInForce;
+		string ExecInst;
 		long LastQty;
 		float LastPx;
 		long LeavesQty;

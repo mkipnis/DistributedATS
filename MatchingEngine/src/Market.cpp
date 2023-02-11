@@ -111,8 +111,8 @@ bool Market::submit(const OrderBookPtr &book, const OrderPtr &order) {
 
   customerOrders->emplace(order->order_id(), order);
 
-  const liquibook::book::OrderConditions NOC(liquibook::book::oc_no_conditions);
-  book->add(order, NOC);
+  //const liquibook::book::OrderConditions NOC(liquibook::book::oc_no_conditions);
+  book->add(order, order->conditions());
 
   return true;
 }
