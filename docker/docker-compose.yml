@@ -1,0 +1,16 @@
+version: '2'
+services:
+  distributed_ats:
+    image: ghcr.io/mkipnis/distributed_ats:latest
+    command: ["bash", "-c", "cd /opt/DistributedATS/; . ./distributed_ats_env.sh; cd MiscATS/CryptoCLOB/scripts; ./start_ats.sh"]
+#    volumes:
+#      - "./data:/opt/DistributedATS/DataService/sql/sqlite"
+    ports:
+      - "15001:15001"
+      - "16001:16001"
+      - "17001:17001"
+  distributed_ats_webtrader:
+    image: ghcr.io/mkipnis/distributed_ats_webtrader:latest
+    #image: distributed_ats_webtrader
+    ports:
+      - "8080:8080"
