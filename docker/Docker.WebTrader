@@ -1,5 +1,3 @@
-FROM ubuntu:20.04
-
 FROM tomcat:9.0
 
 ENV CATALINA_OUT /dev/stdout

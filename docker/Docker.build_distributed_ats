@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM ubuntu:latest
 
 FROM ghcr.io/objectcomputing/opendds:DDS-3.23
 
@@ -14,15 +14,3 @@ RUN /build_distributed_ats.sh
 EXPOSE 15001
 EXPOSE 16001
 EXPOSE 17001
-
-#RUN apt-get install -y openjdk-8-jdk
-#RUN apt-get install -y wget
-
-#RUN mkdir /usr/local/tomcat
-
-#RUN wget https://downloads.apache.org/tomcat/tomcat-10/v10.1.7/bin/apache-tomcat-10.1.7.tar.gz -O /tmp/tomcat.tar.gz
-#RUN cd /tmp && tar xvfz tomcat.tar.gz
-#RUN cp -Rv /tmp/apache-tomcat-10.1.7/* /usr/local/tomcat/
-#RUN mkdir /usr/local/tomcat/webapps-dats
-#ADD DistributedATS/MiscClients/spring_reactjs/target/WebTraderRest-0.0.1-SNAPSHOT.war /usr/local/tomcat/webapps-dats/ROOT.war
-

@@ -54,17 +54,6 @@ cd quickfix-$QUICKFIX_PKG
 make install -j 10
 fi
 
-if [[ ! -f $INSTALL_DIR/include/quickfix/config-all.h ]]
-then
-
-cd $DEPS_BUILD_DIR
-[[ ! -d quickfix-$QUICKFIX_PKG ]] && tar xvf quickfix-v$QUICKFIX_PKG.tar.gz
-cd quickfix-$QUICKFIX_PKG
-./bootstrap
-./configure --prefix=$INSTALL_DIR --exec-prefix=$INSTALL_DIR
-make install -j 10
-fi
-
 if [[ ! -f $INSTALL_DIR/include/sqlite3.h ]]
 then
 
