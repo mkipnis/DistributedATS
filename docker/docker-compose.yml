@@ -9,8 +9,8 @@ services:
       - "15001:15001"
       - "16001:16001"
       - "17001:17001"
+
   distributed_ats_webtrader:
     image: ghcr.io/mkipnis/distributed_ats_webtrader:latest
-    #image: distributed_ats_webtrader
     ports:
       - "8080:8080"
