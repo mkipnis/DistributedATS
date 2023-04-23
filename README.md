@@ -78,8 +78,9 @@ download_deps_and_build_all.sh
 
 ### Docker
 
-[Docker YML](https://github.com/mkipnis/DistributedATS/blob/master/docker/docker-compose.yml)
+[docker-compose.yml](https://github.com/mkipnis/DistributedATS/blob/master/docker/docker-compose.yml)
 
+```
 version: '2'
 services:
   distributed_ats:
@@ -94,6 +95,6 @@ services:
     image: ghcr.io/mkipnis/distributed_ats_webtrader:latest
     ports:
       - "8080:8080"
-
+```
 
 Upon starting the dockerized instance, open your browser and go to http://localhost:8080. Then, use either CRYPTO_TRADER_1, CRYPTO_TRADER_2, CRYPTO_TRADER_3, or CRYPTO_TRADER_4 as the username to log in with the password "TEST".
