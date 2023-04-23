@@ -5,7 +5,7 @@ services:
     command: ["bash", "-c", "cd /opt/DistributedATS/; . ./distributed_ats_env.sh; cd MiscATS/CryptoCLOB/scripts; ./start_ats.sh"]
 #    volumes:
 #      - "./data:/opt/DistributedATS/DataService/sql/sqlite"
-    ports:
+    ports: # FIX Gateways
       - "15001:15001"
       - "16001:16001"
       - "17001:17001"
