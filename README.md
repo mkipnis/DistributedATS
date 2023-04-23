@@ -86,7 +86,7 @@ services:
   distributed_ats:
     image: ghcr.io/mkipnis/distributed_ats:latest
     command: ["bash", "-c", "cd /opt/DistributedATS/; . ./distributed_ats_env.sh; cd MiscATS/CryptoCLOB/scripts; ./start_ats.sh"]
-    ports:
+    ports: # FIX Gateways
       - "15001:15001"
       - "16001:16001"
       - "17001:17001"
