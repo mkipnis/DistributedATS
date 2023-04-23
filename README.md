@@ -83,14 +83,18 @@ download_deps_and_build_all.sh
 ```
 version: '2'
 services:
+# Core: Matching Engines, Data Services, FIX Gateways 
   distributed_ats:
     image: ghcr.io/mkipnis/distributed_ats:latest
     command: ["bash", "-c", "cd /opt/DistributedATS/; . ./distributed_ats_env.sh; cd MiscATS/CryptoCLOB/scripts; ./start_ats.sh"]
+#    volumes: # Users and Instruments
+#      - "./data:/opt/DistributedATS/DataService/sql/sqlite"
     ports: # FIX Gateways
       - "15001:15001"
       - "16001:16001"
       - "17001:17001"
 
+# Front-End : Tomcat/Spring/React
   distributed_ats_webtrader:
     image: ghcr.io/mkipnis/distributed_ats_webtrader:latest
     ports:
