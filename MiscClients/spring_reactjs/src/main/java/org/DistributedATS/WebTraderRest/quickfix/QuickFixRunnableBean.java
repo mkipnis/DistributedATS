@@ -141,8 +141,9 @@ public class QuickFixRunnableBean implements InitializingBean, DisposableBean
 	      int max_count = 0;
 
 	      if (orders != null) {
-	        for (Order order : orders) {	        	
-	          if (/*order.status != ExecutionReport.PENDING_NEW &&*/ order.sequenceNumber > maxOrderSequenceNumber) {
+	        for (Order order : orders) 
+	        {	
+	          if ( order.sequenceNumber > maxOrderSequenceNumber ) {
 
 	            ordersOut.put(order.orderKey, order);
 

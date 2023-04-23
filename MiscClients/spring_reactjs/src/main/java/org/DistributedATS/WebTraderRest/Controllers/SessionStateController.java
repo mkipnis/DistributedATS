@@ -255,7 +255,7 @@ public class SessionStateController {
 		
 		order.status = FIXConvertUtils.getStatusText(execReport.status);
 
-		order.insertExecutionReport("0", execReport, 1);
+		order.insertExecutionReport("0", execReport, -1);
 
 		fix_session_bean.getOrderMan().insertUpdateOrder(sessionID, order.orderKey, order);
 
