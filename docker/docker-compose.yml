@@ -3,7 +3,7 @@ services:
   distributed_ats:
     image: ghcr.io/mkipnis/distributed_ats:latest
     command: ["bash", "-c", "cd /opt/DistributedATS/; . ./distributed_ats_env.sh; cd MiscATS/CryptoCLOB/scripts; ./start_ats.sh"]
-#    volumes:
+#    volumes: # Users and Instruments
 #      - "./data:/opt/DistributedATS/DataService/sql/sqlite"
     ports: # FIX Gateways
       - "15001:15001"
