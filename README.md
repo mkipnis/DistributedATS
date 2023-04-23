@@ -75,3 +75,25 @@ DistributedATS is a [**FIX Protocol-based**](https://www.fixtrading.org) alterna
 ```
 download_deps_and_build_all.sh
 ```
+
+### Docker
+
+[Docker YML](https://github.com/mkipnis/DistributedATS/blob/master/docker/docker-compose.yml)
+
+version: '2'
+services:
+  distributed_ats:
+    image: ghcr.io/mkipnis/distributed_ats:latest
+    command: ["bash", "-c", "cd /opt/DistributedATS/; . ./distributed_ats_env.sh; cd MiscATS/CryptoCLOB/scripts; ./start_ats.sh"]
+    ports:
+      - "15001:15001"
+      - "16001:16001"
+      - "17001:17001"
+
+  distributed_ats_webtrader:
+    image: ghcr.io/mkipnis/distributed_ats_webtrader:latest
+    ports:
+      - "8080:8080"
+
+
+Upon starting the dockerized instance, open your browser and go to http://localhost:8080. Then, use either CRYPTO_TRADER_1, CRYPTO_TRADER_2, CRYPTO_TRADER_3, or CRYPTO_TRADER_4 as the username to log in with the password "TEST".
