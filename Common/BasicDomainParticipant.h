@@ -33,6 +33,7 @@
 #include <dds/DCPS/SubscriberImpl.h>
 #include <dds/DCPS/WaitSet.h>
 #include <ace/streams.h>
+#include <SampleObserver.h>
 
 namespace distributed_ats_utils 
 {
@@ -72,6 +73,11 @@ public:
             ACE_ERROR( (LM_ERROR, "(%T|%P|%t) %s.\n", error.str().c_str() ) );
             throw Exception( error.str() );
         }
+
+#ifdef OPENDDS_RAPIDJSON
+	OpenDDS::DCPS::Observer_rch observer = OpenDDS::DCPS::make_rch<SampleObserver>();
+        dynamic_cast<OpenDDS::DCPS::EntityImpl*>(_participant.in())->set_observer(observer, SampleObserver::e_SAMPLE_SENT | SampleObserver::e_SAMPLE_RECEIVED | SampleObserver::e_SAMPLE_READ | SampleObserver::e_SAMPLE_TAKEN);
+#endif
     }
 
 
@@ -147,6 +153,7 @@ public:
         
         ::DDS::TopicQos topic_qos;
         _participant->get_default_topic_qos(topic_qos);
+        topic_qos.reliability.kind =  DDS::RELIABLE_RELIABILITY_QOS;
         
         DDS::Topic_var topic = _participant->create_topic ( topic_name, type_name,
                                                            topic_qos, DDS::TopicListener::_nil(), ::OpenDDS::DCPS::DEFAULT_STATUS_MASK);

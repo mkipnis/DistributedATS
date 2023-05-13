@@ -37,15 +37,6 @@ namespace DistributedATS {
 auto const market_data_full_snapshot_processor = [] (DistributedATS::DATSApplication &application, DistributedATS_MarketDataSnapshotFullRefresh::MarketDataSnapshotFullRefresh&
                                                marketDataSnapshotFullRefresh)
 {
-
-    std::stringstream ss;
-    MarketDataSnapshotFullRefreshLogger::log(ss,
-                                             marketDataSnapshotFullRefresh);
-    ACE_DEBUG(
-        (LM_INFO,
-         ACE_TEXT("(%P|%t) DATSMarketDataSnapshotFullRefreshLogger : %s\n"),
-         ss.str().c_str()));
-
     FIX::Message marketDataSnapshotFullRefreshMessage;
 
     marketDataSnapshotFullRefresh.m_Header.SendingTime =

@@ -188,7 +188,7 @@ int main(int argc, char **argv) {
     // threads
     std::string fix_prefix = sender_comp_id + "." + data_service_name;
     std::string dds_output_stream_log_file =
-        dds_log_file_name_prefix + ".dds.out.log";
+        dds_log_file_name_prefix + ".dds.fix.log";
 
     std::cout << "DDS out filename : " << dds_output_stream_log_file
               << std::endl;
@@ -206,7 +206,7 @@ int main(int argc, char **argv) {
     ACE_LOG_MSG->set_flags(ACE_Log_Msg::OSTREAM);
 
     std::string dds_input_stream_log_file =
-        dds_log_file_name_prefix + ".dds.in.log";
+        dds_log_file_name_prefix + ".fix.dds.log";
 
     std::cout << "DDS input filename : " << dds_input_stream_log_file
               << std::endl;

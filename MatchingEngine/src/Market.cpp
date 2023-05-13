@@ -252,10 +252,14 @@ bool Market::mass_cancel(const std::string &counter_party) {
 
     auto book = findBook(order->symbol());
 
-    // book->log(out());
-    book->cancel(order);
-    // book->log(out());
+    if ( order->quantityOnMarket() > 0 )
+    {
+        book->cancel(order);
+    }
+
   }
+
+  orders_.erase(contra_party_orders); 
 
   return true;
 }
