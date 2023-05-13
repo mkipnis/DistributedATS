@@ -35,13 +35,6 @@ namespace DistributedATS {
 
 auto const market_data_refresh_processor = [] (DistributedATS::DATSApplication &application, DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefresh& marketDataRefresh)
 {
-
-        std::stringstream ss;
-        MarketDataIncrementalRefreshLogger::log(ss, marketDataRefresh);
-        ACE_DEBUG((LM_INFO,
-                   ACE_TEXT("(%P|%t) MarketDataIncrementalRefresh : %s\n"),
-                   ss.str().c_str()));
-
         FIX::Message marketDataIncementalRefreshMessage;
 
         marketDataRefresh.m_Header.SendingTime = 0; // this is precision;
@@ -87,6 +80,8 @@ MarketDataIncrementalRefreshDataReaderListenerImpl::MarketDataIncrementalRefresh
 
 void MarketDataIncrementalRefreshDataReaderListenerImpl::on_data_available(
     DDS::DataReader_ptr reader) throw(CORBA::SystemException) {
+        
+        static int count = 0;
   try {
       DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefreshDataReader_var
         market_data_incremental_refresh_dr = DistributedATS_MarketDataIncrementalRefresh::

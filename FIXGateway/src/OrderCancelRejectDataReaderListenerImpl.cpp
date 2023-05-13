@@ -34,11 +34,6 @@ namespace DistributedATS {
 auto const order_cancel_reject_processor = [] (DistributedATS::DATSApplication &application, DistributedATS_OrderCancelReject::OrderCancelReject& orderCancelReject)
 {
 
-    std::stringstream ss;
-    OrderCancelRejectLogger::log(ss, orderCancelReject);
-    ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%t) OrderCancelReject : %s\n"),
-               ss.str().c_str()));
-
     FIX::Message orderCancelRejectMessage;
 
     orderCancelReject.m_Header.SendingTime = 0; // this is precision;

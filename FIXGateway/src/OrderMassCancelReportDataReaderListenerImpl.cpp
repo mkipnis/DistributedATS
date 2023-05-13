@@ -34,12 +34,6 @@ namespace DistributedATS {
 
 auto const order_mass_cencel_report_processor = [] (DistributedATS::DATSApplication &application, DistributedATS_OrderMassCancelReport::OrderMassCancelReport& orderMassCancelReport)
 {
-
-    std::stringstream ss;
-    OrderMassCancelReportLogger::log(ss, orderMassCancelReport);
-    ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%t) OrderMassCancelReport : %s\n"),
-               ss.str().c_str()));
-
     FIX::Message orderMassCancelReportMessage;
 
     orderMassCancelReport.m_Header.BeginString =

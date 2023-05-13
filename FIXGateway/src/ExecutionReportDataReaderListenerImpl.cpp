@@ -37,12 +37,6 @@
 
 auto const exec_report_processor = [] (DistributedATS::DATSApplication &application, DistributedATS_ExecutionReport::ExecutionReport& executionReport)
 {
-    std::stringstream ss;
-
-    ExecutionReportLogger::log(ss, executionReport);
-
-    ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%t|%D) Execution Report : %s\n"), ss.str().c_str()));
-
     FIX::Message executionReportMessage;
     executionReport.m_Header.SendingTime = 0; // this is precision; -- TODO: move to auto gen
     executionReport.m_Header.BeginString = CORBA::string_dup("FIX.4.4");
@@ -82,8 +76,14 @@ void ExecutionReportDataReaderListenerImpl::on_data_available(
       if (status == DDS::RETCODE_OK) {
         if (!si.valid_data)
           continue;
+     
+	/*     
+        std::stringstream ss;
+        ExecutionReportLogger::log(ss, executionReport);
+        ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%t|%D) Received Execution Report : %s\n"), ss.str().c_str()));
+	*/
           
-          _processor.enqueue_dds_message(executionReport);
+        _processor.enqueue_dds_message(executionReport);
 
       } else if (status == DDS::RETCODE_NO_DATA) {
         break;

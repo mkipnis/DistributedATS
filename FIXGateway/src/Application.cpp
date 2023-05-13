@@ -178,13 +178,19 @@ void DATSApplication::publishToClient(FIX::Message &message) {
     
     try {
     
-    FIX::SessionID sessionID =
-        AuthServiceHelper::SessionIDFromMessage(message, "");
+    FIX::SessionID activeSessionID;
 
-    FIX::Session *session = FIX::Session::lookupSession(sessionID);
-
-    if (session != NULL)
-      FIX::Session::sendToTarget(message, sessionID);
+    if (AuthServiceHelper::ActiveSessionIDFromMessage(message, activeSessionID))
+    {
+        try {
+            FIX::Session::sendToTarget(message, activeSessionID);
+        } catch ( std::exception& exp )
+        {
+            ACE_ERROR((LM_ERROR,
+                       ACE_TEXT("(%P|%t|%D) ERROR: unable to publish the message [%s] \n"),
+                       exp.what()));
+        }
+    }
 
   } catch (FIX::FieldNotFound &field_not_found) {
     ACE_ERROR((LM_ERROR,

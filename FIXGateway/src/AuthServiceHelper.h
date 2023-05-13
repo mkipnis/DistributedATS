@@ -35,6 +35,8 @@
 
 #include "SocketConnection.h"
 
+typedef std::map<const std::string, FIX::SessionID> ActiveUserMap;
+
 class AuthServiceHelper {
   std::shared_ptr<FIX::SessionSettings> _settings;
   std::shared_ptr<FIX::SessionFactory> _sessionFactory;
@@ -45,7 +47,7 @@ class AuthServiceHelper {
   typedef std::map<const FIX::SessionID, FIX::Message> SessionReLoginMap;
 
   PendingLogonSocketConnection m_pendingLogonSocketConnection;
-  SessionReLoginMap m_sessionReloginMap;
+  static ActiveUserMap m_activeUserMap;
 
   FIX::Mutex _pendingSessionMutex;
 
@@ -55,9 +57,9 @@ public:
                     const FIX::Dictionary *defaultDictionary,
                     std::string senderCompID);
 
-  static const FIX::SessionID
-  SessionIDFromMessage(FIX::Message &message,
-                       const std::string &sessionQualifier = "");
+  static bool
+  ActiveSessionIDFromMessage(const FIX::Message &message,
+                             FIX::SessionID& sessionID);
 
 private:
   FIX::Session *

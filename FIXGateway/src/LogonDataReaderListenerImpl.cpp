@@ -47,6 +47,7 @@ auto const logon_processor = [] (DistributedATS::DATSApplication &application, D
 
     logon.m_Header.SenderCompID = logon.m_Header.TargetCompID;
     logon.m_Header.TargetCompID = logonSenderCompID.c_str();
+    logon.RawData = logon.RawData; // Session Ticker/Identifier
 
     LogonAdapter::DDS2FIX(logon, logonMessage);
     application.processDDSLogon(logonMessage);

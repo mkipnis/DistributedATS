@@ -30,12 +30,12 @@ then
         mkdir $BASEDIR/logs/
 fi
 
-logfile=$BASEDIR/logs/$PROGNAME.$CONFIG_FILE_NAME.startstop.log
+logfile=$BASEDIR/logs/$PROGNAME.$CONFIG_FILE_NAME.console.log
 
 #ldd $DATS_HOME/bin/$PROGNAME >> $logfile
 
 PROCESS="$PROGNAME -c $BASEDIR/config/$CONFIG_FILE_NAME -DCPSConfigFile $DATS_HOME/Protocols/tcp.ini -ORBLogFile $BASEDIR/logs/$PROGNAME.$CONFIG_FILE_NAME.log"
-echo PROCESS=$PROCESS >> $logfile
+#echo PROCESS=$PROCESS >> $logfile
 
 idn=$(id -u)
 
@@ -47,7 +47,7 @@ case $1 in
 
 		if [ "$rc" == "0" ]
 		then
-			nohup $DATS_HOME/bin/$PROCESS & >> $logfile 2>&1
+			$DATS_HOME/bin/$PROCESS >> $logfile 2>&1 &
 			sleep 1
 			$0 check $CONFIG_FILE_NAME
        			exit 1;	
@@ -92,15 +92,15 @@ case $1 in
 		PROCESS_CHECK="$PROCESS"
         	#echo "Checking :" $PROCESS_CHECK
 		FIXGATEWAY_PID=`pgrep -f "$PROCESS_CHECK"`
-		echo $FIXGATEWAY_PID >> $logfile;
+		#echo $FIXGATEWAY_PID >> $logfile;
 		if [ ! -z "$FIXGATEWAY_PID" ]
 		then
         		echo "FIXGateway [$CONFIG_FILE_NAME] is running - $FIXGATEWAY_PID";
-        		echo "FIXGateway [$CONFIG_FILE_NAME] is running - $FIXGATEWAY_PID" >> $logfile;
+        	#	echo "FIXGateway [$CONFIG_FILE_NAME] is running - $FIXGATEWAY_PID" >> $logfile;
         		exit 1;
 		else
         		echo "FIXGateway [$CONFIG_FILE_NAME] is not running $logfile";
-        		echo "FIXGateway [$CONFIG_FILE_NAME] is not running" >> $logfile;
+        	#	echo "FIXGateway [$CONFIG_FILE_NAME] is not running" >> $logfile;
 			exit 0;
 		fi
         ;;

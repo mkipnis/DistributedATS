@@ -45,8 +45,8 @@ namespace SimulatorATS
         };
         
     
-        std::string symbol;
         std::string securityExchange;
+        std::string symbol;
         
         friend std::ostream& operator<<( std::ostream& stream, const Instrument& instrument )
         {

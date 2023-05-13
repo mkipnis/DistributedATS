@@ -30,12 +30,12 @@ then
         mkdir $BASEDIR/logs/
 fi
 
-logfile=$BASEDIR/logs/$PROGNAME.$CONFIG_FILE_NAME.startstop.log
+logfile=$BASEDIR/logs/$PROGNAME.$CONFIG_FILE_NAME.console.log
 
 #ldd $DATS_HOME/bin/$PROGNAME >> $logfile
 
 PROCESS="$PROGNAME -c $BASEDIR/config/$CONFIG_FILE_NAME -DCPSConfigFile $DATS_HOME/Protocols/tcp.ini -ORBLogFile $BASEDIR/logs/$PROGNAME.$CONFIG_FILE_NAME.log"
-echo PROCESS=$PROCESS >> $logfile
+#echo PROCESS=$PROCESS >> $logfile
 
 idn=$(id -u)
 
@@ -47,7 +47,7 @@ case $1 in
 
 		if [ "$rc" == "0" ]
 		then
-			nohup $DATS_HOME/bin/$PROCESS & >> $logfile 2>&1
+			$DATS_HOME/bin/$PROCESS >> $logfile 2>&1 &
 			sleep 1
 			$0 check $CONFIG_FILE_NAME
        			exit 1;	
@@ -92,15 +92,15 @@ case $1 in
 		PROCESS_CHECK="$PROCESS"
 #		echo "Checking :" $PROCESS_CHECK
 		DATASERVICE_PID=`pgrep -f "$PROCESS_CHECK"`
-		echo $DATASERVICE_PID >> $logfile;
+		# echo $DATASERVICE_PID >> $logfile;
 		if [ ! -z "$DATASERVICE_PID" ]
 		then
         		echo "DataService [$CONFIG_FILE_NAME] is running - $DATASERVICE_PID";
-        		echo "DataService [$CONFIG_FILE_NAME] is running - $DATASERVICE_PID" >> $logfile;
+        	#	echo "DataService [$CONFIG_FILE_NAME] is running - $DATASERVICE_PID" >> $logfile;
         		exit 1;
 		else
         		echo "DataService [$CONFIG_FILE_NAME] is not running $logfile";
-        		echo "DataService [$CONFIG_FILE_NAME] is not running" >> $logfile;
+        	#	echo "DataService [$CONFIG_FILE_NAME] is not running" >> $logfile;
 			exit 0;
 		fi
         ;;

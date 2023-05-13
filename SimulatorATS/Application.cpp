@@ -367,7 +367,7 @@ void Application::run()
                     break;
                     // Mass cancel
                     case Operation::MASS_CANCEL:
-                        for ( auto& fixSession : FIX::Session::getSessions() )
+                         for ( auto& fixSession : FIX::Session::getSessions() )
                             m_marketPtr->massCancelRequest(fixSession);
                     break;
                 }
