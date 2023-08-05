@@ -2,7 +2,7 @@
 
 set -x 
 
-CURRENT_DIR=`pwd`
+DATS_SOURCE_DIR=`pwd`
 DEPS_BUILD_DIR=$HOME/distributed_ats_deps_build
 
 mkdir -p $DEPS_BUILD_DIR 
@@ -74,6 +74,8 @@ cd $DEPS_BUILD_DIR
 fi
 
 
+cd $DATS_SOURCE_DIR
+
 /bin/cat <<EOM > distributed_ats_env.sh
 
 . $INSTALL_DIR/$OPENDDS_PKG/setenv.sh
@@ -81,7 +83,7 @@ fi
 export QUICKFIX_HOME=$INSTALL_DIR
 export LIQUIDBOOK_HOME=$INSTALL_DIR/liquibook-$LIQUIBOOK_PKG
 export SQLITE_HOME=$INSTALL_DIR
-export DATS_HOME=$CURRENT_DIR
+export DATS_HOME=$DATS_SOURCE_DIR
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$DATS_HOME/lib:$QUICKFIX_HOME/lib
 
 EOM
@@ -94,20 +96,20 @@ make
 cd DataService/sql/sqlite 
 ./create_database.sh
 
-cd $CURRENT_DIR
+cd $DATS_SOURCE_DIR
 
 cd MiscATS/MultiMatchingEngineATS/sql/
 ./populate_db.sh
 
-cd $CURRENT_DIR
+cd $DATS_SOURCE_DIR
 
 #cd MiscATS/MultiMatchingEngineATS/scripts
 #./start_ats.sh
 
-#cd $CURRENT_DIR
+#cd $DATS_SOURCE_DIR
 
 #cd MiscATS/MultiMatchingEngineATS/scripts
 #./stop_ats.sh
 
-#cd $CURRENT_DIR
+#cd $DATS_SOURCE_DIR
 
