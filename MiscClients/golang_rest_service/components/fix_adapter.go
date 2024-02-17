@@ -327,6 +327,9 @@ func (fix_trade_client *FIXTradeClient) FromApp(msg *quickfix.Message, sessionID
 		msg.Body.Get(&last_qty)
 		msg.Body.Get(&avg_px)
 
+		fmt.Printf("ExecutionReport: %s", msg.String())
+
+
 		var instrument_out = Instrument{security_exchange.String(), symbol_field.String()}
 		var execution_report_out ExecutionReport
 
@@ -346,15 +349,6 @@ func (fix_trade_client *FIXTradeClient) FromApp(msg *quickfix.Message, sessionID
 		execution_report_out.AvgPx = int32(avg_px.IntPart())
 
 		fix_trade_client.insertExecutionReport(execution_report_out)
-
-		order_qty_int := int(order_qty.Value().IntPart())
-		fmt.Println(order_qty_int)
-
-		fmt.Println("Execution Report : " +
-			string(order_status_field.Value()) + ":" +
-			symbol_field.Value() + ":" + security_exchange.Value() + ":" +
-			orig_cl_ord_id.Value() + ":" + order_id.Value() + ":" + string(side.Value()) + ":" +
-			string(order_qty_int) + string(int(cum_qty.IntPart())))
 	}
 	return
 }

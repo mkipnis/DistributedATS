@@ -44,6 +44,7 @@ def submit_order_from_market_data(base_url: str, investor: dict, instrument: dic
     new_order_single['new_order_single']['price'] = price
     new_order_single['new_order_single']['order_qty'] = order_qty
     new_order_single['new_order_single']['time_in_force'] = '0'
+    print_json(new_order_single)
     response = requests.post(base_url + '/submit_order', json=new_order_single)
     response_dict = jwt.decode(response.text, investor['secret'], algorithms="HS256")
 
@@ -114,7 +115,6 @@ if __name__ == '__main__':
                                        passive_order_response['data']['client_order_id'])
         print("Cancel Order Response:")
         print_json(cancel_response)
-        break
 
     print("Getting all orders submitted by secret_1")
     investor_orders = get_inverstor_orders(base_url, investor_1)
