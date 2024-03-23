@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -25,8 +25,7 @@
    SOFTWARE.
 */
 
-#ifndef ORDERBOOKSTATS_H_
-#define ORDERBOOKSTATS_H_
+#pragma once
 
 namespace DistributedATS {
 
@@ -40,5 +39,3 @@ struct OrderBookStats {
 typedef std::shared_ptr<OrderBookStats> OrderBookStatsPtr;
 
 }; // namespace DistributedATS
-
-#endif /* ORDERBOOKSTATS_H_ */

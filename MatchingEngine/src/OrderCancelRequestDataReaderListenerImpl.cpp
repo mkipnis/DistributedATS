@@ -28,10 +28,10 @@
 #include "OrderCancelRequestDataReaderListenerImpl.h"
 
 #include "OrderException.h"
-#include <OrderCancelRejectTypeSupportImpl.h>
 
 #include <LoggerHelper.h>
 #include <OrderCancelRequestLogger.hpp>
+
 
 namespace MatchingEngine {
 
@@ -48,7 +48,51 @@ OrderCancelRequestDataReaderListenerImpl::
 }
 
 void OrderCancelRequestDataReaderListenerImpl::on_data_available(
-    DDS::DataReader_ptr reader) throw(CORBA::SystemException) {
+      eprosima::fastdds::dds::DataReader* reader) {
+    
+    
+    DistributedATS_OrderCancelRequest::OrderCancelRequest
+    order_cancel_request;
+    eprosima::fastdds::dds::SampleInfo info;
+    
+    if (reader->take_next_sample(&order_cancel_request, &info) == ReturnCode_t::RETCODE_OK)
+    {
+         if (info.valid_data)
+         {
+             LoggerHelper::log_debug<std::stringstream, OrderCancelRequestLogger,
+               DistributedATS_OrderCancelRequest::OrderCancelRequest>(logger,
+                 order_cancel_request, "OrderCancelRequest");
+
+             std::string symbol = order_cancel_request.Symbol();
+
+             try {
+               auto book = _market->findBook(symbol);
+
+               if (!book) {
+                 std::cerr << "Order book not found to cancel order : " << symbol
+                           << std::endl;
+               }
+
+               std::string client_order_id = order_cancel_request.OrigClOrdID();
+               std::string contra_party =
+                   order_cancel_request.header().SenderSubID();
+
+               _market->cancel_order(book, contra_party, client_order_id);
+
+             } catch (DistributedATS::OrderException &orderException) {
+                 DistributedATS_OrderCancelReject::OrderCancelReject orderCancelReject;
+               orderCancelReject.header().SenderCompID("MATCHING_ENGINE");
+               orderCancelReject.header().TargetCompID(order_cancel_request.header().SenderCompID());
+               orderCancelReject.header().MsgType("9");
+               orderCancelReject.Text("Cancel Rejected REJECT");
+               orderCancelReject.ClOrdID(order_cancel_request.ClOrdID());
+
+               _market->publishOrderCancelReject(orderCancelReject);
+             }
+         }
+     }
+    
+    /*
   try {
       DistributedATS_OrderCancelRequest::OrderCancelRequestDataReader_var
         order_cancel_request_dr =
@@ -116,7 +160,7 @@ void OrderCancelRequestDataReaderListenerImpl::on_data_available(
   } catch (CORBA::Exception &e) {
     std::cerr << "Exception caught in read:" << std::endl << e << std::endl;
     ACE_OS::exit(1);
-  }
+  }*/
 }
 
 } /* namespace MatchingEngine */

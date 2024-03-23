@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -27,209 +27,153 @@
 
 #include <iostream>
 #include <BasicDomainParticipant.h>
-#include <ConfigFileHelper.h>
-#include <ace/Get_Opt.h>
 #include "AuthService.h"
 #include "RefDataService.h"
 #include "MarketDataService.h"
-#include "MassOrderStatusService.h"
+#include "OrderMassStatusRequestService.h"
 #include "SQLiteConnection.hpp"
 #include <memory>
-#include <ace/Message_Queue_T.h>
 #include <quickfix/FixValues.h>
 #include <Common.h>
 
-
 #include <atomic>
 
+#include <log4cxx/logger.h>
+#include <log4cxx/basicconfigurator.h>
+
+#include <boost/asio.hpp>
+#include <boost/asio/signal_set.hpp>
+#include <boost/bind.hpp>
+#include <boost/program_options.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ini_parser.hpp>
+
+#include <thread>
+#include <chrono>
+
 std::atomic<bool> is_running;
-
-namespace DistributedATS {
-
-class SignalHandler :  public ACE_Event_Handler
-{
-public:
-    virtual int handle_signal (int signum, siginfo_t * = 0, ucontext_t * = 0)
-    {
-        std::cout << "Lets hangle signal : " << signum << std::endl;
-        is_running.store(false);
-        return 0;
-    };
-    
-};
-
-};
 
 
 int main(int argc, char* argv[] )
 {
+    LOG4CXX_INFO(logger, "DataService");
     
-    ACE_DEBUG ((LM_INFO, ACE_TEXT("(%P|%t) INFO: DataService\n")));
-    
-    DDS::DomainParticipantFactory_var dpf = DDS::DomainParticipantFactory::_nil();
-
     try {
 
-	if ( argc < 2 )
-	{
-		std::cout << "usage: " << argv[ 0 ] << std::endl << "\t\t-c data_service_config_file_name" << std::endl;
-		return -1;
-	}
+        if ( argc < 2 )
+        {
+            std::cout << "usage: " << argv[ 0 ] << std::endl << "\t\t-c data_service_config_file_name" << std::endl;
+            return -1;
+        }
 
         std::string data_service_config_file = "";
         
-        dpf = TheParticipantFactoryWithArgs(argc, argv);
+        boost::program_options::options_description options_desc{"Options"};
         
-        distributed_ats_utils::BasicDomainParticipantPtr participantPtr =
-            std::make_shared<distributed_ats_utils::BasicDomainParticipant>( dpf, DISTRIBUTED_ATS_DOMAIN_ID );
+        options_desc.add_options()
+          ("help,h", "Help screen")
+          ("config,c", boost::program_options::value<std::string>()->default_value(""), "DataService ConfigFile");
         
-        participantPtr->createSubscriber();
-        participantPtr->createPublisher();
+        boost::program_options::variables_map vm;
+        boost::program_options::store(parse_command_line(argc, argv, options_desc), vm);
+        boost::program_options::notify(vm);
 
-        ACE_Get_Opt cmd_opts( argc, argv, ":c:" );
+        if (vm.count("help"))
+          std::cout << options_desc << '\n';
+        else if (vm.count("config"))
+            data_service_config_file = vm["config"].as<std::string>();
+        
+        
+        distributed_ats_utils::basic_domain_participant_ptr basic_domain_participant_ptr =
+            std::make_shared<distributed_ats_utils::basic_domain_participant>( 0, "DataService" );
+        
+        basic_domain_participant_ptr->create_subscriber();
+        basic_domain_participant_ptr->create_publisher();
 
-        int option;
 
-        while ( (option = cmd_opts()) != EOF )
+        if ( data_service_config_file.empty() )
         {
-            switch( option )
-            {
-                case 'c' :
-                	data_service_config_file = cmd_opts.opt_arg();
-                break;
-            }
+            std::cerr << "Error: Config file name is not specified." << std::endl;
+            return -1;
         }
-
-	if ( data_service_config_file.empty() )
-	{
-		std::cerr << "Error: Config file name is not specified." << std::endl;
-		return -1;
-	}
         
-        ACE_Sig_Handler handler;
-        DistributedATS::SignalHandler signalHandler;
+        boost::property_tree::ptree pt;
+        boost::property_tree::ini_parser::read_ini(data_service_config_file, pt);
         
-        // add signal handler for the SIGINT signal here
-        ACE_Sig_Handler sig_handler;
-        sig_handler.register_handler (SIGINT, &signalHandler);
-
-        ACE_DEBUG (( LM_INFO, ACE_TEXT("(%P|%t|%D) INFO: Config File : [%s]\n"), data_service_config_file.c_str() ));
-
-        ConfigFileHelper configFileHelper(data_service_config_file.c_str());
-
-     	ACE_TString data_service_name;
-     	if (configFileHelper.get_string_value (ACE_TEXT ("dataservice"), ACE_TEXT ("name"), data_service_name))
-     	{
-            ACE_ERROR ((LM_CRITICAL, ACE_TEXT("(%P|%t|%D) ERROR: Unable to get data service name from ini file %d.\n"), ACE_OS::last_error() ));
-     	};
-
-        ACE_DEBUG ((LM_INFO, ACE_TEXT("(%P|%t|%D) INFO: DataService:[%s]\n"), data_service_name.c_str()));
-
-
-        /*
-     	int port = 0;
-     	if (configFileHelper.get_integer_value (ACE_TEXT ("database"), ACE_TEXT ("portnumber"), &port))
-     	{
-            ACE_ERROR ((LM_CRITICAL, ACE_TEXT("(%P|%t|%D) ERROR: Unable to get database port from ini file %d.\n"), ACE_OS::last_error() ));
-     	};
-
-     	ACE_TString hostname;
-     	if (configFileHelper.get_string_value (ACE_TEXT ("database"), ACE_TEXT ("hostname"), hostname))
-     	{
-            ACE_ERROR ((LM_CRITICAL, ACE_TEXT("(%P|%t|%D) ERROR: Unable to get database hostname from ini file %d.\n"), ACE_OS::last_error() ));
-     	};
-
-     	ACE_TString username;
-     	if (configFileHelper.get_string_value (ACE_TEXT ("database"), ACE_TEXT ("username"), username))
-     	{
-            ACE_ERROR ((LM_CRITICAL, ACE_TEXT("(%P|%t|%D) ERROR: Unable to get database username from ini file %d.\n"), ACE_OS::last_error() ));
-     	};
-
-     	ACE_TString password;
-     	if (configFileHelper.get_string_value (ACE_TEXT ("database"), ACE_TEXT ("password"), password))
-     	{
-            ACE_ERROR ((LM_CRITICAL, ACE_TEXT("(%P|%t|%D) ERROR: Unable to get database password from ini file %d.\n"), ACE_OS::last_error() ));
-     	};
-
-     	ACE_TString database;
-     	if (configFileHelper.get_string_value (ACE_TEXT ("database"), ACE_TEXT ("database"), database))
-     	{
-            ACE_ERROR ((LM_CRITICAL, ACE_TEXT("(%P|%t|%D) ERROR: Unable to get database password from ini file %d.\n"), ACE_OS::last_error() ));
-     	};
+        auto base_dir_ats = std::getenv("BASEDIR_ATS");
+      
+        if ( base_dir_ats == NULL )
+            throw std::runtime_error("BASEDIR_ATS is not set");
         
-        ACE_DEBUG ((LM_INFO, ACE_TEXT("(%P|%t|%D) INFO: Database settings : Hostname : [%s]|Port : [%d]|Username : [%s]|Password : [%s]|Database : [%s]\n"), hostname.c_str(),
-                   port, username.c_str(), password.c_str(), database.c_str()));
-         */
+        std::string data_service_name = pt.get<std::string>("dataservice.name");
+        std::string database_file = pt.get<std::string>("database.database_file");
 
-
-     	//FIX::DatabaseConnectionID databaseConnectionID(database.c_str(), username.c_str(), password.c_str(), hostname.c_str(), port);
+        FIX::DatabaseConnectionID databaseConnectionID(std::string(base_dir_ats) + "/data/" + database_file,"", "", "", 0);
         
-        ACE_TString database_file;
-        if (configFileHelper.get_string_value (ACE_TEXT ("database"), ACE_TEXT ("database_file"), database_file))
-        {
-           ACE_ERROR ((LM_CRITICAL, ACE_TEXT("(%P|%t|%D) ERROR: Unable to get database hostname from ini file %d.\n"), ACE_OS::last_error() ));
-        };
-        
-        FIX::DatabaseConnectionID databaseConnectionID(database_file.c_str(),"", "", "", 0);
-        
-       std::shared_ptr<DistributedATS::SQLiteConnection> mySqlConnectionPtr =
+        std::shared_ptr<DistributedATS::SQLiteConnection> sql_connection =
             std::make_shared<DistributedATS::SQLiteConnection>( databaseConnectionID );
         
-        if ( !mySqlConnectionPtr->connected() )
+        if ( !sql_connection->connected() )
         {
-                ACE_ERROR ((LM_CRITICAL, ACE_TEXT("(%P|%t|%D) ERROR: Data Service is not connected to the database.\n")));
-                return -1;
+            LOG4CXX_ERROR(logger, "Data Service is not connected to the database");
+            return -1;
         };
         
         auto authServicePtr =
-                std::make_shared<DistributedATS::AuthService>(participantPtr, databaseConnectionID, ACE_Thread_Manager::instance () );
+                std::make_shared<DistributedATS::AuthService>(basic_domain_participant_ptr, databaseConnectionID );
         
         auto refServicePtr =
-                std::make_shared<DistributedATS::RefDataService>(participantPtr, databaseConnectionID, ACE_Thread_Manager::instance ());
+                std::make_shared<DistributedATS::RefDataService>(basic_domain_participant_ptr, databaseConnectionID);
         
         auto marketDataServicePtr =
-                std::make_shared<DistributedATS::MarketDataService>(participantPtr, databaseConnectionID, ACE_Thread_Manager::instance ());
+                std::make_shared<DistributedATS::MarketDataService>(basic_domain_participant_ptr, databaseConnectionID);
         
-       auto massOrderStatusServicePtr =
-                std::make_shared<DistributedATS::MassOrderStatusService>( participantPtr, ACE_Thread_Manager::instance ());
+       auto orderMassStatusServicePtr =
+                std::make_shared<DistributedATS::OrderMassStatusRequestService>( basic_domain_participant_ptr );
         
-        std::string data_service_filter_expression = "m_Header.TargetSubID = '" + std::string( data_service_name.c_str() ) + "'";
-        
-        // Authentication
-        authServicePtr->createLogonTopic(data_service_filter_expression);
-        authServicePtr->createLogoutTopic(data_service_filter_expression);
+        std::string data_service_filter_expression = "header.TargetSubID = '" + data_service_name + "'";
         
         // Ref Data
         refServicePtr->createSecurityListRequestListener(data_service_filter_expression);
         refServicePtr->createSecurityListDataWriter();
         
+        // Authentication
+        authServicePtr->createLogonTopic(data_service_filter_expression);
+        authServicePtr->createLogoutTopic(data_service_filter_expression);
+        
+        
         // Market Data
-        marketDataServicePtr->createMarketDataRequestListener(data_service_filter_expression);
+        marketDataServicePtr->createMarketDataRequestListener(data_service_name);
         marketDataServicePtr->createMarketDataIncrementalRefreshListener();
         marketDataServicePtr->createMarketDataFullRefreshDataWriter();
         
         // Order Status
-        massOrderStatusServicePtr->createOrderMassStatusRequestListener(data_service_filter_expression);
-        massOrderStatusServicePtr->createExecutionReportListener(data_service_filter_expression);
-        
-        authServicePtr->activate(THR_NEW_LWP, 2); // since we will be making a blocking database call, lets hava a pool of 2
-        refServicePtr->activate();
-        marketDataServicePtr->activate();
-        massOrderStatusServicePtr->activate();
+        orderMassStatusServicePtr->createOrderMassStatusRequestListener(data_service_filter_expression);
+        orderMassStatusServicePtr->createExecutionReportListener(data_service_filter_expression);
         
         std::atomic_init(&is_running, true);
 
-        // TODO: Gracefull shutdown: deactivate tasks (disconnect from the db)
-        while ( is_running == true )
-            ACE_OS::sleep(1);
+        boost::asio::io_service io_service;
+        boost::asio::signal_set signals(io_service, SIGINT, SIGTERM);
+        
+        signals.async_wait([&](const boost::system::error_code& ec, int signal_number) {
+            if (!ec) {
+                std::cout << "Signal number " << signal_number << std::endl;
+                std::cout << "Gracefully stopping the timer and exiting"
+                          << std::endl;
+                is_running.store(false);
+            } else {
+                std::cout << "Error " << ec.value() << " - " << ec.message()
+                          << " - Signal number - " << signal_number << std::endl;
+            }
+        });
+        
+        io_service.run();
         
     } catch ( std::exception & e) {
         
-        ACE_ERROR ((LM_CRITICAL, ACE_TEXT("(%P|%t|%D) ERROR: Exception during the initialization of Data Service : %s\n"), e.what()));
-        
-    	std::cout << e.what() << std::endl;
+        LOG4CXX_ERROR(logger, "Exception during the initialization of Data Service" << e.what());
     	return 1;
     }
     
-    TheServiceParticipant->shutdown ();
 };

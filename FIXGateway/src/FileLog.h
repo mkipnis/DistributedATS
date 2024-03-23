@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -25,8 +25,7 @@
    SOFTWARE.
 */
 
-#ifndef FIX_FILELOG_H
-#define FIX_FILELOG_H
+#pragma once
 
 #include <fstream>
 #include <quickfix/Log.h>
@@ -40,28 +39,28 @@ namespace DistributedATS {
  */
 class FileLogFactory : public FIX::LogFactory {
 public:
-  FileLogFactory(const FIX::SessionSettings &settings, std::string fix_prefix)
-      : m_settings(settings), m_globalLog(0), m_globalLogCount(0),
-        m_fix_prefix(fix_prefix){};
-  FileLogFactory(const std::string &path)
-      : m_path(path), m_backupPath(path), m_globalLog(0), m_globalLogCount(0){};
-  FileLogFactory(const std::string &path, const std::string &backupPath)
-      : m_path(path), m_backupPath(backupPath), m_globalLog(0),
-        m_globalLogCount(0){};
-
+    FileLogFactory(const FIX::SessionSettings &settings, std::string fix_prefix)
+    : m_settings(settings), m_globalLog(0), m_globalLogCount(0),
+    m_fix_prefix(fix_prefix){};
+    FileLogFactory(const std::string &path)
+    : m_path(path), m_backupPath(path), m_globalLog(0), m_globalLogCount(0){};
+    FileLogFactory(const std::string &path, const std::string &backupPath)
+    : m_path(path), m_backupPath(backupPath), m_globalLog(0),
+    m_globalLogCount(0){};
+    
 public:
-  FIX::Log *create();
-  FIX::Log *create(const FIX::SessionID &);
-  void destroy(FIX::Log *log);
-
+    FIX::Log *create();
+    FIX::Log *create(const FIX::SessionID &);
+    void destroy(FIX::Log *log);
+    
 private:
-  std::string m_path;
-  std::string m_backupPath;
-  FIX::SessionSettings m_settings;
-  FIX::Log *m_globalLog;
-  int m_globalLogCount;
-
-  std::string m_fix_prefix;
+    std::string m_path;
+    std::string m_backupPath;
+    FIX::SessionSettings m_settings;
+    FIX::Log *m_globalLog;
+    int m_globalLogCount;
+    
+    std::string m_fix_prefix;
 };
 
 /**
@@ -73,45 +72,44 @@ private:
  */
 class FileLog : public FIX::Log {
 public:
-  FileLog(const std::string &path, const std::string &);
-  FileLog(const std::string &path, const std::string &backupPath,
-          const std::string &);
-  FileLog(const std::string &path, const FIX::SessionID &sessionID,
-          const std::string &);
-  FileLog(const std::string &path, const std::string &backupPath,
-          const FIX::SessionID &sessionID, const std::string &);
-  virtual ~FileLog();
-
-  void clear();
-  void backup();
-
-  void onIncoming(const std::string &value) {
-    m_messages << FIX::UtcTimeStampConvertor::convert(FIX::UtcTimeStamp(), 9)
-               << " : " << value << std::endl;
-  }
-  void onOutgoing(const std::string &value) {
-    m_messages << FIX::UtcTimeStampConvertor::convert(FIX::UtcTimeStamp(), 9)
-               << " : " << value << std::endl;
-  }
-  void onEvent(const std::string &value) {
-    FIX::UtcTimeStamp now;
-    m_event << FIX::UtcTimeStampConvertor::convert(now, 9) << " : " << value
-            << std::endl;
-  }
-
+    FileLog(const std::string &path, const std::string &);
+    FileLog(const std::string &path, const std::string &backupPath,
+            const std::string &);
+    FileLog(const std::string &path, const FIX::SessionID &sessionID,
+            const std::string &);
+    FileLog(const std::string &path, const std::string &backupPath,
+            const FIX::SessionID &sessionID, const std::string &);
+    virtual ~FileLog();
+    
+    void clear();
+    void backup();
+    
+    void onIncoming(const std::string &value) {
+        m_messages << FIX::UtcTimeStampConvertor::convert(FIX::UtcTimeStamp(), 9)
+        << " : " << value << std::endl;
+    }
+    void onOutgoing(const std::string &value) {
+        m_messages << FIX::UtcTimeStampConvertor::convert(FIX::UtcTimeStamp(), 9)
+        << " : " << value << std::endl;
+    }
+    void onEvent(const std::string &value) {
+        FIX::UtcTimeStamp now;
+        m_event << FIX::UtcTimeStampConvertor::convert(now, 9) << " : " << value
+        << std::endl;
+    }
+    
 private:
-  std::string generatePrefix(const std::string &filePrefix,
-                             const FIX::SessionID &sessionID);
-  void init(std::string path, std::string backupPath,
-            const std::string &prefix);
-
-  std::ofstream m_messages;
-  std::ofstream m_event;
-  std::string m_messagesFileName;
-  std::string m_eventFileName;
-  std::string m_fullPrefix;
-  std::string m_fullBackupPrefix;
+    std::string generatePrefix(const std::string &filePrefix,
+                               const FIX::SessionID &sessionID);
+    void init(std::string path, std::string backupPath,
+              const std::string &prefix);
+    
+    std::ofstream m_messages;
+    std::ofstream m_event;
+    std::string m_messagesFileName;
+    std::string m_eventFileName;
+    std::string m_fullPrefix;
+    std::string m_fullBackupPrefix;
 };
-} // namespace DistributedATS
 
-#endif // FIX_LOG_H
+} // namespace DistributedATS

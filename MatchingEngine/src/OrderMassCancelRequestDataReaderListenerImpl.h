@@ -25,25 +25,24 @@
    SOFTWARE.
 */
 
-#ifndef ORDERMASSCANCELREQUESTDATAREADERLISTENERIMPL_H_
-#define ORDERMASSCANCELREQUESTDATAREADERLISTENERIMPL_H_
+#pragma once
 
 #include "Market.h"
-#include <OrderMassCancelRequestTypeSupportImpl.h>
 #include <stdint.h>
 
 namespace MatchingEngine {
 
 class OrderMassCancelRequestDataReaderListenerImpl
-    : public virtual OpenDDS::DCPS::LocalObject<DDS::DataReaderListener> {
+    : public eprosima::fastdds::dds::DataReaderListener  {
 public:
   OrderMassCancelRequestDataReaderListenerImpl(
       std::shared_ptr<DistributedATS::Market> market);
-  virtual ~OrderMassCancelRequestDataReaderListenerImpl();
+   ~OrderMassCancelRequestDataReaderListenerImpl() override;
 
-  virtual void
-  on_data_available(DDS::DataReader_ptr reader) throw(CORBA::SystemException);
+    void
+  on_data_available(eprosima::fastdds::dds::DataReader* reader) override;
 
+        /*
   virtual void
   on_requested_deadline_missed(DDS::DataReader_ptr reader,
                                const DDS::RequestedDeadlineMissedStatus
@@ -70,12 +69,10 @@ public:
 
   virtual void on_sample_lost(
       DDS::DataReader_ptr reader,
-      const DDS::SampleLostStatus &status) throw(CORBA::SystemException){};
+      const DDS::SampleLostStatus &status) throw(CORBA::SystemException){};*/
 
 private:
   std::shared_ptr<DistributedATS::Market> _market;
 };
 
 } // namespace MatchingEngine
-
-#endif /* ORDERMASSCANCELREQUESTDATAREADER_H_ */

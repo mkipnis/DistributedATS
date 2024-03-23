@@ -25,20 +25,23 @@
    SOFTWARE.
 */
 
-#ifndef EXECUTIONREPORTDATAREADERLISTENERIMPL_H_
-#define EXECUTIONREPORTDATAREADERLISTENERIMPL_H_
-
-
-#include <ExecutionReportTypeSupportImpl.h>
+#pragma once
 
 #include "LatencyTest.h"
 #include <quickfix/Mutex.h>
+
+#include <fastdds/dds/subscriber/Subscriber.hpp>
+#include <fastdds/dds/subscriber/DataReader.hpp>
+#include <fastdds/dds/subscriber/DataReaderListener.hpp>
+#include <fastdds/dds/subscriber/qos/DataReaderQos.hpp>
+#include <fastdds/dds/subscriber/SampleInfo.hpp>
+#include <ExecutionReport.h>
 
 namespace LatencyTest {
 
 
 class ExecutionReportDataReaderListenerImpl  :
-public virtual OpenDDS::DCPS::LocalObject<DDS::DataReaderListener>
+public eprosima::fastdds::dds::DataReaderListener
 {
 public:
 
@@ -46,8 +49,9 @@ public:
 
 	ExecutionReportDataReaderListenerImpl(  LatencyStatsPtr pLatencyStatsPtr )  : m_pLatencyStatsPtr( pLatencyStatsPtr ) {};
 
-    virtual void on_data_available( DDS::DataReader_ptr reader) throw (CORBA::SystemException);
+    virtual void on_data_available(eprosima::fastdds::dds::DataReader*);
 
+    /*
     virtual void on_requested_deadline_missed ( DDS::DataReader_ptr reader, const DDS::RequestedDeadlineMissedStatus & status)
     throw (CORBA::SystemException) {};
 
@@ -64,12 +68,10 @@ public:
     throw (CORBA::SystemException) {};
 
     virtual void on_sample_lost( DDS::DataReader_ptr reader, const DDS::SampleLostStatus& status)
-    throw (CORBA::SystemException) {};
+    throw (CORBA::SystemException) {};*/
 
 private:
 	 LatencyStatsPtr m_pLatencyStatsPtr;
 };
 
-} /* namespace FIXGateway */
-
-#endif /* EXECUTIONREPORTDATAREADERLISTENERIMPL_H_ */
+}

@@ -28,9 +28,9 @@
 #ifndef ORDEREXCEPTION_H_
 #define ORDEREXCEPTION_H_
 
-#include <ExecutionReportTypeSupportImpl.h>
-#include <NewOrderSingleTypeSupportImpl.h>
-#include <OrderCancelRejectTypeSupportImpl.h>
+#include <ExecutionReport.h>
+#include <NewOrderSingle.h>
+#include <OrderCancelReject.h>
 
 #include <quickfix/FixValues.h>
 

@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -28,8 +28,17 @@
 #include "LogoutDataReaderListenerImpl.hpp"
 #include <LogoutAdapter.hpp>
 #include <LogoutLogger.hpp>
-#include <LogoutTypeSupportImpl.h>
 #include <quickfix/Message.h>
+
+#include <fastdds/dds/subscriber/DataReader.hpp>
+#include <fastdds/dds/subscriber/DataReaderListener.hpp>
+#include <fastdds/dds/subscriber/qos/DataReaderQos.hpp>
+#include <fastdds/dds/subscriber/SampleInfo.hpp>
+
+#include <log4cxx/logger.h>
+#include <log4cxx/basicconfigurator.h>
+
+//static auto logger = log4cxx::Logger::getRootLogger();
 
 namespace DistributedATS {
 
@@ -38,17 +47,16 @@ auto const logout_processor = [] (DistributedATS::DATSApplication &application, 
 {
     std::stringstream ss;
     LogoutLogger::log(ss, logout);
-    ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%t|%D) Data Reader Logout : %s\n"),
-               ss.str().c_str()));
+    
+    LOG4CXX_INFO(logger, "Data Reader Logout : [" <<  ss.str() << "]");
 
     FIX::Message logoutMessage;
-    logout.m_Header.SendingTime = 0;
+    logout.header().SendingTime(0);
 
     LogoutAdapter::DDS2FIX(logout, logoutMessage);
 
     std::string connectionToken =
-        logout.m_Header.TargetSubID
-            .in(); // Kludge : Connection token is populated in RawData in
+        logout.header().TargetSubID(); // Kludge : Connection token is populated in RawData in
                    // Logon message, but because there is no RawData in
                    // Logout message, DataService populates TargetSubID with
                    // the Connection Token of the session that needs to be
@@ -60,13 +68,27 @@ auto const logout_processor = [] (DistributedATS::DATSApplication &application, 
 
 
 LogoutDataReaderListenerImpl::LogoutDataReaderListenerImpl(DistributedATS::DATSApplication &application)
-    : _processor(application, logout_processor)
+    : _processor(application, logout_processor, "LogoutDataReaderListenerImpl")
 {
 };
 
 
 void LogoutDataReaderListenerImpl::on_data_available(
-    DDS::DataReader_ptr reader) throw(CORBA::SystemException) {
+            eprosima::fastdds::dds::DataReader* reader)
+{
+    
+    DistributedATS_Logout::Logout logout;
+    eprosima::fastdds::dds::SampleInfo info;
+    
+    if (reader->take_next_sample(&logout, &info) == ReturnCode_t::RETCODE_OK)
+    {
+        if (info.valid_data)
+        {
+            _processor.enqueue_dds_message(logout);
+        }
+    }
+    
+    /*
   try {
       DistributedATS_Logout::LogoutDataReader_var logout_dr =
       DistributedATS_Logout::LogoutDataReader::_narrow(reader);
@@ -99,6 +121,6 @@ void LogoutDataReaderListenerImpl::on_data_available(
   } catch (CORBA::Exception &e) {
     std::cerr << "Exception caught in read:" << std::endl << e << std::endl;
     ACE_OS::exit(1);
-  }
+  }*/
 }
 }; // namespace DistributedATS

@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -25,8 +25,7 @@
    SOFTWARE.
 */
 
-#ifndef __AUTH_SERVICE_HELPER_H__
-#define __AUTH_SERVICE_HELPER_H__
+#pragma once
 
 #include <quickfix/FileStore.h>
 #include <quickfix/Log.h>
@@ -40,7 +39,7 @@ typedef std::map<const std::string, FIX::SessionID> ActiveUserMap;
 class AuthServiceHelper {
   std::shared_ptr<FIX::SessionSettings> _settings;
   std::shared_ptr<FIX::SessionFactory> _sessionFactory;
-  const FIX::Dictionary *_defaultDictionary;
+    std::shared_ptr< FIX::Dictionary > _defaultDictionary;
 
   typedef std::map<const std::string, DistributedATS::SocketConnection *>
       PendingLogonSocketConnection;
@@ -54,7 +53,7 @@ class AuthServiceHelper {
 public:
   AuthServiceHelper(std::shared_ptr<FIX::SessionSettings> settings,
                     std::shared_ptr<FIX::SessionFactory> sessionFactory,
-                    const FIX::Dictionary *defaultDictionary,
+                    std::shared_ptr< FIX::Dictionary > defaultDictionary,
                     std::string senderCompID);
 
   static bool
@@ -83,5 +82,3 @@ public:
 
   void loginSession(FIX::Session *session, std::string &connectionToken);
 };
-
-#endif

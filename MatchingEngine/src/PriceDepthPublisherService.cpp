@@ -25,88 +25,102 @@
    SOFTWARE.
 */
 
+#include <boost/lockfree/spsc_queue.hpp>
+#include "Market.h"
+
 #include "PriceDepthPublisherService.hpp"
-#include "MarketDataIncrementalRefreshTypeSupportImpl.h"
 #include <LoggerHelper.h>
 #include <MarketDataIncrementalRefreshLogger.hpp>
 #include <map>
+#include <thread>
+#include <chrono>
+
 
 using namespace DistributedATS;
 
+
 PriceDepthPublisherService::PriceDepthPublisherService(
-                                                       DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefreshDataWriter_var
+                                                       eprosima::fastdds::dds::DataWriter*
         market_data_incremental_refresh_dw,
         PriceDepthPublisherQueuePtr price_depth_publisher_queue_ptr,
         int price_depth_pub_interval)
     : _price_depth_publisher_queue_ptr( price_depth_publisher_queue_ptr ),
         _market_data_incremental_refresh_dw(market_data_incremental_refresh_dw),
-        _price_depth_pub_interval(price_depth_pub_interval) {}
+        _price_depth_pub_interval(price_depth_pub_interval)
+{
+    
+    std::atomic_init(&_is_running, true);
+    
+    _publisher_thread = std::thread(&PriceDepthPublisherService::service, this);
+    
+}
 
-int PriceDepthPublisherService::svc(void) {
-  std::map<std::string,
-           std::shared_ptr<
-    DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefresh>>
-      latestMarketDataUpdates;
+PriceDepthPublisherService::~PriceDepthPublisherService()
+{
+    std::atomic_init(&_is_running, false);
+    _publisher_thread.join();
+};
 
-  ACE_Time_Value udelay(0, _price_depth_pub_interval);
-  struct timespec ts = udelay;
-
-  while (1) {
-    if (_price_depth_publisher_queue_ptr->message_count() == 0) {
-      ACE_OS::nanosleep(&ts);
+int PriceDepthPublisherService::service()
+{
+  while (_is_running) {
+    if (_price_depth_publisher_queue_ptr->empty()) {
+        
+      std::this_thread::sleep_for(std::chrono::duration<long double, std::micro>(_price_depth_pub_interval));
       continue;
     };
-
-    ACE_Message_Block *incrementalRefreshMessage = 0;
 
     //
     // Iterate through the queue and get the latest update
     //
 
-    std::cout << "Queue Size : "
-              << _price_depth_publisher_queue_ptr->message_count()
-              << std::endl;
-
-    while (_price_depth_publisher_queue_ptr->message_count()) {
-        _price_depth_publisher_queue_ptr->dequeue_head(
-          incrementalRefreshMessage);
-
-      market_data_update *mdUpdate =
-          (market_data_update *)incrementalRefreshMessage->rd_ptr();
-
-      std::shared_ptr<
+    /*std::cout << "Queue Size : "
+              << _price_depth_publisher_queue_ptr->size()
+              << std::endl;*/
+      
+      std::shared_ptr<DistributedATS::MarketDataUpdate> market_data_update;
+      
+      std::map<std::string,
         DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefresh>
-          mdIncrementalDataRefresh(mdUpdate->priceDepth);
+          latestMarketDataUpdates;
+       
+      
+          while (_price_depth_publisher_queue_ptr->pop(market_data_update))
+          {
+              latestMarketDataUpdates[market_data_update->symbol] = market_data_update->priceDepth;
+              
+              std::stringstream ss;
+              MarketDataIncrementalRefreshLogger::log(ss, latestMarketDataUpdates[market_data_update->symbol]);
+              LOG4CXX_INFO(logger, "MarketDataIncrementalRefresh : [" <<  ss.str() << "]");
+              std::cout << "Update : " << ss.str() << std::endl;
+              
+          }
+      
 
-      latestMarketDataUpdates[mdUpdate->symbol] = mdIncrementalDataRefresh;
-
-      incrementalRefreshMessage->release();
-    }
-
-      DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefresh
+    DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefresh
         chunkedIncrementalMarketDataRefresh;
 
-    chunkedIncrementalMarketDataRefresh.m_Header.SenderCompID =
-        CORBA::string_dup("MATCHING_ENGINE");
-    chunkedIncrementalMarketDataRefresh.m_Header.MsgType =
-        CORBA::string_dup("X");
+    chunkedIncrementalMarketDataRefresh.header().SenderCompID("MATCHING_ENGINE");
+    chunkedIncrementalMarketDataRefresh.header().MsgType("X");
 
     int max_chunk_size = 10;
 
-    CORBA::ULong chunk_size =
+    auto chunk_size =
         latestMarketDataUpdates.size() > max_chunk_size
             ? max_chunk_size
-            : (CORBA::ULong)latestMarketDataUpdates.size();
+            : latestMarketDataUpdates.size();
 
-    chunkedIncrementalMarketDataRefresh.c_NoMDEntries.length(chunk_size * 14);
+    chunkedIncrementalMarketDataRefresh.c_NoMDEntries().resize(chunk_size * 14);
 
     int market_data_update_index = 0;
     int chunk_index = 0;
 
-    for (auto marketDataUpdate : latestMarketDataUpdates) {
-      for (int md_index = 0; md_index < 14; md_index++) {
-        chunkedIncrementalMarketDataRefresh.c_NoMDEntries[chunk_index++] =
-            (*marketDataUpdate.second).c_NoMDEntries[md_index];
+    for (auto marketDataUpdate : latestMarketDataUpdates)
+    {
+      for (int md_index = 0; md_index < 14; md_index++)
+      {
+        chunkedIncrementalMarketDataRefresh.c_NoMDEntries()[chunk_index++] =
+            (marketDataUpdate.second).c_NoMDEntries()[md_index];
       }
 
       if ((++market_data_update_index) % max_chunk_size == 0 ||
@@ -114,11 +128,12 @@ int PriceDepthPublisherService::svc(void) {
         LoggerHelper::log_debug<
             std::stringstream, MarketDataIncrementalRefreshLogger,
           DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefresh>(
+            logger,
             chunkedIncrementalMarketDataRefresh,
             "MarketDataIncrementalRefresh");
 
         std::cout << "Publishing chunk of "
-                  << chunkedIncrementalMarketDataRefresh.c_NoMDEntries.length()
+                  << chunkedIncrementalMarketDataRefresh.c_NoMDEntries().size()
                   << " updates" << std::endl;
 
         std::stringstream ss;
@@ -126,32 +141,31 @@ int PriceDepthPublisherService::svc(void) {
             ss, chunkedIncrementalMarketDataRefresh);
 
         int ret = _market_data_incremental_refresh_dw->write(
-            chunkedIncrementalMarketDataRefresh, NULL);
+            &chunkedIncrementalMarketDataRefresh);
+          
+          if (ret != eprosima::fastrtps::types::ReturnCode_t::RETCODE_OK) {
+              LOG4CXX_ERROR(logger, "MarketDataIncrementalRefresh :" << ret);
+          }
 
-        if (ret != DDS::RETCODE_OK) {
-          ACE_ERROR((LM_ERROR,
-                     ACE_TEXT("(%P|%t|%D) ERROR: MarketDataIncrementalRefresh "
-                              "write returned %d.\n"),
-                     ret));
-        }
 
+          /*
         chunk_index = 0;
 
-        CORBA::ULong next_chunk_size =
+        auto next_chunk_size =
             latestMarketDataUpdates.size() - market_data_update_index >
                     max_chunk_size
                 ? max_chunk_size
-                : (CORBA::ULong)(latestMarketDataUpdates.size() -
+                : (latestMarketDataUpdates.size() -
                                  market_data_update_index);
 
-        chunkedIncrementalMarketDataRefresh.c_NoMDEntries.length(
-            next_chunk_size * 14);
+        chunkedIncrementalMarketDataRefresh.c_NoMDEntries().resize(
+            next_chunk_size * 14);*/
       }
     }
 
     latestMarketDataUpdates.clear();
 
-    ACE_OS::nanosleep(&ts);
+      std::this_thread::sleep_for(std::chrono::duration<long double, std::micro>(_price_depth_pub_interval));
   }
 
   return 0;

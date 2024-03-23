@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -25,45 +25,26 @@
    SOFTWARE.
 */
 
-#ifndef LogoutDataReaderListenerImpl_hpp
-#define LogoutDataReaderListenerImpl_hpp
+#pragma once
 
-#include <stdio.h>
+#include <memory>
+#include <boost/lockfree/spsc_queue.hpp>
+#include <Logout.h>
+#include <fastdds/dds/subscriber/DataReaderListener.hpp>
+#include <fastdds/dds/publisher/DataWriter.hpp>
 
-#include <LogoutTypeSupportImpl.h>
-
-class LogoutDataReaderListenerImpl :
-public virtual OpenDDS::DCPS::LocalObject<DDS::DataReaderListener>
+class LogoutDataReaderListenerImpl : public eprosima::fastdds::dds::DataReaderListener
 {
 public:
-    LogoutDataReaderListenerImpl( DistributedATS_Logout::LogoutDataWriter_var& logout_dw ) : _logout_dw( logout_dw ) {};
+    LogoutDataReaderListenerImpl( eprosima::fastdds::dds::DataWriter* logout_dw ) : _logout_dw( logout_dw ) {};
     
-    virtual void on_data_available( DDS::DataReader_ptr reader) throw (CORBA::SystemException);
-    
-    virtual void on_requested_deadline_missed ( DDS::DataReader_ptr reader, const DDS::RequestedDeadlineMissedStatus & status)
-    throw (CORBA::SystemException) {};
-    
-    virtual void on_requested_incompatible_qos ( DDS::DataReader_ptr reader, const DDS::RequestedIncompatibleQosStatus & status)
-    throw (CORBA::SystemException) {};
-    
-    virtual void on_liveliness_changed ( DDS::DataReader_ptr reader, const DDS::LivelinessChangedStatus & status)
-    throw (CORBA::SystemException) {};
-    
-    virtual void on_subscription_matched ( DDS::DataReader_ptr reader, const DDS::SubscriptionMatchedStatus & status)
-    throw (CORBA::SystemException) {};
-    
-    virtual void on_sample_rejected( DDS::DataReader_ptr reader, const DDS::SampleRejectedStatus& status)
-    throw (CORBA::SystemException) {};
-    
-    virtual void on_sample_lost( DDS::DataReader_ptr reader, const DDS::SampleLostStatus& status)
-    throw (CORBA::SystemException) {};
+    void on_data_available( eprosima::fastdds::dds::DataReader* reader ) override;
     
 protected:
     LogoutDataReaderListenerImpl() {};
     
 private:
-    DistributedATS_Logout::LogoutDataWriter_var _logout_dw;
+    eprosima::fastdds::dds::DataWriter* _logout_dw;
     
 };
 
-#endif /* LogonDataReaderListenerImpl_hpp */

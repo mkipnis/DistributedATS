@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -26,8 +26,7 @@
 */
 
 
-#ifndef DATS_APPLICATION_H
-#define DATS_APPLICATION_H
+#pragma once
 
 #include <map>
 #include <memory>
@@ -43,14 +42,15 @@
 #include <quickfix/fix44/SecurityListRequest.h>
 #include <quickfix/fix44/OrderCancelReplaceRequest.h>
 #include <stdio.h>
+#include <fastdds/dds/publisher/DataWriter.hpp>
 
 #include "AuthServiceHelper.h"
-#include <ace/Message_Queue_T.h>
+#include "DataWriterContainer.hpp"
+
 
 namespace DistributedATS {
 class SocketConnection;
 class SocketAcceptor;
-class DataWriterContrainer;
 
 class DATSApplication : public FIX::Application, public FIX::MessageCracker {
 
@@ -84,7 +84,7 @@ class DATSApplication : public FIX::Application, public FIX::MessageCracker {
 public:
   DATSApplication(
       std::string dataService, std::string senderCompId,
-      std::shared_ptr<DistributedATS::DataWriterContrainer> dataWriterContainer)
+      DataWriterContrainerPtr dataWriterContainer)
       : _connection_id(0), _dataService(dataService),
         _senderCompId(senderCompId),
         _dataWriterContainer(dataWriterContainer){};
@@ -96,8 +96,9 @@ public:
   void onDisconnect(const FIX::SessionID &sessionID,
                     SocketConnection *pSocketConnection);
 
-  template <class ADAPTER, class DATA_WRITER, class DATA, class LOGGER>
-  void publishToDDS(const FIX::Message &message, DATA_WRITER &dataWriter,
+  template <class ADAPTER, class DATA, class LOGGER>
+  void publishToDDS(const FIX::Message &message,
+                    const distributed_ats_utils::data_writer_ptr& dataWriter,
                     const std::string &sender, const std::string &target,
                     const std::string &senderSubID);
 
@@ -106,20 +107,26 @@ public:
   void processDDSLogon(FIX::Message &message);
   void processDDSLogout(std::string &connectionToken, FIX::Message &message);
 
-  std::string getConnectionToken(
-      const FIX::Message
-          &); // RawData of Login Message, it will be used to cross reference
-              // logon reply with Socket Connection
+    // RawData of Login Message, it will be used to cross reference
+    // logon reply with Socket Connection
+  std::string getConnectionToken(const FIX::Message&);
 
 public:
   void setAuthService(std::shared_ptr<AuthServiceHelper> &authService) {
     _authService = authService;
   };
+    
+    const std::shared_ptr<DistributedATS::DataWriterContrainer>& get_data_writer_container() const
+    {
+        return _dataWriterContainer;
+    }
+    
+    const std::string& fix_gateway_name() const { return _senderCompId;};
 
 private:
   DistributedATS::SocketAcceptor *_acceptor;
   std::shared_ptr<AuthServiceHelper> _authService;
-  std::shared_ptr<DistributedATS::DataWriterContrainer> _dataWriterContainer;
+  DistributedATS::DataWriterContrainerPtr _dataWriterContainer;
 
   unsigned int _connection_id; // used in token generation
   std::string _dataService;
@@ -127,7 +134,8 @@ private:
 
   // Must lock whenever we interract with QuickFIX Sessions(i.e. if quickfix client disconnets and session state is update on QuickFIX Threads, we can't send messages from DDS threads in an non-synchronized matter )
     static FIX::Mutex s_quickFIXSessionStateMutex;
+    
+    DistributedATS_Logon::Logon logon;
 };
 }; // namespace DistributedATS
 
-#endif /* DATS_APPLICATION_H */

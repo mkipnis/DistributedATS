@@ -25,26 +25,25 @@
    SOFTWARE.
 */
 
-#ifndef NEWORDERSINGLEDATAREADERLISTENERIMPL_H_
-#define NEWORDERSINGLEDATAREADERLISTENERIMPL_H_
+#pragma once
 
 #include "Market.h"
-#include <NewOrderSingleTypeSupportImpl.h>
 #include <stdint.h>
 
 namespace MatchingEngine {
 
 class NewOrderSingleDataReaderListenerImpl
-    : public virtual OpenDDS::DCPS::LocalObject<DDS::DataReaderListener> {
+    : public eprosima::fastdds::dds::DataReaderListener {
 public:
   NewOrderSingleDataReaderListenerImpl(
       std::shared_ptr<DistributedATS::Market> market);
-  virtual ~NewOrderSingleDataReaderListenerImpl();
+   ~NewOrderSingleDataReaderListenerImpl() override;
 
-  virtual void
-  on_data_available(DDS::DataReader_ptr reader) throw(CORBA::SystemException);
+    void
+        on_data_available(eprosima::fastdds::dds::DataReader* reader) override;
 
-  virtual void
+ /*
+        virtual void
   on_requested_deadline_missed(DDS::DataReader_ptr reader,
                                const DDS::RequestedDeadlineMissedStatus
                                    &status) throw(CORBA::SystemException){};
@@ -70,12 +69,10 @@ public:
 
   virtual void on_sample_lost(
       DDS::DataReader_ptr reader,
-      const DDS::SampleLostStatus &status) throw(CORBA::SystemException){};
+      const DDS::SampleLostStatus &status) throw(CORBA::SystemException){};*/
 
 private:
   std::shared_ptr<DistributedATS::Market> _market;
 };
 
 } /* namespace MatchingEngine */
-
-#endif /* NEWORDERSINGLEDATAREADERLISTENERIMPL_H_ */

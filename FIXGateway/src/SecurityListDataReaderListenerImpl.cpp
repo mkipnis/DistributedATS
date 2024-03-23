@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -31,109 +31,106 @@
 #include <SecurityListLogger.hpp>
 #include <quickfix/fix44/SecurityList.h>
 
+#include <log4cxx/logger.h>
+#include <log4cxx/basicconfigurator.h>
+
+#include <fastdds/dds/subscriber/Subscriber.hpp>
+#include <fastdds/dds/subscriber/DataReader.hpp>
+#include <fastdds/dds/subscriber/DataReaderListener.hpp>
+#include <fastdds/dds/subscriber/qos/DataReaderQos.hpp>
+#include <fastdds/dds/subscriber/SampleInfo.hpp>
+
+
 namespace DistributedATS {
 
 auto const security_list_processor = [] (DistributedATS::DATSApplication &application, DistributedATS_SecurityList::SecurityList& securityList)
 {
-
+    /*
     std::stringstream ss;
     SecurityListLogger::log(ss, securityList);
-    ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%t) SecurityList : %s\n"),
-               ss.str().c_str()));
+    LOG4CXX_INFO(logger, "SecurityList : [" <<  ss.str() << "]");
+     */
 
     FIX44::SecurityList securityListMessage;
 
-    securityList.m_Header.SendingTime = 0; // this is precision;
+    securityList.header().SendingTime(0); // this is precision;
 
-    securityList.m_Header.SenderCompID =
-        securityList.m_Header
-            .TargetSubID; // security_list.m_Header.TargetCompID;
-    HeaderAdapter::DDS2FIX(securityList.m_Header,
+    securityList.header().SenderCompID(
+        securityList.header()
+            .TargetSubID()); // security_list.m_Header.TargetCompID;*/
+    HeaderAdapter::DDS2FIX(securityList.header(),
                            securityListMessage.getHeader());
 
-    FIX::SecurityReqID securityReqID(securityList.SecurityReqID.in());
+    FIX::SecurityReqID securityReqID(securityList.SecurityReqID());
     securityListMessage.setField(securityReqID);
 
     FIX::SecurityResponseID securityResponseID(
-        securityList.SecurityResponseID.in());
+        securityList.SecurityResponseID());
     securityListMessage.setField(securityResponseID);
 
     FIX::SecurityRequestResult securityRequestResult(
-        securityList.SecurityRequestResult);
+        securityList.SecurityRequestResult());
     securityListMessage.setField(securityRequestResult);
 
-    for (int sec_index = 0;
-         sec_index < securityList.c_NoRelatedSym.length(); sec_index++) {
-      FIX44::SecurityList::NoRelatedSym relatedSymbol;
+    for (int sec_index = 0; sec_index < securityList.c_NoRelatedSym().size(); sec_index++)
+    {
 
-      std::string instrument =
-          securityList.c_NoRelatedSym[sec_index].Symbol.in();
-      std::string exchange =
-          securityList.c_NoRelatedSym[sec_index].SecurityExchange.in();
+        FIX44::SecurityList::NoRelatedSym relatedSymbol;
+        
+        std::string instrument =
+          securityList.c_NoRelatedSym()[sec_index].Symbol();
+        std::string exchange =
+          securityList.c_NoRelatedSym()[sec_index].SecurityExchange();
 
-  std::string ref_data = securityList.c_NoRelatedSym[sec_index].Text.in();
+        std::string ref_data = securityList.c_NoRelatedSym()[sec_index].Text();
 
-      FIX::Symbol symbol(instrument);
-      relatedSymbol.setField(symbol);
+        FIX::Symbol symbol(instrument);
+        relatedSymbol.setField(symbol);
 
-      FIX::SecurityExchange securityExchange(exchange);
-      relatedSymbol.setField(securityExchange);
+        FIX::SecurityExchange securityExchange(exchange);
+        relatedSymbol.setField(securityExchange);
 
-  if ( ref_data.size() > 0 )
-  {
-        FIX::Text text(ref_data);
-        relatedSymbol.setField(text);
-      }
+        if ( ref_data.size() > 0 )
+        {
+            FIX::Text text(ref_data);
+            relatedSymbol.setField(text);
+        }
 
-      securityListMessage.addGroup(relatedSymbol);
+        securityListMessage.addGroup(relatedSymbol);
     }
+    
 
     DistributedATS::DATSApplication::publishToClient(securityListMessage);
 
-
 };
 
-SecurityListDataReaderListenerImpl::SecurityListDataReaderListenerImpl(DistributedATS::DATSApplication &application) :
-    _processor(application, security_list_processor ) {};
+SecurityListDataReaderListenerImpl::SecurityListDataReaderListenerImpl(DistributedATS::DATSApplication &application)
+        : _processor(application, security_list_processor, "SecurityListDataReaderListenerImpl" ),
+        _fix_gateway_name(application.fix_gateway_name())
+{
+};
 
 
 void SecurityListDataReaderListenerImpl::on_data_available(
-    DDS::DataReader_ptr reader) throw(CORBA::SystemException) {
-  try {
-      DistributedATS_SecurityList::SecurityListDataReader_var security_list_dr =
-      DistributedATS_SecurityList::SecurityListDataReader::_narrow(reader);
-
-    if (CORBA::is_nil(security_list_dr.in())) {
-      std::cerr << "SecurityListDataReaderListenerImpl::on_data_available: "
-                   "_narrow failed."
-                << std::endl;
-      ACE_OS::exit(1);
+                    eprosima::fastdds::dds::DataReader* reader) {
+    
+    DistributedATS_SecurityList::SecurityList security_list;
+    eprosima::fastdds::dds::SampleInfo info;
+    if (reader->take_next_sample(&security_list, &info) == ReturnCode_t::RETCODE_OK)
+    {
+        if (info.valid_data)
+        {
+            if ( security_list.header().TargetCompID().compare(_fix_gateway_name) == 0 )
+            {
+                std::stringstream ss;
+                SecurityListLogger::log(ss, security_list);
+                LOG4CXX_INFO(logger, "SecurityList : [" <<  ss.str() << "]");
+                
+                _processor.enqueue_dds_message(security_list);
+            }
+        }
     }
-
-    while (true) {
-        DistributedATS_SecurityList::SecurityList securityList;
-      DDS::SampleInfo si;
-      DDS::ReturnCode_t status =
-          security_list_dr->take_next_sample(securityList, si);
-
-      if (status == DDS::RETCODE_OK) {
-        if (!si.valid_data)
-          continue;
-          
-          _processor.enqueue_dds_message(securityList);
-
-      } else if (status == DDS::RETCODE_NO_DATA) {
-        break;
-      } else {
-        std::cerr << "ERROR: read DATS::SecurityList: Error: " << status
-                  << std::endl;
-      }
-    }
-
-  } catch (CORBA::Exception &e) {
-    std::cerr << "Exception caught in read:" << std::endl << e << std::endl;
-    ACE_OS::exit(1);
-  }
+  
 }
 
 } /* namespace DistributedATS */

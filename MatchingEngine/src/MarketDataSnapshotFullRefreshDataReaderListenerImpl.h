@@ -25,26 +25,24 @@
    SOFTWARE.
 */
 
-#ifndef MARKETDATASNAPSHOTFULLREFRESHDATAREADERLISTENERIMPL_H_
-#define MARKETDATASNAPSHOTFULLREFRESHDATAREADERLISTENERIMPL_H_
-
-#include <MarketDataSnapshotFullRefreshTypeSupportImpl.h>
+#pragma once
 
 #include "Market.h"
 
 namespace DistributedATS {
 
 class MarketDataSnapshotFullRefreshDataReaderListenerImpl
-    : public virtual OpenDDS::DCPS::LocalObject<DDS::DataReaderListener> {
+    : public eprosima::fastdds::dds::DataReaderListener {
 public:
   MarketDataSnapshotFullRefreshDataReaderListenerImpl(
       std::shared_ptr<DistributedATS::Market> market)
       : _market(market){};
-  virtual ~MarketDataSnapshotFullRefreshDataReaderListenerImpl();
+   ~MarketDataSnapshotFullRefreshDataReaderListenerImpl() override;
 
   virtual void
-  on_data_available(DDS::DataReader_ptr reader) throw(CORBA::SystemException);
+  on_data_available(eprosima::fastdds::dds::DataReader* reader) override;
 
+        /*
   virtual void
   on_requested_deadline_missed(DDS::DataReader_ptr reader,
                                const DDS::RequestedDeadlineMissedStatus
@@ -71,7 +69,7 @@ public:
 
   virtual void on_sample_lost(
       DDS::DataReader_ptr reader,
-      const DDS::SampleLostStatus &status) throw(CORBA::SystemException){};
+      const DDS::SampleLostStatus &status) throw(CORBA::SystemException){};*/
 
 private:
   std::shared_ptr<DistributedATS::Market> _market;
@@ -80,4 +78,3 @@ private:
 
 } /* namespace DistributedATS */
 
-#endif /* MARKETDATASNAPSHOTFULLREFRESHDATAREADERLISTENERIMPL_H_ */

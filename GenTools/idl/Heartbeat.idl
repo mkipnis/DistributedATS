@@ -1,12 +1,12 @@
-// Don't modify, automatically generated file by QuickFIX2OpenDDS.py
+/* Don't modify, automatically generated file by QuickFIX2FastDDS.py*/
 #include "Header.idl"
 
 module DistributedATS_Heartbeat
 {
 
-	@topic
+	
 	struct Heartbeat
 	{
-	DistributedATS::Header m_Header;
+		DistributedATS::Header header;
 	};
 };

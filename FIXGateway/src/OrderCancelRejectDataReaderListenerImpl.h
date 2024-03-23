@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -25,60 +25,30 @@
    SOFTWARE.
 */
 
-#ifndef ORDERCANCELREJECTDATAREADERLISTENERIMPL_H_
-#define ORDERCANCELREJECTDATAREADERLISTENERIMPL_H_
+#pragma once
 
-#include <OrderCancelRejectTypeSupportImpl.h>
 #include <thread>
 #include "Application.hpp"
 
 #include "FIXMsgComposerThread.h"
+#include <fastdds/dds/subscriber/DataReaderListener.hpp>
+#include <OrderCancelReject.h>
+#include <OrderCancelRejectAdapter.hpp>
 
 
 namespace DistributedATS {
 
 class OrderCancelRejectDataReaderListenerImpl
-    : public virtual OpenDDS::DCPS::LocalObject<DDS::DataReaderListener> {
+    : public eprosima::fastdds::dds::DataReaderListener {
 public:
         OrderCancelRejectDataReaderListenerImpl(DistributedATS::DATSApplication &application);
-        virtual ~OrderCancelRejectDataReaderListenerImpl() {};
+        ~OrderCancelRejectDataReaderListenerImpl() override {};
 
-  virtual void
-  on_data_available(DDS::DataReader_ptr reader) throw(CORBA::SystemException);
-
-  virtual void
-  on_requested_deadline_missed(DDS::DataReader_ptr reader,
-                               const DDS::RequestedDeadlineMissedStatus
-                                   &status) throw(CORBA::SystemException){};
-
-  virtual void
-  on_requested_incompatible_qos(DDS::DataReader_ptr reader,
-                                const DDS::RequestedIncompatibleQosStatus
-                                    &status) throw(CORBA::SystemException){};
-
-  virtual void
-  on_liveliness_changed(DDS::DataReader_ptr reader,
-                        const DDS::LivelinessChangedStatus
-                            &status) throw(CORBA::SystemException){};
-
-  virtual void
-  on_subscription_matched(DDS::DataReader_ptr reader,
-                          const DDS::SubscriptionMatchedStatus
-                              &status) throw(CORBA::SystemException){};
-
-  virtual void on_sample_rejected(
-      DDS::DataReader_ptr reader,
-      const DDS::SampleRejectedStatus &status) throw(CORBA::SystemException){};
-
-  virtual void on_sample_lost(
-      DDS::DataReader_ptr reader,
-      const DDS::SampleLostStatus &status) throw(CORBA::SystemException){};
+        void on_data_available(eprosima::fastdds::dds::DataReader* reader) override;
         
     private:
         
         fix_message_composer_thread<DistributedATS_OrderCancelReject::OrderCancelReject> _processor;
 };
 
-} /* namespace DistributedATS */
-
-#endif /* ORDERCANCELREJECTDATAREADERLISTENERIMPL_H_ */
+}

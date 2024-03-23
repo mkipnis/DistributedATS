@@ -25,11 +25,14 @@
    SOFTWARE.
 */
 
-#ifndef NEWORDERSINGLEDATAREADERLISTENERIMPL_H_
-#define NEWORDERSINGLEDATAREADERLISTENERIMPL_H_
+#pragma once
 
-#include <NewOrderSingleTypeSupportImpl.h>
-
+#include <NewOrderSingle.h>
+#include <fastdds/dds/subscriber/Subscriber.hpp>
+#include <fastdds/dds/subscriber/DataReader.hpp>
+#include <fastdds/dds/subscriber/DataReaderListener.hpp>
+#include <fastdds/dds/subscriber/qos/DataReaderQos.hpp>
+#include <fastdds/dds/subscriber/SampleInfo.hpp>
 #include <quickfix/Mutex.h>
 
 #include "LatencyTest.h"
@@ -37,15 +40,17 @@
 namespace LatencyTest 
 {
 
-class NewOrderSingleDataReaderListenerImpl  : public virtual OpenDDS::DCPS::LocalObject<DDS::DataReaderListener> 
+class NewOrderSingleDataReaderListenerImpl  :
+    public eprosima::fastdds::dds::DataReaderListener
 {
 public:
 	NewOrderSingleDataReaderListenerImpl( LatencyStatsPtr pLatencyStatsPtr ) :
         m_pLatencyStatsPtr( pLatencyStatsPtr ) {};
-	virtual ~NewOrderSingleDataReaderListenerImpl();
+    ~NewOrderSingleDataReaderListenerImpl() override;
 
-    virtual void on_data_available( DDS::DataReader_ptr reader) throw (CORBA::SystemException);
+    void on_data_available( eprosima::fastdds::dds::DataReader* ) override;
 
+    /*
     virtual void on_requested_deadline_missed ( DDS::DataReader_ptr reader, const DDS::RequestedDeadlineMissedStatus & status)
     throw (CORBA::SystemException) {};
 
@@ -62,12 +67,10 @@ public:
     throw (CORBA::SystemException) {};
 
     virtual void on_sample_lost( DDS::DataReader_ptr reader, const DDS::SampleLostStatus& status)
-    throw (CORBA::SystemException) {};
+    throw (CORBA::SystemException) {};*/
 
 private:
     LatencyStatsPtr m_pLatencyStatsPtr;
 };
 
 };
-
-#endif /* NEWORDERSINGLEDATAREADERLISTENERIMPL_H_ */

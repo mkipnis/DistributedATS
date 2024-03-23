@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -25,148 +25,152 @@
    SOFTWARE.
 */
 
-#ifndef DataReaderContainer_h
-#define DataReaderContainer_h
+#pragma once
+
+#include <LogonPubSubTypes.h>
+#include <LogoutPubSubTypes.h>
+#include <MarketDataIncrementalRefreshPubSubTypes.h>
+#include <MarketDataSnapshotFullRefreshPubSubTypes.h>
+#include <ExecutionReportPubSubTypes.h>
+#include <OrderCancelRejectPubSubTypes.h>
+#include <OrderMassCancelReportPubSubTypes.h>
+#include <SecurityListPubSubTypes.h>
+#include <SecurityList.h>
+
+
 
 namespace DistributedATS {
 
 struct DataReaderContrainer {
+    
+    
+    distributed_ats_utils::data_reader_tuple_ptr<DistributedATS_Logon::Logon> _logon_data_reader_tuple;
+
+    distributed_ats_utils::topic_tuple_ptr<DistributedATS_Logout::Logout> _logout_topic_tuple;
+    distributed_ats_utils::data_reader_tuple_ptr<DistributedATS_Logout::Logout> _logout_data_reader_tuple;
+
+    
+    distributed_ats_utils::topic_tuple_ptr<DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefresh> _market_data_incremental_refresh_topic_tuple;
+    distributed_ats_utils::data_reader_tuple_ptr<DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefresh> _market_data_incremental_refresh_data_reader_tuple;
+    
+    distributed_ats_utils::topic_tuple_ptr<DistributedATS_MarketDataSnapshotFullRefresh::MarketDataSnapshotFullRefresh> _market_data_snapshot_full_refresh_topic_tuple;
+    distributed_ats_utils::data_reader_tuple_ptr<DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefresh> _market_data_snapshot_full_refresh_data_reader_tuple;
+
+
+    distributed_ats_utils::topic_tuple_ptr<DistributedATS_ExecutionReport::ExecutionReport> _execution_report_topic_tuple;
+    distributed_ats_utils::data_reader_tuple_ptr<DistributedATS_ExecutionReport::ExecutionReport>  _execution_report_data_reader_tuple;
+        
+    distributed_ats_utils::topic_tuple_ptr<DistributedATS_OrderCancelReject::OrderCancelReject> _order_cancel_reject_topic_tuple;
+    distributed_ats_utils::data_reader_tuple_ptr<DistributedATS_OrderCancelReject::OrderCancelReject>  _order_cancel_reject_data_reader_tuple;
+
+    distributed_ats_utils::topic_tuple_ptr<DistributedATS_OrderMassCancelReport::OrderMassCancelReport> _order_mass_cancel_report_topic_tuple;
+    distributed_ats_utils::data_reader_tuple_ptr<DistributedATS_OrderMassCancelReport::OrderMassCancelReport>  _order_mass_cancel_report_data_reader_tuple;
+
+    distributed_ats_utils::topic_tuple_ptr<DistributedATS_SecurityList::SecurityList> _security_list_topic_tuple;
+    distributed_ats_utils::data_reader_tuple_ptr<DistributedATS_SecurityList::SecurityList>  _security_list_data_reader_tuple;
+    
+    
+    ~DataReaderContrainer()
+    {
+        std::cout << "~DataReaderContrainer" << std::endl;
+    }
+
   DataReaderContrainer(
-      distributed_ats_utils::BasicDomainParticipantPtr participantPtr,
+      distributed_ats_utils::basic_domain_participant_ptr participant_ptr,
       DistributedATS::DATSApplication &application,
       std::string targetCompIdFilter) {
+      
     //
     // Data Reader Topic
     //
-    DDS::Topic_var logon_topic = participantPtr->createTopicAndRegisterType<
-      DistributedATS_Logon::LogonTypeSupport_var, DistributedATS_Logon::LogonTypeSupportImpl>(
-        LOGON_TOPIC_NAME);
 
-    DDS::Topic_var logout_topic = participantPtr->createTopicAndRegisterType<
-      DistributedATS_Logout::LogoutTypeSupport_var, DistributedATS_Logout::LogoutTypeSupportImpl>(
+      auto& logon_topic_tuple = application.get_data_writer_container()->_logon_topic_tuple;
+    
+      std::string authCompIdFilter = "header.SenderCompID='AUTH'";
+      
+      _logon_data_reader_tuple = participant_ptr->make_data_reader_tuple(logon_topic_tuple,
+                        new DistributedATS::LogonDataReaderListenerImpl(application), "FILTERED_LOGON", authCompIdFilter);
+      
+
+
+      _logout_topic_tuple = participant_ptr->make_topic<
+      DistributedATS_Logout::LogoutPubSubType,
+      DistributedATS_Logout::Logout>(
         LOGOUT_TOPIC_NAME);
+      
+      _logout_data_reader_tuple = participant_ptr->make_data_reader_tuple(_logout_topic_tuple,
+                        new DistributedATS::LogoutDataReaderListenerImpl(application),"FILTERED_LOGOUT", authCompIdFilter);
 
-    DDS::Topic_var market_data_incremental_refresh_topic =
-        participantPtr->createTopicAndRegisterType<
-      DistributedATS_MarketDataIncrementalRefresh::
-                MarketDataIncrementalRefreshTypeSupport_var,
-      DistributedATS_MarketDataIncrementalRefresh::
-                MarketDataIncrementalRefreshTypeSupportImpl>(
+
+      _security_list_topic_tuple =
+      participant_ptr->make_topic<
+      DistributedATS_SecurityList::SecurityListPubSubType,
+      DistributedATS_SecurityList::SecurityList>(
+               SECURITY_LIST_TOPIC_NAME);
+      
+      
+      
+      _security_list_data_reader_tuple = participant_ptr->make_data_reader_tuple(_security_list_topic_tuple,
+                                                                                 new DistributedATS::SecurityListDataReaderListenerImpl(application)); //,"FILTERED_REF_DATA", targetCompIdFilter);
+      
+
+      _market_data_incremental_refresh_topic_tuple =
+      participant_ptr->make_topic<
+      DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefreshPubSubType,
+      DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefresh>(
             MARKET_DATA_INCREMENTAL_REFRESH_TOPIC_NAME);
+      
+      _market_data_incremental_refresh_data_reader_tuple = participant_ptr->make_data_reader_tuple(_market_data_incremental_refresh_topic_tuple,
+                                new DistributedATS::MarketDataIncrementalRefreshDataReaderListenerImpl(application));
 
-    DDS::Topic_var market_data_snapshot_full_refresh_topic =
-        participantPtr->createTopicAndRegisterType<
+      
+      
+      _market_data_snapshot_full_refresh_topic_tuple =
+      participant_ptr->make_topic<
       DistributedATS_MarketDataSnapshotFullRefresh::
-                MarketDataSnapshotFullRefreshTypeSupport_var,
+                MarketDataSnapshotFullRefreshPubSubType,
       DistributedATS_MarketDataSnapshotFullRefresh::
-                MarketDataSnapshotFullRefreshTypeSupportImpl>(
+                MarketDataSnapshotFullRefresh>(
             MARKET_DATA_SNAPSHOT_FULL_REFRESH_TOPIC_NAME);
+      
+      _market_data_snapshot_full_refresh_data_reader_tuple =
+      participant_ptr->make_data_reader_tuple(_market_data_snapshot_full_refresh_topic_tuple,
+                new DistributedATS::MarketDataSnapshotFullRefreshDataReaderListenerImpl(application));
 
-    DDS::Topic_var execution_report_topic =
-        participantPtr->createTopicAndRegisterType<
-      DistributedATS_ExecutionReport::ExecutionReportTypeSupport_var,
-      DistributedATS_ExecutionReport::ExecutionReportTypeSupportImpl>(
+      
+      _execution_report_topic_tuple =
+      participant_ptr->make_topic<
+      DistributedATS_ExecutionReport::ExecutionReportPubSubType,
+      DistributedATS_ExecutionReport::ExecutionReport>(
             EXECUTION_REPORT_TOPIC_NAME);
 
-    DDS::Topic_var order_cancel_reject_topic =
-        participantPtr->createTopicAndRegisterType<
-      DistributedATS_OrderCancelReject::OrderCancelRejectTypeSupport_var,
-      DistributedATS_OrderCancelReject::OrderCancelRejectTypeSupportImpl>(
+
+       
+      _execution_report_data_reader_tuple = participant_ptr->make_data_reader_tuple(_execution_report_topic_tuple,
+                                        new DistributedATS::ExecutionReportDataReaderListenerImpl(application),
+                                            "FILTERED_EXEC_REPORT", targetCompIdFilter);
+      
+      _order_cancel_reject_topic_tuple =
+      participant_ptr->make_topic<
+      DistributedATS_OrderCancelReject::OrderCancelRejectPubSubType,
+      DistributedATS_OrderCancelReject::OrderCancelReject>(
             ORDER_CANCEL_REJECT_TOPIC_NAME);
+      
+      _order_cancel_reject_data_reader_tuple = participant_ptr->make_data_reader_tuple(_order_cancel_reject_topic_tuple,
+                        new DistributedATS::OrderCancelRejectDataReaderListenerImpl(application),
+                        "FILTERED_ORDER_CANCEL_REJECT", targetCompIdFilter);
+    
 
-    DDS::Topic_var order_mass_cancel_report_topic =
-        participantPtr->createTopicAndRegisterType<
-      DistributedATS_OrderMassCancelReport::OrderMassCancelReportTypeSupport_var,
-      DistributedATS_OrderMassCancelReport::OrderMassCancelReportTypeSupportImpl>(
+      _order_mass_cancel_report_topic_tuple =
+      participant_ptr->make_topic<
+      DistributedATS_OrderMassCancelReport::OrderMassCancelReportPubSubType,
+      DistributedATS_OrderMassCancelReport::OrderMassCancelReport>(
             ORDER_MASS_CANCEL_REPORT_TOPIC_NAME);
-
-    DDS::Topic_var security_list_topic =
-        participantPtr->createTopicAndRegisterType<
-      DistributedATS_SecurityList::SecurityListTypeSupport_var,
-      DistributedATS_SecurityList::SecurityListTypeSupportImpl>(
-            SECURITY_LIST_TOPIC_NAME);
-
-    //
-    // Content Filters
-    //
-
-    std::string authCompIdFilter = "m_Header.SenderCompID='AUTH'";
-
-    DDS::ContentFilteredTopic_ptr cft_logon =
-        participantPtr->getDomainParticipant()->create_contentfilteredtopic(
-            "FILTERED_LOGON", logon_topic, authCompIdFilter.c_str(),
-            DDS::StringSeq());
-
-    DDS::ContentFilteredTopic_ptr cft_logout =
-        participantPtr->getDomainParticipant()->create_contentfilteredtopic(
-            "FILTERED_LOGOUT", logout_topic, authCompIdFilter.c_str(),
-            DDS::StringSeq());
-
-    DDS::ContentFilteredTopic_ptr cft_ref_data =
-        participantPtr->getDomainParticipant()->create_contentfilteredtopic(
-            "FILTERED_REF_DATA", security_list_topic,
-            targetCompIdFilter.c_str(), DDS::StringSeq());
-
-    DDS::ContentFilteredTopic_ptr cft_exec_report =
-        participantPtr->getDomainParticipant()->create_contentfilteredtopic(
-            "FILTERED_EXEC_REPORT", execution_report_topic,
-            targetCompIdFilter.c_str(), DDS::StringSeq());
-
-    DDS::ContentFilteredTopic_ptr cft_mdc_full_refresh =
-        participantPtr->getDomainParticipant()->create_contentfilteredtopic(
-            "FILTERED_MDC_FULL_REFRESH",
-            market_data_snapshot_full_refresh_topic, targetCompIdFilter.c_str(),
-            DDS::StringSeq());
-
-    DDS::ContentFilteredTopic_ptr cft_order_cancel_reject =
-        participantPtr->getDomainParticipant()->create_contentfilteredtopic(
-            "FILTERED_ORDER_CANCEL_REJECT", order_cancel_reject_topic,
-            targetCompIdFilter.c_str(), DDS::StringSeq());
-
-    DDS::ContentFilteredTopic_ptr cft_order_mass_cancel_report =
-        participantPtr->getDomainParticipant()->create_contentfilteredtopic(
-            "FILTERED_ORDER_MASS_CANCEL", order_mass_cancel_report_topic,
-            targetCompIdFilter.c_str(), DDS::StringSeq());
-
-    //
-    // Data Listeners
-    //
-    DDS::DataReaderListener_var logonDataListener(
-        new DistributedATS::LogonDataReaderListenerImpl(application));
-    DDS::DataReaderListener_var logoutDataListener(
-        new DistributedATS::LogoutDataReaderListenerImpl(application));
-    DDS::DataReaderListener_var executionReportDataListener(
-        new DistributedATS::ExecutionReportDataReaderListenerImpl(application));
-    DDS::DataReaderListener_var marketDataIncrementalRefreshtDataListener(
-        new DistributedATS::
-            MarketDataIncrementalRefreshDataReaderListenerImpl(application));
-    DDS::DataReaderListener_var marketDataSnapdshotFullRefreshtDataListener(
-        new DistributedATS::
-            MarketDataSnapshotFullRefreshDataReaderListenerImpl(application));
-    DDS::DataReaderListener_var orderCancelRejectDataListener(
-        new DistributedATS::OrderCancelRejectDataReaderListenerImpl(application));
-    DDS::DataReaderListener_var orderMassCancelReportDataListener(
-        new DistributedATS::OrderMassCancelReportDataReaderListenerImpl(application));
-    DDS::DataReaderListener_var securityListReportDataListener(
-        new DistributedATS::SecurityListDataReaderListenerImpl(application));
-
-    participantPtr->createDataReaderListener(cft_logon, logonDataListener);
-    participantPtr->createDataReaderListener(cft_logout, logoutDataListener);
-    participantPtr->createDataReaderListener(cft_exec_report,
-                                             executionReportDataListener);
-    participantPtr->createDataReaderListener(
-        market_data_incremental_refresh_topic,
-        marketDataIncrementalRefreshtDataListener);
-    participantPtr->createDataReaderListener(
-        cft_mdc_full_refresh, marketDataSnapdshotFullRefreshtDataListener);
-    participantPtr->createDataReaderListener(cft_order_cancel_reject,
-                                             orderCancelRejectDataListener);
-    participantPtr->createDataReaderListener(cft_order_mass_cancel_report,
-                                             orderMassCancelReportDataListener);
-    participantPtr->createDataReaderListener(cft_ref_data,
-                                             securityListReportDataListener);
+      
+      _order_mass_cancel_report_data_reader_tuple = participant_ptr->make_data_reader_tuple(_order_mass_cancel_report_topic_tuple,
+                        new DistributedATS::OrderMassCancelReportDataReaderListenerImpl(application),
+                            "FILTERED_ORDER_MASS_CANCEL", targetCompIdFilter);
   };
 };
 }; // namespace DistributedATS
 
-#endif /* DataReaderContainer_h */

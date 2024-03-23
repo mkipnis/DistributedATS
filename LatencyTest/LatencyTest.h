@@ -25,11 +25,11 @@
    SOFTWARE.
 */
 
-#ifndef __LATENCY_TEST_H__
-#define __LATENCY_TEST_H__
+#pragma once
 
 #include <iostream>
 #include <time.h>
+#include <map>
 #include <quickfix/Mutex.h>
 
 namespace LatencyTest
@@ -160,5 +160,4 @@ namespace LatencyTest
 typedef std::shared_ptr<latency_stats> LatencyStatsPtr;
 };
 
-#endif
 

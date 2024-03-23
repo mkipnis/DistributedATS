@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -26,105 +26,88 @@
 */
 
 #include <BasicDomainParticipant.h>
-#include <LogonTypeSupportImpl.h>
-#include "LogonDataReaderListenerImpl.hpp"
-
 #include "AuthService.h"
 #include <sstream>
-
+#include <LogonPubSubTypes.h>
+#include <LogoutPubSubTypes.h>
 #include <quickfix/FixValues.h>
-#include <ace/Time_Value.h>
-
 #include <LogonLogger.hpp>
 #include <LogoutLogger.hpp>
-
 #include <Common.h>
+#include <thread>
+#include <chrono>
+#include <tuple>
 
 
 using namespace DistributedATS;
 
-AuthService::AuthService(std::shared_ptr<distributed_ats_utils::BasicDomainParticipant> basicDomainParticipantPtr,
-                         const FIX::DatabaseConnectionID& dbConnectionID,
-						 ACE_Thread_Manager *thr_mgr ) : ACE_Task<ACE_MT_SYNCH> (thr_mgr), m_dbConnectionID( dbConnectionID )
+AuthService::AuthService(std::shared_ptr<distributed_ats_utils::basic_domain_participant> basic_domain_participant_ptr,
+                         const FIX::DatabaseConnectionID& dbConnectionID) : m_dbConnectionID( dbConnectionID )
 {
-    m_basicDomainParticipantPtr = basicDomainParticipantPtr;
+    _basic_domain_participant_ptr = basic_domain_participant_ptr;
+    _logon_request_queue = std::make_shared<LogonPtrQueue>();
+    
+    std::atomic_init(&_is_running, true);
+
+    _service_thread = std::thread(&AuthService::service, this);
 };
 
 AuthService::~AuthService()
 {
-    
+    std::atomic_init(&_is_running, false);
+    _service_thread.join();
 }
 
-
-
-
-
-void AuthService::createLogonTopic( const std::string& data_service_filter_expression/*,
-                              const char* logon_topic_name, const char* logout_topic_name*/ )
+void AuthService::createLogonTopic( const std::string& data_service_filter_expression )
 {
-    DDS::Topic_var logon_topic =
-    m_basicDomainParticipantPtr->createTopicAndRegisterType < DistributedATS_Logon::LogonTypeSupport_var, DistributedATS_Logon::LogonTypeSupportImpl >
+    _logon_topic_tuple =
+    _basic_domain_participant_ptr->make_topic < DistributedATS_Logon::LogonPubSubType, DistributedATS_Logon::Logon  >
     ( LOGON_TOPIC_NAME );
 
     
     std::string data_service_filter_expression_auth = data_service_filter_expression +
-        " and m_Header.TargetCompID = 'AUTH'";
+        "and header.TargetCompID='AUTH'";
     
-    m_cft_logon =
-        m_basicDomainParticipantPtr->getDomainParticipant()->create_contentfilteredtopic( "LOGON_FILTER" , logon_topic,
-                                        data_service_filter_expression_auth.c_str(), DDS::StringSeq()); ;
-    
-    m_logon_dw = m_basicDomainParticipantPtr->createDataWriter<
-    DistributedATS_Logon::LogonDataWriter_var, DistributedATS_Logon::LogonDataWriter > ( logon_topic );
+    _logon_data_reader_tuple = _basic_domain_participant_ptr->make_data_reader_tuple(_logon_topic_tuple,
+                new LogonDataReaderListenerImpl( _logon_request_queue ),
+                "FILTERED_LOGON", data_service_filter_expression_auth);
 
-    DDS::DataReaderListener_var logonDataListener( new LogonDataReaderListenerImpl( msg_queue() ) );
-    m_basicDomainParticipantPtr->createDataReaderListener ( m_cft_logon.in(), logonDataListener );
+    m_logon_dw = _basic_domain_participant_ptr->make_data_writer<DistributedATS_Logon::Logon>( _logon_topic_tuple );
 }
 
 
-void AuthService::createLogoutTopic( const std::string& data_service_filter_expression/*,
-                              const char* logon_topic_name, const char* logout_topic_name*/ )
+void AuthService::createLogoutTopic( const std::string& data_service_filter_expression )
 {
-    DDS::Topic_var logout_topic =
-    m_basicDomainParticipantPtr->createTopicAndRegisterType < DistributedATS_Logout::LogoutTypeSupport_var, DistributedATS_Logout::LogoutTypeSupportImpl >
+    _logout_topic_tuple =
+    _basic_domain_participant_ptr->make_topic < DistributedATS_Logout::LogoutPubSubType, DistributedATS_Logout::Logout >
     ( LOGOUT_TOPIC_NAME );
     
     std::string data_service_filter_expression_auth = data_service_filter_expression +
-    " and m_Header.TargetCompID = 'AUTH'";
+    " and header.TargetCompID = 'AUTH'";
     
-    
-    m_cft_logout = m_basicDomainParticipantPtr->getDomainParticipant()->create_contentfilteredtopic( "LOGOUT_FILTER", logout_topic,
-                                                                        data_service_filter_expression_auth.c_str(),
-                                                                        DDS::StringSeq()); ;
-    
-    
-    m_logout_dw = m_basicDomainParticipantPtr->createDataWriter< DistributedATS_Logout::LogoutDataWriter_var,
-    DistributedATS_Logout::LogoutDataWriter > ( logout_topic );
+    m_logout_dw = _basic_domain_participant_ptr->make_data_writer( _logout_topic_tuple );
 }
 
-int AuthService::svc (void)
+int AuthService::service (void)
 {
-    std::shared_ptr<DistributedATS::SQLiteConnection> mySqlConnectionPtr = std::make_shared<DistributedATS::SQLiteConnection>( m_dbConnectionID );
+    std::shared_ptr<DistributedATS::SQLiteConnection> sqlite_connection_ptr = std::make_shared<DistributedATS::SQLiteConnection>( m_dbConnectionID );
     
-	while(1)
+	while(_is_running)
 	{
-        if ( !mySqlConnectionPtr->connected() )
+        if ( !sqlite_connection_ptr->connected() )
         {
-            ACE_ERROR ((LM_ERROR, ACE_TEXT("(%P|%t|%D) ERROR: Auth Service is not connected to the database.\n")));
+            LOG4CXX_ERROR(logger, "Auth Service is not connected to the database.\n");
+            
             return 0;
         };
         
-        ACE_Message_Block* messageBlock = 0;
-
-        ACE_Time_Value interval (0, 5000000);
+        std::shared_ptr<DistributedATS_Logon::Logon> logon_ptr;
         
-        if ( this->getq (messageBlock, &interval) > -1 )
+        if ( _logon_request_queue->pop( logon_ptr ) )
         {
-            DistributedATS_Logon::Logon* logonPtr = (  DistributedATS_Logon::Logon* )messageBlock->rd_ptr();
-            authenticate( mySqlConnectionPtr, logonPtr );
-            messageBlock->release();
+            authenticate( sqlite_connection_ptr, logon_ptr );
         } else {
-            ACE_OS::sleep(interval);
+            std::this_thread::sleep_for(std::chrono::duration<long double, std::milli>(1000));
         }
 	};
 
@@ -132,53 +115,51 @@ int AuthService::svc (void)
 }
 
 
-bool AuthService::authenticate( std::shared_ptr<DistributedATS::SQLiteConnection> sqliteConnectionPtr,  DistributedATS_Logon::Logon* logonPtr )
+bool AuthService::authenticate( std::shared_ptr<DistributedATS::SQLiteConnection>& sqliteConnectionPtr,  std::shared_ptr<DistributedATS_Logon::Logon>& logon )
 {
     std::string textOut = "";
     
-    if ( authenticate( sqliteConnectionPtr, logonPtr->Username.in(), logonPtr->Password.in(), textOut ) )
+    std::stringstream ss_logon;
+    LogonLogger::log(ss_logon, *logon);
+    
+    if ( authenticate( sqliteConnectionPtr, logon->Username(), logon->Password(), textOut ) )
     {
-        DistributedATS_Logon::Logon logon = *logonPtr;
-        logon.m_Header.TargetCompID = logonPtr->m_Header.SenderCompID;
-        logon.m_Header.SenderCompID = CORBA::string_dup("AUTH");
-        logon.m_Header.TargetSubID = CORBA::string_dup( logonPtr->Username );
+        logon->header().TargetCompID(logon->header().SenderCompID());
+        logon->header().SenderCompID("AUTH");
+        logon->header().TargetSubID( logon->Username() );
         
-        std::stringstream ss_logon;
-        LogonLogger::log(ss_logon, logon);
-        ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%t|%D) Auth Service Logon Success: %s\n"), ss_logon.str().c_str()));
-
-        int ret = m_logon_dw->write(logon, NULL);
+        LOG4CXX_INFO(logger, "Auth Service Logon Success: [" <<  ss_logon.str() << "]");
         
-        if (ret != DDS::RETCODE_OK)
-        {
-            ACE_ERROR ((LM_ERROR, ACE_TEXT("(%P|%t|%D) ERROR: Logon write returned %d.\n"), ret));
+        int ret = m_logon_dw->write(logon.get());
+        
+        if (!ret) {
+            LOG4CXX_ERROR(logger, "Error Publishing to DDS :" << ss_logon.str());
         }
+        
     } else {
         
-        ACE_DEBUG ((LM_INFO, ACE_TEXT("(%P|%t|%D) INFO: Authentication failed: Publishing logout [%s].\n"), logonPtr->Username.in()));
-        
+        LOG4CXX_INFO(logger, "Authentication failed: Publishing logout for : [" <<  ss_logon.str() << "]");
+
         DistributedATS_Logout::Logout logout;
         
-        logout.m_Header.BeginString = logonPtr->m_Header.BeginString;
-        logout.m_Header.MsgType = FIX::MsgType_Logout;
+        logout.header().BeginString(logon->header().BeginString());
+        logout.header().MsgType(FIX::MsgType_Logout);
         
-        logout.m_Header.TargetCompID = logonPtr->m_Header.SenderCompID;
-        logout.m_Header.SenderCompID = CORBA::string_dup("AUTH");
-        logout.m_Header.TargetSubID = logonPtr->RawData; // Kludge
-        logout.m_Header.SendingTime = 0;
+        logout.header().TargetCompID(logon->header().SenderCompID());
+        logout.header().SenderCompID("AUTH");
+        logout.header().TargetSubID(logon->RawData());
+        logout.header().SendingTime(0);
         
-        logout.Text = CORBA::string_dup(textOut.c_str());
+        logout.Text(textOut);
 
         std::stringstream ss_logout;
         LogoutLogger::log(ss_logout, logout);
-        ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%t|%D) Auth Service Logout : %s\n"), ss_logout.str().c_str()));
-
+        LOG4CXX_INFO(logger, "Auth Service Logout : %s\n" << ss_logout.str());
         
-        int ret = m_logout_dw->write(logout, NULL);
+        int ret = m_logout_dw->write(&logout);
         
-        if (ret != DDS::RETCODE_OK)
-        {
-            ACE_ERROR ((LM_ERROR, ACE_TEXT("(%P|%t|%D)  ERROR: Logout write returned %d.\n"), ret));
+        if (!ret) {
+            LOG4CXX_ERROR(logger, "Logout write returned error : " << ret );
         }
     }
 
@@ -186,38 +167,15 @@ bool AuthService::authenticate( std::shared_ptr<DistributedATS::SQLiteConnection
 }
 
 
-/*
-bool AuthService::authenticate( std::shared_ptr<FIX::MySQLConnection> mySqlConnectionPtr, const char* username_in, const char* password_in, std::string& textOut )
-{
-    std::stringstream user_logon_call;
-    
-    
-    user_logon_call << "call user_logon('" << username_in << "','" <<password_in << "', @usercheck, @reason)";
 
-    std::cout << "user logon call : " <<user_logon_call.str() << std::endl;
-    
-    FIX::MySQLQuery mySQLQuery(user_logon_call.str().c_str());
-    mySqlConnectionPtr->execute(mySQLQuery);
-    
-    FIX::MySQLQuery mySQLQueryOut("select @usercheck, @reason");
-    mySqlConnectionPtr->execute(mySQLQueryOut);
-    
-    int result =  ACE_OS::atoi(mySQLQueryOut.getValue(0,0));
-    textOut = mySQLQueryOut.getValue(0, 1);
-    
-    return result == 0 ? true : false;
-};
- */
-
-
-bool AuthService::authenticate( std::shared_ptr<DistributedATS::SQLiteConnection> sqliteConnect, const char* username_in, const char* password_in, std::string& textOut )
+bool AuthService::authenticate( std::shared_ptr<DistributedATS::SQLiteConnection>& sqliteConnect, const std::string& username, const std::string& password, std::string& textOut )
 {
     std::stringstream auth_query_stream;
     
-    auth_query_stream << "select * from user_code where user_name='" << username_in <<
-                    "' and json_extract(properties, \"$.password\")='" << password_in << "'";
+    auth_query_stream << "select * from user_code where user_name='" << username <<
+                    "' and json_extract(properties, \"$.password\")='" << password << "'";
     
-    DistributedATS::SQLiteQuery auth_query(auth_query_stream.str().c_str());
+    DistributedATS::SQLiteQuery auth_query(auth_query_stream.str());
     
     sqliteConnect->execute(auth_query);
     

@@ -28,24 +28,19 @@
 #ifndef DataWriterContainer_h
 #define DataWriterContainer_h
 
-#include <ace/Singleton.h>
-
-#include <ace/Guard_T.h>
-#include <ace/RW_Mutex.h>
 #include <map>
 #include <memory>
 
-#include <LogonTypeSupportImpl.h>
-#include <MarketDataIncrementalRefreshTypeSupportImpl.h>
-#include <MarketDataRequestTypeSupportImpl.h>
-#include <NewOrderSingleTypeSupportImpl.h>
-#include <OrderCancelRequestTypeSupportImpl.h>
-#include <OrderMassCancelRequestTypeSupportImpl.h>
-#include <OrderMassStatusRequestAdapter.hpp>
+#include <Logon.h>
+#include <MarketDataIncrementalRefresh.h>
+#include <MarketDataRequest.h>
+#include <NewOrderSingle.h>
+#include <OrderCancelRequest.h>
+#include <OrderMassCancelRequest.h>
+#include <OrderMassStatusRequest.h>
 #include <OrderMassCancelReportAdapter.hpp>
-#include <SecurityListRequestTypeSupportImpl.h>
-#include <OrderCancelReplaceRequestTypeSupportImpl.h>
-#include <dds/DdsDcpsPublicationC.h>
+#include <SecurityListRequest.h>
+#include <OrderCancelReplaceRequest.h>
 
 #include <BasicDomainParticipant.h>
 #include <Common.h>
@@ -54,53 +49,43 @@ namespace DistributedATS {
 
 struct DataWriterContainer
 {
+    /*
     void setExecutionReportDataWriter(
-      DistributedATS_ExecutionReport::ExecutionReportDataWriter_var &execution_report_dw) {
+                                      distributed_ats_utils::data_writer_ptr execution_report_dw) {
       _execution_report_dw = execution_report_dw;
     }
 
     void setMarketDataIncrementalRefreshDataWriter(
-          DistributedATS_MarketDataIncrementalRefresh::
-            MarketDataIncrementalRefreshDataWriter_var
-                &marketdata_incremental_refresh_dw) {
+                                                   distributed_ats_utils::data_writer_ptr  marketdata_incremental_refresh_dw) {
       _marketdata_incremental_refresh_dw = marketdata_incremental_refresh_dw;
     }
 
     void setOrderCancelRejectDataWriter(
-                                        DistributedATS_OrderCancelReject::OrderCancelRejectDataWriter_var
-            &order_cancel_reject_dw) {
+                                        distributed_ats_utils::data_writer_ptr  order_cancel_reject_dw) {
       _order_cancel_reject_dw = order_cancel_reject_dw;
     }
 
     void setOrderMassCancelReportDataWriter(
-          DistributedATS_OrderMassCancelReport::OrderMassCancelReportDataWriter_var
-            &order_mass_cancel_report_dw) {
+                                            distributed_ats_utils::data_writer_ptr order_mass_cancel_report_dw) {
       _order_mass_cancel_report_dw = order_mass_cancel_report_dw;
     }
 
     void setSecurityListRequestDataWriter(
-      DistributedATS_SecurityListRequest::SecurityListRequestDataWriter_var
-            &security_list_request_dw) {
+                                          distributed_ats_utils::data_writer_ptr  security_list_request_dw) {
       _security_list_request_dw = security_list_request_dw;
     }
 
     void setMarketDataRequestDataWriter(
-          DistributedATS_MarketDataRequest::MarketDataRequestDataWriter_var
-            &market_date_request_dw) {
+                                        distributed_ats_utils::data_writer_ptr market_date_request_dw) {
       _market_date_request_dw = market_date_request_dw;
-    }
+    }*/
     
-    DistributedATS_ExecutionReport::ExecutionReportDataWriter_var _execution_report_dw;
-    DistributedATS_OrderCancelReject::OrderCancelRejectDataWriter_var
-_order_cancel_reject_dw;
-    DistributedATS_OrderMassCancelReport::OrderMassCancelReportDataWriter_var
-_order_mass_cancel_report_dw;
-    DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefreshDataWriter_var
-_marketdata_incremental_refresh_dw;
-    DistributedATS_SecurityListRequest::SecurityListRequestDataWriter_var
-_security_list_request_dw;
-    DistributedATS_MarketDataRequest::MarketDataRequestDataWriter_var
-_market_date_request_dw;
+    distributed_ats_utils::data_writer_ptr execution_report_dw;
+    distributed_ats_utils::data_writer_ptr order_cancel_reject_dw;
+    distributed_ats_utils::data_writer_ptr order_mass_cancel_report_dw;
+    distributed_ats_utils::data_writer_ptr market_data_incremental_refresh_dw;
+    distributed_ats_utils::data_writer_ptr security_list_request_dw;
+    distributed_ats_utils::data_writer_ptr market_data_request_dw;
 };
 
 typedef std::shared_ptr<DataWriterContainer> DataWriterContainerPtr;

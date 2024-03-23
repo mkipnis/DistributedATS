@@ -1,13 +1,13 @@
-// Don't modify, automatically generated file by QuickFIX2OpenDDS.py
+/* Don't modify, automatically generated file by QuickFIX2FastDDS.py*/
 #include "Header.idl"
 
 module DistributedATS_OrderMassCancelRequest
 {
 
-	@topic
+	
 	struct OrderMassCancelRequest
 	{
-	DistributedATS::Header m_Header;
+		DistributedATS::Header header;
 		string ClOrdID;
 		char MassCancelRequestType;
 		string Symbol;

@@ -108,9 +108,11 @@ class Application(quickfix.Application):
         return
 
     def fromAdmin(self, message, sessionID):
+        print("fromAdmin:" + str(message))
         return
 
     def toApp(self, message, sessionID):
+        print("toApp:" + str(message))
         return
 
     def fromApp(self, message, sessionID):

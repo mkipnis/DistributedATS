@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -26,36 +26,27 @@
 */
 
 #include <LogonAdapter.hpp>
-#include <LogonTypeSupportImpl.h>
 #include <MarketDataRequestAdapter.hpp>
-#include <MarketDataRequestTypeSupportImpl.h>
 #include <NewOrderSingleAdapter.hpp>
-#include <NewOrderSingleTypeSupportImpl.h>
 #include <OrderCancelRequestAdapter.hpp>
-#include <OrderCancelRequestTypeSupportImpl.h>
 #include <OrderMassCancelRequestAdapter.hpp>
-#include <OrderMassCancelRequestTypeSupportImpl.h>
 #include <OrderMassStatusRequestAdapter.hpp>
-#include <OrderMassStatusRequestTypeSupportImpl.h>
 #include <OrderCancelReplaceRequestAdapter.hpp>
-#include <OrderCancelReplaceRequestTypeSupportImpl.h>
 #include <SecurityListRequestAdapter.hpp>
-#include <SecurityListRequestTypeSupportImpl.h>
-
-#include <ace/Message_Queue_T.h>
 
 #include "Application.hpp"
 #include "SocketConnection.h"
 
 #include <quickfix/fix44/ExecutionReport.h>
 
-#include <dds/DdsDcpsPublicationC.h>
-
 #include "SocketAcceptor.h"
 
 #include "AuthServiceHelper.h"
 
 #include <strstream>
+
+#include <log4cxx/logger.h>
+#include <log4cxx/basicconfigurator.h>
 
 #include <LogonLogger.hpp>
 #include <MarketDataRequestLogger.hpp>
@@ -66,63 +57,67 @@
 #include <SecurityListRequestLogger.hpp>
 #include <OrderCancelReplaceRequestLogger.hpp>
 
+#include <fastdds/dds/domain/DomainParticipantFactory.hpp>
+#include <fastdds/dds/domain/DomainParticipant.hpp>
+#include <fastdds/dds/topic/TypeSupport.hpp>
+#include <fastdds/dds/publisher/Publisher.hpp>
+#include <fastdds/dds/publisher/DataWriter.hpp>
+#include <fastdds/dds/publisher/DataWriterListener.hpp>
+
 #include "DataWriterContainer.hpp"
+
 
 using namespace DistributedATS;
 
 Mutex DATSApplication::s_quickFIXSessionStateMutex;
 
-template <class ADAPTER, class DATA_WRITER, class DATA, class LOGGER>
+//static auto logger = log4cxx::Logger::getRootLogger();
+
+template <class ADAPTER, class DATA, class LOGGER>
 void DATSApplication::publishToDDS(const FIX::Message &message,
-                                   DATA_WRITER &dataWriter,
+                                   const distributed_ats_utils::data_writer_ptr& dataWriter,
                                    const std::string &sender,
                                    const std::string &target,
                                    const std::string &senderSubID) {
-  DATA ddsMessage;
-
-  try {
-    ADAPTER::FIX2DDS(message, ddsMessage);
-  } catch (FIX::FieldNotFound &field_not_found) {
-    ACE_ERROR((LM_ERROR,
-               ACE_TEXT("(%P|%t|%D) ERROR: Adapter message convertion : field "
-                        "not found : Type - [%s] : Field - [%d] - %s.\n"),
-               field_not_found.type.c_str(), field_not_found.field,
-               message.toString().c_str()));
-    return;
-  }
-
-  ddsMessage.m_Header.SenderCompID = CORBA::string_dup(sender.c_str());
-  ddsMessage.m_Header.TargetCompID = CORBA::string_dup(target.c_str());
-  ddsMessage.m_Header.SenderSubID = CORBA::string_dup(senderSubID.c_str());
-  ddsMessage.m_Header.TargetSubID = CORBA::string_dup(_dataService.c_str());
-
-  std::stringstream ss;
-  LOGGER::log(ss, ddsMessage);
-  ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%t) Publishing to DDS : %s\n"),
-             ss.str().c_str()));
-
-  int ret = dataWriter->write(ddsMessage, NULL);
-
-  if (ret != DDS::RETCODE_OK) {
-    ACE_ERROR((LM_ERROR,
-               ACE_TEXT("(%P|%t) ERROR: Data Writer write returned %d.\n"),
-               ret));
-  }
+    DATA ddsMessage;
+    
+    try {
+        ADAPTER::FIX2DDS(message, ddsMessage);
+    } catch (FIX::FieldNotFound &field_not_found) {
+        
+        LOG4CXX_ERROR(logger, "Adapter message convertion : field not found : Type - [" << field_not_found.type << "] : Field - [" << field_not_found.field << "]" << " - " <<  message.toString());
+        
+        return;
+    }
+    
+    ddsMessage.header().SenderCompID(sender);
+    ddsMessage.header().TargetCompID(target);
+    ddsMessage.header().SenderSubID(senderSubID);
+    ddsMessage.header().TargetSubID(_dataService);
+    
+    std::stringstream ss;
+    LOGGER::log(ss, ddsMessage);
+    
+    LOG4CXX_INFO(logger, "Publishing to DDS :" << ss.str());
+    
+    auto ret = dataWriter->write(&ddsMessage);
+    
+    if (!ret) {
+        LOG4CXX_ERROR(logger, "Unable to publishing to DDS:" << ss.str());
+    }
+    
 }
 
 void DATSApplication::onCreate(const FIX::SessionID &sessionID) {
-  ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%t) Session Created : %s\n"),
-             sessionID.toString().c_str()));
+    LOG4CXX_INFO(logger, "Session Created :" <<  sessionID.toString());
 }
 
 void DATSApplication::onLogon(const FIX::SessionID &sessionID) {
-  ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%t) Session Logon : %s\n"),
-             sessionID.toString().c_str()));
+    LOG4CXX_INFO(logger, "Session Logon :" <<  sessionID.toString());
 }
 
 void DATSApplication::onLogout(const FIX::SessionID &sessionID) {
-  ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%t) Session Logout : %s\n"),
-             sessionID.toString().c_str()));
+    LOG4CXX_INFO(logger, "Session Logout :" << sessionID.toString());
 
   FIX::ClOrdID clOrdID;
   FIX::MassCancelRequestType massCancelRequestType(
@@ -133,10 +128,9 @@ void DATSApplication::onLogout(const FIX::SessionID &sessionID) {
                                         transactType);
 
   publishToDDS<OrderMassCancelRequestAdapter,
-    DistributedATS_OrderMassCancelRequest::OrderMassCancelRequestDataWriter_ptr,
     DistributedATS_OrderMassCancelRequest::OrderMassCancelRequest,
                OrderMassCancelRequestLogger>(
-      message, _dataWriterContainer->_orderMassCancelRequestDataWriter,
+      message, _dataWriterContainer->_order_mass_cancel_request_dw,
       sessionID.getSenderCompID(), "MATCHING_ENGINE",
       sessionID.getTargetCompID());
 }
@@ -144,8 +138,9 @@ void DATSApplication::onLogout(const FIX::SessionID &sessionID) {
 void DATSApplication::onDisconnect(
     const FIX::SessionID &sessionID,
     DistributedATS::SocketConnection *pSocketConnection) {
-  ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%t) Session Disconnect : %s\n"),
-             sessionID.toString().c_str()));
+    
+    LOG4CXX_INFO(logger, "Session Disconnect :" << sessionID.toString());
+
   FIX::Locker lock(s_quickFIXSessionStateMutex);
   _authService->processDisconnect(sessionID, pSocketConnection);
 }
@@ -186,18 +181,16 @@ void DATSApplication::publishToClient(FIX::Message &message) {
             FIX::Session::sendToTarget(message, activeSessionID);
         } catch ( std::exception& exp )
         {
-            ACE_ERROR((LM_ERROR,
-                       ACE_TEXT("(%P|%t|%D) ERROR: unable to publish the message [%s] \n"),
-                       exp.what()));
+            LOG4CXX_ERROR(logger, "unable to publish the message" <<  exp.what());
         }
     }
 
   } catch (FIX::FieldNotFound &field_not_found) {
-    ACE_ERROR((LM_ERROR,
-               ACE_TEXT("(%P|%t|%D) ERROR: Adapter message convertion : field "
-                        "not found : Type - [%s] : Field - [%d] - %s.\n"),
-               field_not_found.type.c_str(), field_not_found.field,
-               message.toString().c_str()));
+      
+      LOG4CXX_ERROR(logger, "Adapter message convertion : field "
+                    "not found : Type - [" << field_not_found.type << "%] : Field - [" <<  field_not_found.field << "] - " <<
+                    message.toString() << "]");
+
     return;
   }
 }
@@ -214,9 +207,8 @@ void DATSApplication::broadcastToClients(FIX::Message &message) {
 void DATSApplication::onMessage(const FIX44::NewOrderSingle &message,
                                 const FIX::SessionID &sessionID) {
   publishToDDS<NewOrderSingleAdapter,
-    DistributedATS_NewOrderSingle::NewOrderSingleDataWriter_ptr,
     DistributedATS_NewOrderSingle::NewOrderSingle, NewOrderSingleLogger>(
-      message, _dataWriterContainer->_newOrderSingleDataWriter,
+      message, _dataWriterContainer->_new_order_single_dw,
       sessionID.getSenderCompID(), "MATCHING_ENGINE",
       sessionID.getTargetCompID());
 }
@@ -224,10 +216,9 @@ void DATSApplication::onMessage(const FIX44::NewOrderSingle &message,
 void DATSApplication::onMessage(const FIX44::OrderCancelRequest &message,
                                 const FIX::SessionID &sessionID) {
   publishToDDS<OrderCancelRequestAdapter,
-    DistributedATS_OrderCancelRequest::OrderCancelRequestDataWriter_ptr,
     DistributedATS_OrderCancelRequest::OrderCancelRequest,
                OrderCancelRequestLogger>(
-      message, _dataWriterContainer->_orderCancelRequestDataWriter,
+      message, _dataWriterContainer->_order_cancel_request_dw,
       sessionID.getSenderCompID(), "MATCHING_ENGINE",
       sessionID.getTargetCompID());
 }
@@ -235,10 +226,9 @@ void DATSApplication::onMessage(const FIX44::OrderCancelRequest &message,
 void DATSApplication::onMessage(const FIX44::OrderMassCancelRequest &message,
                                 const FIX::SessionID &sessionID) {
   publishToDDS<OrderMassCancelRequestAdapter,
-    DistributedATS_OrderMassCancelRequest::OrderMassCancelRequestDataWriter_ptr,
     DistributedATS_OrderMassCancelRequest::OrderMassCancelRequest,
                OrderMassCancelRequestLogger>(
-      message, _dataWriterContainer->_orderMassCancelRequestDataWriter,
+      message, _dataWriterContainer->_order_mass_cancel_request_dw,
       sessionID.getSenderCompID(), "MATCHING_ENGINE",
       sessionID.getTargetCompID());
 }
@@ -246,10 +236,9 @@ void DATSApplication::onMessage(const FIX44::OrderMassCancelRequest &message,
 void DATSApplication::onMessage(const FIX44::OrderCancelReplaceRequest &message, const FIX::SessionID &sessionID)
 {
     publishToDDS<OrderCancelReplaceRequestAdapter,
-    DistributedATS_OrderCancelReplaceRequest::OrderCancelReplaceRequestDataWriter_ptr,
     DistributedATS_OrderCancelReplaceRequest::OrderCancelReplaceRequest,
         OrderCancelReplaceRequestLogger>(
-      message, _dataWriterContainer->_orderCancelReplaceRequestDataWriter,
+      message, _dataWriterContainer->_order_cancel_replace_request_dw,
       sessionID.getSenderCompID(), "MATCHING_ENGINE",
       sessionID.getTargetCompID());
 }
@@ -257,30 +246,27 @@ void DATSApplication::onMessage(const FIX44::OrderCancelReplaceRequest &message,
 void DATSApplication::onMessage(const FIX44::SecurityListRequest &message,
                                 const FIX::SessionID &sessionID) {
   publishToDDS<SecurityListRequestAdapter,
-    DistributedATS_SecurityListRequest::SecurityListRequestDataWriter_ptr,
     DistributedATS_SecurityListRequest::SecurityListRequest,
                SecurityListRequestLogger>(
-      message, _dataWriterContainer->_securityListRequestDataWriter,
+      message, _dataWriterContainer->_security_list_request_dw,
       sessionID.getSenderCompID(), "DATA_SERVICE", sessionID.getTargetCompID());
 }
 
 void DATSApplication::onMessage(const FIX44::MarketDataRequest &message,
                                 const FIX::SessionID &sessionID) {
   publishToDDS<MarketDataRequestAdapter,
-    DistributedATS_MarketDataRequest::MarketDataRequestDataWriter_ptr,
     DistributedATS_MarketDataRequest::MarketDataRequest,
                MarketDataRequestLogger>(
-      message, _dataWriterContainer->_marketDataRequestDataWriter,
+      message, _dataWriterContainer->_market_data_request_dw,
       sessionID.getSenderCompID(), "DATA_SERVICE", sessionID.getTargetCompID());
 }
 
 void DATSApplication::onMessage(const FIX44::OrderMassStatusRequest &message,
                                 const FIX::SessionID &sessionID) {
   publishToDDS<OrderMassStatusRequestAdapter,
-    DistributedATS_OrderMassStatusRequest::OrderMassStatusRequestDataWriter_ptr,
     DistributedATS_OrderMassStatusRequest::OrderMassStatusRequest,
                OrderMassStatusRequestLogger>(
-      message, _dataWriterContainer->_orderMassStatusRequestDataWriter,
+      message, _dataWriterContainer->_order_mass_status_request_dw,
       sessionID.getSenderCompID(), "DATA_SERVICE", sessionID.getTargetCompID());
 }
 
@@ -310,9 +296,9 @@ DATSApplication::getConnectionToken(const FIX::Message &pendingLogon) {
               << ":" << utcTimStamp.getTimeT() << ":" << _connection_id++;
 
   std::string tokenStr = tokenStream.str().c_str();
+    
+    LOG4CXX_INFO(logger, "Connection Token :" << tokenStr);
 
-  ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%t|%D) Connection Token: %s \n"),
-             tokenStr.c_str()));
 
   return tokenStr;
 }
@@ -323,20 +309,15 @@ bool DATSApplication::insertPendingLogonSocketConnection(
   pendingLogon.getHeader().getField(clTargetCompID);
 
   if (clTargetCompID.getValue().compare(this->_senderCompId) != 0) {
-    ACE_DEBUG(
-        (LM_INFO,
-         ACE_TEXT("(%P|%t|%D) Invalid Target CompID | Pending Logon : %s \n"),
-         pendingLogon.toString().c_str()));
+    LOG4CXX_DEBUG(logger, "Invalid Target CompID | Pending Logon :" << pendingLogon.toString());
+      
     socketConnection->disconnect();
     return false;
   }
 
   std::string connectionToken = getConnectionToken(pendingLogon);
-
-  ACE_DEBUG(
-      (LM_INFO,
-       ACE_TEXT("(%P|%t|%D) Connection Token : %s | Pending Logon : %s \n"),
-       connectionToken.c_str(), pendingLogon.toString().c_str()));
+    
+    LOG4CXX_DEBUG(logger, "Connection Token : " << connectionToken  << " | Pending Logon :" << pendingLogon.toString());
 
   _authService->insertPendingConnection(connectionToken, socketConnection);
 
@@ -348,9 +329,9 @@ bool DATSApplication::insertPendingLogonSocketConnection(
   FIX::RawData tokenData(connectionToken);
   const_cast<Message &>(pendingLogon).setField(tokenData);
 
-  publishToDDS<LogonAdapter, DistributedATS_Logon::LogonDataWriter_ptr, DistributedATS_Logon::Logon,
+  publishToDDS<LogonAdapter, DistributedATS_Logon::Logon,
                LogonLogger>(
-      pendingLogon, _dataWriterContainer->_logonDataWriter,
+      pendingLogon, _dataWriterContainer->_logon_dw,
       clTargetCompID.getValue(), "AUTH", clSenderCompID.getValue());
 
   return true;
