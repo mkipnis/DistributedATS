@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
 
@@ -38,7 +38,7 @@ DONT_MODIFY_TEXT = "/* Don't modify, automatically generated file by QuickFIX2Fa
 
 def print_help():
     print('QuickFIX2FastDDS.py converts specified in requirements file messages, groups and fields from FIX specs to '
-          'OpenDDS IDL libraries and conversion helper classes')
+          'DDS IDL libraries and conversion helper classes')
     print('QuickFIX2FastDDS.py -r <requirements> -s <fix_specs>')
     print('try this : python QuickFIX2FastDDS.py -r ../spec/dats_requirements.xml -s ../../FIXGateway/spec/FIX44.xml')
 

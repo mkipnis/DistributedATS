@@ -8,7 +8,7 @@ CONFIG_FILE_NAME=$2
 
 export LOG_FILE_NAME=$2.log
 
-. /Users/mkipnis/DistributedATS/dats_env.sh
+. $DATS_HOME/dats_env.sh
 
 logfile=$BASEDIR_ATS/logs/$PROGNAME.$CONFIG_FILE_NAME.console.log
 

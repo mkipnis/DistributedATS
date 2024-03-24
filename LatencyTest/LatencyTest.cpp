@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -78,37 +78,35 @@ int main( int argc, char** argv )
     else if (vm.count("config"))
         latency_test_config_file = vm["config"].as<std::string>();
 
-  FIX::Initiator * initiator = 0;
+    if (latency_test_config_file.empty()) {
+            std::cerr << "Error: Config file name is not specified." << std::endl;
+            return -1;
+   }
 
-  //DDS::DomainParticipantFactory_var dpf = DDS::DomainParticipantFactory::_nil();
+
+  FIX::Initiator * initiator = 0;
 
   try
   {
-      LatencyTest::LatencyStatsPtr latencyStatsPtr( std::make_shared<LatencyTest::latency_stats>() );
 
-      /*
-    dpf = TheParticipantFactoryWithArgs(argc, argv);
-
-    ACE_Get_Opt cmd_opts( argc, argv, ":c:" );
-
-    int option;*/
-
-    //std::string quickfix_config_file = "";
-
-       /*
-    while ( (option = cmd_opts()) != EOF )
-    {
-      switch( option )
-      {
-        case 'c' :
-          quickfix_config_file = cmd_opts.opt_arg();
-        break;
-      }
-    }*/
-
-    /*distributed_ats_utils::BasicDomainParticipant participant( dpf, DISTRIBUTED_ATS_DOMAIN_ID );
-    participant.createSubscriber();*/
+        auto settings = std::make_shared<FIX::SessionSettings>(latency_test_config_file);
       
+        FIX::SessionID default_session_id("FIX.4.4", "DEFAULT", "DEFAULT");
+        
+        auto session_settings = settings->get(default_session_id);
+          
+        auto dats_home = std::getenv("DATS_HOME");
+        auto dats_log_home = std::getenv("DATS_LOG_HOME");
+      
+        if ( dats_home == NULL || dats_log_home == NULL )
+            throw std::runtime_error("DATS_HOME or/and DATS_LOG_HOME is not set");
+
+        auto default_dictionary_tmp = &settings->get(default_session_id);
+        const_cast<FIX::Dictionary *>(default_dictionary_tmp)->setString("DATADICTIONARY", std::string(dats_home) + "/spec/" + default_dictionary_tmp->getString("DATADICTIONARY") );
+
+
+     LatencyTest::LatencyStatsPtr latencyStatsPtr( std::make_shared<LatencyTest::latency_stats>() );
+
      auto participant_ptr =
           std::make_shared<distributed_ats_utils::basic_domain_participant>(0, "LatencyTest");
 
@@ -134,14 +132,12 @@ int main( int argc, char** argv )
                                         new LatencyTest::ExecutionReportDataReaderListenerImpl( latencyStatsPtr  ));
 
 
-    FIX::SessionSettings settings( latency_test_config_file );
-
-    LatencyTest::Application application( settings, latencyStatsPtr );
+    LatencyTest::Application application( *settings, latencyStatsPtr );
     FIX::NullStoreFactory storeFactory;
-    FIX::ScreenLogFactory logFactory( settings );
+    FIX::ScreenLogFactory logFactory( *settings );
 
       try {
-          initiator = new FIX::SocketInitiator( application, storeFactory, settings, logFactory );
+          initiator = new FIX::SocketInitiator( application, storeFactory, *settings, logFactory );
           
           initiator->start();
           application.run();

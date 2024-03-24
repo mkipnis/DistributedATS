@@ -29,6 +29,37 @@ TINYXML2_PKG=10.0.0
 ASIO_PKG=1.28.1
 LIQUIBOOK_PKG=2.0.0
 LOG4CXX_PKG=1.2.0
+APR_PKG=1.7.4
+APR_UTIL_PKG=1.6.3
+#https://github.com/apache/apr-util/archive/refs/tags/1.6.3.tar.gz
+
+export INSTALL_PREFIX=$INSTALL_DIR
+
+[[ ! -f $DEPS_BUILD_DIR/apr-$APR_PKG.tar.gz ]] && curl -L "https://github.com/apache/apr/archive/refs/tags/$APR_PKG.tar.gz"  -o $DEPS_BUILD_DIR/apr-$APR_PKG.tar.gz
+
+if [[ ! -f $INSTALL_DIR/include/apr-1/apr.h ]]
+then
+cd $DEPS_BUILD_DIR
+[[ ! -d $APR_PKG ]] && tar xvf apr-$APR_PKG.tar.gz
+cd apr-$APR_PKG
+./buildconf
+./configure --prefix=$INSTALL_PREFIX --exec-prefix=$INSTALL_PREFIX
+make install -j 20
+fi
+
+
+[[ ! -f $DEPS_BUILD_DIR/apr-util-$APR_UTIL_PKG.tar.gz ]] && curl -L "https://github.com/apache/apr-util/archive/refs/tags/$APR_UTIL_PKG.tar.gz"  -o $DEPS_BUILD_DIR/apr-util-$APR_UTIL_PKG.tar.gz
+
+if [[ ! -f $INSTALL_DIR/include/apr-util-1/apr.h ]]
+then
+cd $DEPS_BUILD_DIR
+[[ ! -d $APR_UTIL_PKG ]] && tar xvf apr-util-$APR_UTIL_PKG.tar.gz
+cd apr-util-$APR_UTIL_PKG
+./buildconf --with-apr=$INSTALL_PREFIX/apr-$APR_PKG
+./configure --with-apr=$INSTALL_PREFIX/apr-$APR_PKG --prefix=$INSTALL_PREFIX --exec-prefix=$INSTALL_PREFIX
+make install -j 20
+fi
+
 
 [[ ! -f $DEPS_BUILD_DIR/$BOOST_PKG.tar.gz ]] && curl -L "https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/$BOOST_PKG.tar.gz"  -o $DEPS_BUILD_DIR/$BOOST_PKG.tar.gz
 [[ ! -f $DEPS_BUILD_DIR/asio-$ASIO_PKG.tar.gz ]] && curl -L "https://sourceforge.net/projects/asio/files/asio/1.28.1%20%28Stable%29/asio-$ASIO_PKG.tar.gz/download/"  -o $DEPS_BUILD_DIR/asio-$ASIO_PKG.tar.gz
@@ -77,7 +108,7 @@ cd $DEPS_BUILD_DIR
 [[ ! -d $LOG4CXX ]] && tar xvf log4cxx-$LOG4CXX_PKG.tar.gz
 cd logging-log4cxx-rel-v$LOG4CXX_PKG
 mkdir build; cd build;
-cmake .. -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX -DBUILD_SHARED_LIBS=ON
+cmake .. -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX -DBUILD_SHARED_LIBS=ON  -DAPR_LIBRARIES=$INSTALL_PREFIX -DAPR_UTIL_LIBRARIES=$INSTALL_PREFIX -DBUILD_TESTING=false
 cmake --build . --target install
 fi
 
@@ -117,7 +148,7 @@ cd $DEPS_BUILD_DIR
 [[ ! -d quickfix-$QUICKFIX_PKG ]] && tar xvf quickfix-v$QUICKFIX_PKG.tar.gz
 cd quickfix-$QUICKFIX_PKG
 mkdir build; cd build;
-cmake .. -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX -DBUILD_SHARED_LIBS=ON
+cmake .. -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX -DBUILD_SHARED_LIBS=ON -DCMAKE_CXX_FLAGS="-std=c++0x"
 cmake --build . --target install
 fi
 
@@ -158,8 +189,11 @@ export DATS_LOG_HOME=$BASEDIR_ATS/logs
 EOM
 
 . ./distributed_ats_env.sh
-mkdir build; cd build
+mkdir build
+cd build
 
-cmake -G Xcode .. -Dfastcdr_DIR=$INSTALL_DIR/lib/cmake/fastcdr/ -Dfastrtps_DIR=$INSTALL_DIR/share/fastrtps/cmake/ -Dfoonathan_memory_DIR=$INSTALL_DIR/lib/foonathan_memory/cmake/ -Dlog4cxx_DIR=$INSTALL_DIR/lib/cmake/log4cxx -DCMAKE_INSTALL_PREFIX=$HOME/DistributedATS -DBoost_INCLUDE_DIR=$INSTALL_DIR/include -DLIQUIBOOK_HOME=$INSTALL_DIR/liquibook-$LIQUIBOOK_PKG/src -DQUICKFIX_INSTALL_PREFIX=$INSTALL_DIR
+#cmake -G Xcode .. -Dfastcdr_DIR=$INSTALL_DIR/lib/cmake/fastcdr/ -Dfastrtps_DIR=$INSTALL_DIR/share/fastrtps/cmake/ -Dfoonathan_memory_DIR=$INSTALL_DIR/lib/foonathan_memory/cmake/ -Dlog4cxx_DIR=$INSTALL_DIR/lib/cmake/log4cxx -DCMAKE_INSTALL_PREFIX=$HOME/DistributedATS -DBoost_INCLUDE_DIR=$INSTALL_DIR/include -DLIQUIBOOK_HOME=$INSTALL_DIR/liquibook-$LIQUIBOOK_PKG/src -DQUICKFIX_INSTALL_PREFIX=$INSTALL_DIR
+
+cmake .. -Dfastcdr_DIR=$INSTALL_DIR/lib/cmake/fastcdr/ -Dfastrtps_DIR=$INSTALL_DIR/share/fastrtps/cmake/ -Dfoonathan_memory_DIR=$INSTALL_DIR/lib/foonathan_memory/cmake/ -Dlog4cxx_DIR=$INSTALL_DIR/lib/cmake/log4cxx -DCMAKE_INSTALL_PREFIX=$HOME/DistributedATS -DBoost_INCLUDE_DIR=$INSTALL_DIR/include -DLIQUIBOOK_HOME=$INSTALL_DIR/liquibook-$LIQUIBOOK_PKG/src -DQUICKFIX_INSTALL_PREFIX=$INSTALL_DIR
 
 cmake --build . --target install --config Debug

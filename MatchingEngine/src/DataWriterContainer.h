@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -25,8 +25,7 @@
    SOFTWARE.
 */
 
-#ifndef DataWriterContainer_h
-#define DataWriterContainer_h
+#pragma once
 
 #include <map>
 #include <memory>
@@ -49,37 +48,6 @@ namespace DistributedATS {
 
 struct DataWriterContainer
 {
-    /*
-    void setExecutionReportDataWriter(
-                                      distributed_ats_utils::data_writer_ptr execution_report_dw) {
-      _execution_report_dw = execution_report_dw;
-    }
-
-    void setMarketDataIncrementalRefreshDataWriter(
-                                                   distributed_ats_utils::data_writer_ptr  marketdata_incremental_refresh_dw) {
-      _marketdata_incremental_refresh_dw = marketdata_incremental_refresh_dw;
-    }
-
-    void setOrderCancelRejectDataWriter(
-                                        distributed_ats_utils::data_writer_ptr  order_cancel_reject_dw) {
-      _order_cancel_reject_dw = order_cancel_reject_dw;
-    }
-
-    void setOrderMassCancelReportDataWriter(
-                                            distributed_ats_utils::data_writer_ptr order_mass_cancel_report_dw) {
-      _order_mass_cancel_report_dw = order_mass_cancel_report_dw;
-    }
-
-    void setSecurityListRequestDataWriter(
-                                          distributed_ats_utils::data_writer_ptr  security_list_request_dw) {
-      _security_list_request_dw = security_list_request_dw;
-    }
-
-    void setMarketDataRequestDataWriter(
-                                        distributed_ats_utils::data_writer_ptr market_date_request_dw) {
-      _market_date_request_dw = market_date_request_dw;
-    }*/
-    
     distributed_ats_utils::data_writer_ptr execution_report_dw;
     distributed_ats_utils::data_writer_ptr order_cancel_reject_dw;
     distributed_ats_utils::data_writer_ptr order_mass_cancel_report_dw;
@@ -90,5 +58,3 @@ struct DataWriterContainer
 
 typedef std::shared_ptr<DataWriterContainer> DataWriterContainerPtr;
 };
-
-#endif
