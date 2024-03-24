@@ -31,11 +31,21 @@ LIQUIBOOK_PKG=2.0.0
 LOG4CXX_PKG=1.2.0
 APR_PKG=1.7.4
 APR_UTIL_PKG=1.6.3
-#https://github.com/apache/apr-util/archive/refs/tags/1.6.3.tar.gz
+
+[[ ! -f $DEPS_BUILD_DIR/$BOOST_PKG.tar.gz ]] && curl -L "https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/$BOOST_PKG.tar.gz"  -o $DEPS_BUILD_DIR/$BOOST_PKG.tar.gz
+[[ ! -f $DEPS_BUILD_DIR/asio-$ASIO_PKG.tar.gz ]] && curl -L "https://sourceforge.net/projects/asio/files/asio/1.28.1%20%28Stable%29/asio-$ASIO_PKG.tar.gz/download/"  -o $DEPS_BUILD_DIR/asio-$ASIO_PKG.tar.gz
+[[ ! -f $DEPS_BUILD_DIR/apr-$APR_PKG.tar.gz ]] && curl -L "https://github.com/apache/apr/archive/refs/tags/$APR_PKG.tar.gz"  -o $DEPS_BUILD_DIR/apr-$APR_PKG.tar.gz
+[[ ! -f $DEPS_BUILD_DIR/apr-util-$APR_UTIL_PKG.tar.gz ]] && curl -L "https://github.com/apache/apr-util/archive/refs/tags/$APR_UTIL_PKG.tar.gz"  -o $DEPS_BUILD_DIR/apr-util-$APR_UTIL_PKG.tar.gz
+[[ ! -f $DEPS_BUILD_DIR/log4cxx-$LOG4CXX_PKG.tar.gz ]] && curl -L "https://github.com/apache/logging-log4cxx/archive/refs/tags/rel/v$LOG4CXX_PKG.tar.gz"  -o $DEPS_BUILD_DIR/log4cxx-$LOG4CXX_PKG.tar.gz
+[[ ! -f $DEPS_BUILD_DIR/tinyxml2-$TINYXML2_PKG.tar.gz ]] && curl -L "https://github.com/leethomason/tinyxml2/archive/refs/tags/$TINYXML2_PKG.tar.gz"  -o $DEPS_BUILD_DIR/tinyxml2-$TINYXML2_PKG.tar.gz
+[[ ! -f $DEPS_BUILD_DIR/memory-v$FOONATHAN_MEMORY_PKG.tar.gz ]] && curl -L "https://github.com/foonathan/memory/archive/refs/tags/v$FOONATHAN_MEMORY_PKG.tar.gz"  -o $DEPS_BUILD_DIR/memory-v$FOONATHAN_MEMORY_PKG.tar.gz
+[[ ! -f $DEPS_BUILD_DIR/Fast-CDR-v$FAST_CDR_PKG.tar.gz ]] && curl -L "https://github.com/eProsima/Fast-CDR/archive/refs/tags/v$FAST_CDR_PKG.tar.gz"  -o $DEPS_BUILD_DIR/Fast-CDR-v$FAST_CDR_PKG.tar.gz
+[[ ! -f $DEPS_BUILD_DIR/Fast-DDS-v$FAST_DDS_PKG.tar.gz ]] && curl -L "https://github.com/eProsima/Fast-DDS/archive/refs/tags/v$FAST_DDS_PKG.tar.gz"  -o $DEPS_BUILD_DIR/Fast-DDS-v$FAST_DDS_PKG.tar.gz
+[[ ! -f $DEPS_BUILD_DIR/quickfix-v$QUICKFIX_PKG.tar.gz ]] && curl -L "https://github.com/quickfix/quickfix/archive/refs/tags/v$QUICKFIX_PKG.tar.gz"  -o $DEPS_BUILD_DIR/quickfix-v$QUICKFIX_PKG.tar.gz
+[[ ! -f $DEPS_BUILD_DIR/sqlite-$SQLITE_PKG.tar.gz ]] && curl -L "https://github.com/sqlite/sqlite/archive/refs/tags/$SQLITE_PKG.tar.gz"  -o $DEPS_BUILD_DIR/sqlite-$SQLITE_PKG.tar.gz
+[[ ! -f $DEPS_BUILD_DIR/liquibook-$LIQUIBOOK_PKG.tar.gz ]] && curl -L "https://github.com/enewhuis/liquibook/archive/refs/tags/$LIQUIBOOK_PKG.tar.gz"  -o $DEPS_BUILD_DIR/liquibook-$LIQUIBOOK_PKG.tar.gz
 
 export INSTALL_PREFIX=$INSTALL_DIR
-
-[[ ! -f $DEPS_BUILD_DIR/apr-$APR_PKG.tar.gz ]] && curl -L "https://github.com/apache/apr/archive/refs/tags/$APR_PKG.tar.gz"  -o $DEPS_BUILD_DIR/apr-$APR_PKG.tar.gz
 
 if [[ ! -f $INSTALL_DIR/include/apr-1/apr.h ]]
 then
@@ -47,9 +57,6 @@ cd apr-$APR_PKG
 make install -j 20
 fi
 
-
-[[ ! -f $DEPS_BUILD_DIR/apr-util-$APR_UTIL_PKG.tar.gz ]] && curl -L "https://github.com/apache/apr-util/archive/refs/tags/$APR_UTIL_PKG.tar.gz"  -o $DEPS_BUILD_DIR/apr-util-$APR_UTIL_PKG.tar.gz
-
 if [[ ! -f $INSTALL_DIR/include/apr-util-1/apr.h ]]
 then
 cd $DEPS_BUILD_DIR
@@ -59,20 +66,6 @@ cd apr-util-$APR_UTIL_PKG
 ./configure --with-apr=$INSTALL_PREFIX/apr-$APR_PKG --prefix=$INSTALL_PREFIX --exec-prefix=$INSTALL_PREFIX
 make install -j 20
 fi
-
-
-[[ ! -f $DEPS_BUILD_DIR/$BOOST_PKG.tar.gz ]] && curl -L "https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/$BOOST_PKG.tar.gz"  -o $DEPS_BUILD_DIR/$BOOST_PKG.tar.gz
-[[ ! -f $DEPS_BUILD_DIR/asio-$ASIO_PKG.tar.gz ]] && curl -L "https://sourceforge.net/projects/asio/files/asio/1.28.1%20%28Stable%29/asio-$ASIO_PKG.tar.gz/download/"  -o $DEPS_BUILD_DIR/asio-$ASIO_PKG.tar.gz
-[[ ! -f $DEPS_BUILD_DIR/log4cxx-$LOG4CXX_PKG.tar.gz ]] && curl -L "https://github.com/apache/logging-log4cxx/archive/refs/tags/rel/v$LOG4CXX_PKG.tar.gz"  -o $DEPS_BUILD_DIR/log4cxx-$LOG4CXX_PKG.tar.gz
-[[ ! -f $DEPS_BUILD_DIR/tinyxml2-$TINYXML2_PKG.tar.gz ]] && curl -L "https://github.com/leethomason/tinyxml2/archive/refs/tags/$TINYXML2_PKG.tar.gz"  -o $DEPS_BUILD_DIR/tinyxml2-$TINYXML2_PKG.tar.gz
-[[ ! -f $DEPS_BUILD_DIR/memory-v$FOONATHAN_MEMORY_PKG.tar.gz ]] && curl -L "https://github.com/foonathan/memory/archive/refs/tags/v$FOONATHAN_MEMORY_PKG.tar.gz"  -o $DEPS_BUILD_DIR/memory-v$FOONATHAN_MEMORY_PKG.tar.gz
-[[ ! -f $DEPS_BUILD_DIR/Fast-CDR-v$FAST_CDR_PKG.tar.gz ]] && curl -L "https://github.com/eProsima/Fast-CDR/archive/refs/tags/v$FAST_CDR_PKG.tar.gz"  -o $DEPS_BUILD_DIR/Fast-CDR-v$FAST_CDR_PKG.tar.gz
-[[ ! -f $DEPS_BUILD_DIR/Fast-DDS-v$FAST_DDS_PKG.tar.gz ]] && curl -L "https://github.com/eProsima/Fast-DDS/archive/refs/tags/v$FAST_DDS_PKG.tar.gz"  -o $DEPS_BUILD_DIR/Fast-DDS-v$FAST_DDS_PKG.tar.gz
-[[ ! -f $DEPS_BUILD_DIR/quickfix-v$QUICKFIX_PKG.tar.gz ]] && curl -L "https://github.com/quickfix/quickfix/archive/refs/tags/v$QUICKFIX_PKG.tar.gz"  -o $DEPS_BUILD_DIR/quickfix-v$QUICKFIX_PKG.tar.gz
-[[ ! -f $DEPS_BUILD_DIR/sqlite-$SQLITE_PKG.tar.gz ]] && curl -L "https://github.com/sqlite/sqlite/archive/refs/tags/$SQLITE_PKG.tar.gz"  -o $DEPS_BUILD_DIR/sqlite-$SQLITE_PKG.tar.gz
-[[ ! -f $DEPS_BUILD_DIR/liquibook-$LIQUIBOOK_PKG.tar.gz ]] && curl -L "https://github.com/enewhuis/liquibook/archive/refs/tags/$LIQUIBOOK_PKG.tar.gz"  -o $DEPS_BUILD_DIR/liquibook-$LIQUIBOOK_PKG.tar.gz
-
-export INSTALL_PREFIX=$INSTALL_DIR
 
 if [[ ! -f $INSTALL_DIR/include/tinyxml2.h ]]
 then
