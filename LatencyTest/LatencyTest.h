@@ -31,6 +31,7 @@
 #include <time.h>
 #include <map>
 #include <quickfix/Mutex.h>
+#include <chrono>
 
 namespace LatencyTest
 {
