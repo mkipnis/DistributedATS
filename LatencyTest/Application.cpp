@@ -182,13 +182,15 @@ void Application::onMessage
             session->logout("Done.");
             std::cout << "Stats:" << _min_latency << "|"<< _max_latency << "|" << _total_latency/m_number_of_orders << std::endl;
         } else {
+            std::tuple<long,long,long,long> latency_stats;
             
-            uint32_t gatewayNewOrderSingleLatency = 0;
-            uint32_t matchingEngineLatency = 0;
-            uint32_t gatewayExecutionReportLatency = 0;
-            uint32_t roundTripLatency = 0;
+            m_pLatencyStatsPtr->getLatencyStats(orderID.getValue(), latency_stats);
+
+            long gatewayNewOrderSingleLatency = std::get<FIX_NEW_ORDER_SINGLE>(latency_stats);
+            long matchingEngineLatency =  std::get<MATCHING_ENGINE>(latency_stats);
+            long gatewayExecutionReportLatency =  std::get<DDS_EXECUTION_REPORT>(latency_stats);
+            long roundTripLatency =  std::get<ROUND_TRIP>(latency_stats);
             
-            m_pLatencyStatsPtr->getLatencyStats(orderID.getValue(), gatewayNewOrderSingleLatency, matchingEngineLatency, gatewayExecutionReportLatency, roundTripLatency);
             
             std::cerr << "Round trip latency (Microseconds) |" << orderID << "|"
                     << gatewayNewOrderSingleLatency << "|"

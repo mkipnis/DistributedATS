@@ -162,31 +162,26 @@ fi
 
 cd $DATS_SOURCE_DIR
 
-/bin/cat <<EOM > distributed_ats_env.sh
+/bin/cat <<EOM > $HOME/DistributedATS/dats_env.sh
 
 export DATS_HOME=$HOME/DistributedATS
+export DEPS_HOME=$INSTALL_DIR
 
-export LOG4CXX_HOME=$INSTALL_PREFIX
-export QUICKFIX_HOME=$INSTALL_PREFIX
-export BOOST_HOME=$INSTALL_PREFIX
-export LIQUIDBOOK_HOME=$INSTALL_DIR/liquibook-$LIQUIBOOK_PKG
-export SQLITE_HOME=$INSTALL_DIR
-
-export DYLD_LIBRARY_PATH=$DATS_HOME/lib:$QUICKFIX_HOME/lib:$LOG4CXX_HOME/lib:$BOOST_HOME/lib:$DYLD_LIBRARY_PATH
+export DYLD_LIBRARY_PATH=$DEPS_HOME:$DATS_HOME/lib:$DYLD_LIBRARY_PATH
 export LOG4CXX_CONFIGURATION=$DATS_HOME/config/log4cxx.xml
 
-export BASEDIR_ATS=$DATS_HOME/MiscATS/MultiMatchingEngineATS
-
+export BASEDIR_ATS=$DATS_HOME/MiscATS/CryptoCLOB
+#export BASEDIR_ATS=$DATS_HOME/MiscATS/USTreasuryCLOB
+#export BASEDIR_ATS=$DATS_HOME/MiscATS/MultiMatchingEngineATS
 export DATS_LOG_HOME=$BASEDIR_ATS/logs
 
 EOM
 
-. ./distributed_ats_env.sh
 mkdir build
 cd build
 
-#cmake -G Xcode .. -Dfastcdr_DIR=$INSTALL_DIR/lib/cmake/fastcdr/ -Dfastrtps_DIR=$INSTALL_DIR/share/fastrtps/cmake/ -Dfoonathan_memory_DIR=$INSTALL_DIR/lib/foonathan_memory/cmake/ -Dlog4cxx_DIR=$INSTALL_DIR/lib/cmake/log4cxx -DCMAKE_INSTALL_PREFIX=$HOME/DistributedATS -DBoost_INCLUDE_DIR=$INSTALL_DIR/include -DLIQUIBOOK_HOME=$INSTALL_DIR/liquibook-$LIQUIBOOK_PKG/src -DQUICKFIX_INSTALL_PREFIX=$INSTALL_DIR
+cmake -G Xcode .. -Dfastcdr_DIR=$INSTALL_DIR/lib/cmake/fastcdr/ -Dfastrtps_DIR=$INSTALL_DIR/share/fastrtps/cmake/ -Dfoonathan_memory_DIR=$INSTALL_DIR/lib/foonathan_memory/cmake/ -Dlog4cxx_DIR=$INSTALL_DIR/lib/cmake/log4cxx -DCMAKE_INSTALL_PREFIX=$HOME/DistributedATS -DBoost_INCLUDE_DIR=$INSTALL_DIR/include -DLIQUIBOOK_HOME=$INSTALL_DIR/liquibook-$LIQUIBOOK_PKG/src -DQUICKFIX_INSTALL_PREFIX=$INSTALL_DIR
 
-cmake .. -Dfastcdr_DIR=$INSTALL_DIR/lib/cmake/fastcdr/ -Dfastrtps_DIR=$INSTALL_DIR/share/fastrtps/cmake/ -Dfoonathan_memory_DIR=$INSTALL_DIR/lib/foonathan_memory/cmake/ -Dlog4cxx_DIR=$INSTALL_DIR/lib/cmake/log4cxx -DCMAKE_INSTALL_PREFIX=$HOME/DistributedATS -DBoost_INCLUDE_DIR=$INSTALL_DIR/include -DLIQUIBOOK_HOME=$INSTALL_DIR/liquibook-$LIQUIBOOK_PKG/src -DQUICKFIX_INSTALL_PREFIX=$INSTALL_DIR
+#cmake .. -Dfastcdr_DIR=$INSTALL_DIR/lib/cmake/fastcdr/ -Dfastrtps_DIR=$INSTALL_DIR/share/fastrtps/cmake/ -Dfoonathan_memory_DIR=$INSTALL_DIR/lib/foonathan_memory/cmake/ -Dlog4cxx_DIR=$INSTALL_DIR/lib/cmake/log4cxx -DCMAKE_INSTALL_PREFIX=$HOME/DistributedATS -DBoost_INCLUDE_DIR=$INSTALL_DIR/include -DLIQUIBOOK_HOME=$INSTALL_DIR/liquibook-$LIQUIBOOK_PKG/src -DQUICKFIX_INSTALL_PREFIX=$INSTALL_DIR
 
 cmake --build . --target install --config Debug

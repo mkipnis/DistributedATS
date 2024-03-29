@@ -91,16 +91,20 @@ int main( int argc, char** argv )
 
         auto settings = std::make_shared<FIX::SessionSettings>(latency_test_config_file);
       
-        FIX::SessionID default_session_id("FIX.4.4", "DEFAULT", "DEFAULT");
+        //FIX::SessionID default_session_id("FIX.4.4", "DEFAULT", "DEFAULT");
         
-        auto session_settings = settings->get(default_session_id);
-          
+        //auto session_settings = settings->get(default_session_id);
+      
+        FIX::SessionID default_session_id = *settings->getSessions().begin();
+
+        std::cout << "Default Sesison ID : " << default_session_id << std::endl;
+      
         auto dats_home = std::getenv("DATS_HOME");
         auto dats_log_home = std::getenv("DATS_LOG_HOME");
       
         if ( dats_home == NULL || dats_log_home == NULL )
             throw std::runtime_error("DATS_HOME or/and DATS_LOG_HOME is not set");
-
+      
         auto default_dictionary_tmp = &settings->get(default_session_id);
         const_cast<FIX::Dictionary *>(default_dictionary_tmp)->setString("DATADICTIONARY", std::string(dats_home) + "/spec/" + default_dictionary_tmp->getString("DATADICTIONARY") );
 
@@ -136,19 +140,21 @@ int main( int argc, char** argv )
     FIX::NullStoreFactory storeFactory;
     FIX::ScreenLogFactory logFactory( *settings );
 
-      try {
+      try
+      {
           initiator = new FIX::SocketInitiator( application, storeFactory, *settings, logFactory );
           
           initiator->start();
           application.run();
           initiator->stop();
-          delete initiator; }
-          catch ( std::exception & e )
-          {
-            std::cout << e.what();
-            delete initiator;
-            return 1;
-          }
+          delete initiator;
+      }
+      catch ( std::exception & e )
+      {
+          std::cout << e.what();
+          delete initiator;
+          return 1;
+      }
 
     return 0;
   }
