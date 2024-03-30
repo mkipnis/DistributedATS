@@ -94,17 +94,23 @@ fi
 
 mkdir $HOME/DistributedATS
 
+export DATS_HOME=$HOME/DistributedATS
+export DEPS_HOME=$HOME/distributed_ats_deps_build
+export BASEDIR_ATS=$DATS_HOME/MiscATS/CryptoCLOB
+
 /bin/cat <<EOM > $HOME/DistributedATS/dats_env.sh
 
-export DATS_HOME=/root/DistributedATS
-export DEPS_HOME=$HOME/distributed_ats_deps_build
+export DATS_HOME=$DATS_HOME
+export DEPS_HOME=$DEPS_HOME
 
 export LD_LIBRARY_PATH=$DEPS_HOME/lib:$DATS_HOME/lib:$LD_LIBRARY_PATH
 export LOG4CXX_CONFIGURATION=$DATS_HOME/config/log4cxx.xml
 
-export BASEDIR_ATS=$DATS_HOME/MiscATS/CryptoCLOB
+export BASEDIR_ATS=$BASEDIR_ATS
 #export BASEDIR_ATS=$DATS_HOME/MiscATS/USTreasuryCLOB
 #export BASEDIR_ATS=$DATS_HOME/MiscATS/MultiMatchingEngineATS
+
+mkdir -p $BASEDIR_ATS/logs
 export DATS_LOG_HOME=$BASEDIR_ATS/logs
 
 EOM
