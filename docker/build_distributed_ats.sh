@@ -1,8 +1,8 @@
 #!/bin/bash
 
-[[ ! -f /opt/distributed_ats_src ]] && git clone -b FastDDS https://github.com/mkipnis/distributed_ats_src /opt/distributed_ats_src
+[[ ! -f /opt/distributed_ats_src ]] && git clone -b FastDDS https://github.com/mkipnis/DistributedATS /opt/distributed_ats_src
 
-cd /opt/DistributedATS
+cd /opt/distributed_ats_src
 rm -rf build
 mkdir build
 cd build
