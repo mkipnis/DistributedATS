@@ -3,7 +3,7 @@
 set -x 
 
 DATS_SOURCE_DIR=`pwd`
-DEPS_BUILD_DIR=$HOME/distributed_ats_deps_build
+DEPS_BUILD_DIR=/opt/distributed_ats_deps_build
 
 mkdir -p $DEPS_BUILD_DIR 
 
@@ -61,7 +61,7 @@ cd $DEPS_BUILD_DIR
 [[ ! -d $FAST_DDS_PKG ]] && tar xvf Fast-DDS-v$FAST_DDS_PKG.tar.gz
 cd Fast-DDS-$FAST_DDS_PKG
 mkdir build; cd build;
-cmake .. -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX -DBUILD_SHARED_LIBS=ON
+cmake .. -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX -DBUILD_SHARED_LIBS=ON -DSHM_TRANSPORT_DEFAULT=OFF -DCOMPILE_EXAMPLES=ON -DINSTALL_EXAMPLES=ON
 cmake --build . --target install
 fi
 
@@ -92,12 +92,12 @@ cd $DEPS_BUILD_DIR
 ln -s liquibook-$LIQUIBOOK_PKG liquibook
 fi
 
-mkdir $HOME/DistributedATS
+mkdir /opt/DistributedATS
 
-/bin/cat <<EOM > $HOME/DistributedATS/dats_env.sh
+/bin/cat <<EOM > /opt/DistributedATS/dats_env.sh
 
-export DATS_HOME=/root/DistributedATS
-export DEPS_HOME=$HOME/distributed_ats_deps_build
+export DATS_HOME=/opt/DistributedATS
+export DEPS_HOME=/opt/distributed_ats_deps_build
 
 export LD_LIBRARY_PATH=$DEPS_HOME/lib:$DATS_HOME/lib:$LD_LIBRARY_PATH
 export LOG4CXX_CONFIGURATION=$DATS_HOME/config/log4cxx.xml

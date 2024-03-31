@@ -11,7 +11,7 @@
   <appender name="FileAppender" class="org.apache.log4j.FileAppender">
     <param name="file" value="${DATS_LOG_HOME}/${LOG_FILE_NAME}" />
     <layout class="org.apache.log4j.PatternLayout">
-      <param name="ConversionPattern" value="[%d{yyyy-MM-dd HH:mm:ss.SSSSSS}] %c %-5p %T - %m%n" />
+      <param name="ConversionPattern" value="[%d{yyyy-MM-dd HH:mm:ss.SSSSSS}] %c %-5p %T %t - %m%n" />
     </layout>
   </appender>
  

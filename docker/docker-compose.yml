@@ -1,12 +1,19 @@
 version: '2'
 services:
+  # FastDDS Discovery
+  fastdds_discovery:
+    image: ghcr.io/mkipnis/distributed_ats_fast_dds
+    command: ["bash", "-c", "cd /root/DistributedATS/; . ./dats_env.sh; cd /root/distributed_ats_deps_build/bin; ./fast-discovery-server -i 0 -t 127.0.0.1 -q 42100"]
+    ports: # TCP Discovery
+      - "42100:42100"
+
   # Core: Matching Engines, Data Services, FIX Gateways 
   distributed_ats:
-    image: ghcr.io/mkipnis/distributed_ats:latest
-    command: ["bash", "-c", "cd /opt/DistributedATS/; . ./distributed_ats_env.sh; cd MiscATS/CryptoCLOB/scripts; ./start_ats.sh"]
+    image: ghcr.io/mkipnis/distributed_ats_fast_dds
+    command: ["bash", "-c", "sleep 10; cd /root/DistributedATS/; . ./dats_env.sh; cd /root/DistributedATS/MiscATS/CryptoCLOB/scripts; echo $ROS_DISCOVERY_SERVER & ./start_ats.sh"]
     volumes: # Users and Instruments
     #   - "./data:/opt/DistributedATS/DataService/sql/sqlite"
-       - "./logs:/opt/DistributedATS/MiscATS/CryptoCLOB/logs"
+       - "./logs:/root/DistributedATS/MiscATS/CryptoCLOB/logs"
     ports: # FIX Gateways
       - "15001:15001"
       - "16001:16001"
