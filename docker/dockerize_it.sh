@@ -3,9 +3,9 @@
 set -x 
 
 # Core
-#docker build -t distributed_ats -f Docker.build_distributed_ats .
-docker build -t ghcr.io/mkipnis/distributed_ats:latest -f Docker.build_distributed_ats .
-docker push ghcr.io/mkipnis/distributed_ats:latest
+#docker build -t distributed_ats_fast_dds -f Docker.build_distributed_ats .
+docker build -t ghcr.io/mkipnis/distributed_ats_fast_dds:latest -f Docker.build_distributed_ats .
+docker push ghcr.io/mkipnis/distributed_ats_fast_dds:latest
 
 # Front-end
 DOCKER_DIR=`pwd`

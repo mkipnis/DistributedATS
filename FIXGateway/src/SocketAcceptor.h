@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -44,8 +44,8 @@ public:
   SocketAcceptor(DistributedATS::DATSApplication &, FIX::MessageStoreFactory &,
                  const FIX::SessionSettings &) throw(FIX::ConfigError);
   SocketAcceptor(DistributedATS::DATSApplication &, FIX::MessageStoreFactory &,
-                 const FIX::SessionSettings &, FIX::LogFactory &,
-                 std::ofstream *) throw(FIX::ConfigError);
+                 const FIX::SessionSettings &, FIX::LogFactory &/*,
+                 std::ofstream */ ) throw(FIX::ConfigError);
 
   virtual ~SocketAcceptor();
 
@@ -79,16 +79,12 @@ private:
   void onError(FIX::SocketServer &);
   void onTimeout(FIX::SocketServer &);
 
-  // void insertPendingLogonSocketConnection(const SessionID&, SocketConnection*
-  // );
   bool proceedWithLogon(const SessionID &);
 
   FIX::SocketServer *m_pServer;
   PortToSessions m_portToSessions;
   SocketConnections m_connections;
-  std::ofstream *m_dds_input_stream_log_file;
 
-  // PendingLogonSocketConnection m_pendingLogonSocketConnection;
 };
 } // namespace DistributedATS
 

@@ -1,11 +1,7 @@
-// Don't modify, automatically generated file by QuickFIX2OpenDDS.py
-#ifndef __OrderMassStatusRequest_h__
-#define __OrderMassStatusRequest_h__
-
-#include "OrderMassStatusRequestTypeSupportImpl.h"
+/* Don't modify, automatically generated file by QuickFIX2FastDDS.py*/
+#pragma once
+#include "OrderMassStatusRequest.h"
 #include <quickfix/Message.h>
-
- using namespace DistributedATS;
 
 #include "HeaderAdapter.hpp"
 
@@ -17,5 +13,3 @@ class OrderMassStatusRequestAdapter
 		static void DDS2FIX(const DistributedATS_OrderMassStatusRequest::OrderMassStatusRequest& ddsMsg, FIX::Message&)  __attribute__ ((visibility ("default")));
 
 };
-#endif
-

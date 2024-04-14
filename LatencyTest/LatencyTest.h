@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -25,86 +25,92 @@
    SOFTWARE.
 */
 
-#ifndef __LATENCY_TEST_H__
-#define __LATENCY_TEST_H__
+#pragma once
 
 #include <iostream>
 #include <time.h>
+#include <map>
 #include <quickfix/Mutex.h>
+#include <chrono>
 
 namespace LatencyTest
 {
 
     // All hops will include application and network latencies
-    enum OrderHopLatency
+    enum OrderHopLatency : int
     {
-        NEW_ORDER_SINGLE_FIX, // timestamp of order going out from LatencyTest Client
+        NEW_ORDER_SINGLE_FIX = 0, // timestamp of order going out from LatencyTest Client
         NEW_ORDER_SINGLE_DDS, // New order single converted from FIX to DDS and sent to matching engine
         EXECUTION_REPORT_DDS, // Execution Report produced by matching engine and published to FIX Gateway
         EXECUTION_REPORT_FIX // Execution Report converted from DDS to FIX and consumed by LatencyTest Client
     };
 
-    typedef std::map<OrderHopLatency, timeval> OrderHopLatencyMap;
-    typedef std::shared_ptr<OrderHopLatencyMap> OrderHopLatencyMapPtr;
+    enum OrderHopLatencyStats : int
+    {
+        FIX_NEW_ORDER_SINGLE = 0,
+        MATCHING_ENGINE,
+        DDS_EXECUTION_REPORT,
+        ROUND_TRIP,
+    };
+
+
+    //typedef std::map<OrderHopLatency, timeval> OrderHopLatencyMap;
+    //typedef std::shared_ptr<OrderHopLatencyMap> OrderHopLatencyMapPtr;
 
     struct order_latency_stats
     {
-        order_latency_stats() : _orderHopLatencyMapPtr( std::make_shared<OrderHopLatencyMap>() )
+        order_latency_stats()
         {
-            timeval timestamp;
-            memset(&timestamp, 0x0, sizeof(timestamp));
-            _orderHopLatencyMapPtr->emplace(OrderHopLatency::NEW_ORDER_SINGLE_FIX, timestamp);
-            _orderHopLatencyMapPtr->emplace(OrderHopLatency::NEW_ORDER_SINGLE_DDS, timestamp);
-            _orderHopLatencyMapPtr->emplace(OrderHopLatency::EXECUTION_REPORT_DDS, timestamp);
-            _orderHopLatencyMapPtr->emplace(OrderHopLatency::EXECUTION_REPORT_FIX, timestamp);
+    
+            std::get<NEW_ORDER_SINGLE_FIX>(_order_hop_timestamps) = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock().now().time_since_epoch());
+            
+            std::get<NEW_ORDER_SINGLE_DDS>(_order_hop_timestamps) =
+            std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock().now().time_since_epoch());
+            
+            std::get<EXECUTION_REPORT_DDS>(_order_hop_timestamps) =
+            std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock().now().time_since_epoch());
+            
+            std::get<EXECUTION_REPORT_FIX>(_order_hop_timestamps) =
+            std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock().now().time_since_epoch());
         };
     
         void insertStat( OrderHopLatency orderHopLatency )
         {
-            FIX::Locker l( _mutex );
-            timeval timestamp;
-            gettimeofday( &timestamp, NULL );
-            (*_orderHopLatencyMapPtr)[orderHopLatency] = timestamp;
+            switch(orderHopLatency) {
+                case NEW_ORDER_SINGLE_FIX: std::get<NEW_ORDER_SINGLE_FIX>(_order_hop_timestamps) = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock().now().time_since_epoch());
+                case NEW_ORDER_SINGLE_DDS: std::get<NEW_ORDER_SINGLE_DDS>(_order_hop_timestamps) = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock().now().time_since_epoch());
+                case EXECUTION_REPORT_DDS: std::get<EXECUTION_REPORT_DDS>(_order_hop_timestamps) = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock().now().time_since_epoch());
+                case EXECUTION_REPORT_FIX: std::get<EXECUTION_REPORT_FIX>(_order_hop_timestamps) = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock().now().time_since_epoch());
+            }
         };
         
-        void getLatencyStats( uint32_t& gatewayNewOrderSingleLatency,
-                             uint32_t& matchingEngineLatency,
-                             uint32_t& gatewayExecutionReportLatency,
-                             uint32_t& roundTripLatency )
+        void getLatencyStats( std::tuple<long,long,long,long>& latency_tuple )
         {
             FIX::Locker l( _mutex );
 
-            auto new_order_single_timestamp_fix =
-                _orderHopLatencyMapPtr->find(OrderHopLatency::NEW_ORDER_SINGLE_FIX);
-            
-            auto new_order_single_timestamp_dds =
-                _orderHopLatencyMapPtr->find(OrderHopLatency::NEW_ORDER_SINGLE_DDS);
+            auto new_order_single_timestamp_fix = std::get<NEW_ORDER_SINGLE_FIX>(_order_hop_timestamps);
+            auto new_order_single_timestamp_dds = std::get<NEW_ORDER_SINGLE_DDS>(_order_hop_timestamps);
+    
 
-            gatewayNewOrderSingleLatency = (new_order_single_timestamp_dds->second.tv_sec - (uint32_t)new_order_single_timestamp_fix->second.tv_sec) * 1000000 +
-                    (new_order_single_timestamp_dds->second.tv_usec - (long)new_order_single_timestamp_fix->second.tv_usec);
+            std::get<FIX_NEW_ORDER_SINGLE>(latency_tuple) = std::chrono::duration_cast<std::chrono::microseconds>(new_order_single_timestamp_dds - new_order_single_timestamp_fix).count();
 
-            auto execution_report_dds =
-                _orderHopLatencyMapPtr->find(OrderHopLatency::EXECUTION_REPORT_DDS);
+            auto execution_report_dds = std::get<EXECUTION_REPORT_DDS>(_order_hop_timestamps);
             
-            matchingEngineLatency = (execution_report_dds->second.tv_sec - (uint32_t)new_order_single_timestamp_dds->second.tv_sec) * 1000000 +
-                    (execution_report_dds->second.tv_usec - (long)new_order_single_timestamp_dds->second.tv_usec);
+            std::get<MATCHING_ENGINE>(latency_tuple) = std::chrono::duration_cast<std::chrono::microseconds>(execution_report_dds - new_order_single_timestamp_dds).count();
             
             auto execution_report_fix =
-                _orderHopLatencyMapPtr->find(OrderHopLatency::EXECUTION_REPORT_FIX);
+                std::get<EXECUTION_REPORT_FIX>(_order_hop_timestamps);
 
-            gatewayExecutionReportLatency = (execution_report_fix->second.tv_sec - (uint32_t)execution_report_dds->second.tv_sec) * 1000000 +
-                    (execution_report_fix->second.tv_usec - (long)execution_report_dds->second.tv_usec);
-
+            std::get<DDS_EXECUTION_REPORT>(latency_tuple) = std::chrono::duration_cast<std::chrono::microseconds>(execution_report_fix - execution_report_dds).count();
             
-            if ( matchingEngineLatency<0 ) // Fix message was recieved before dds exection report -- needs checking, might be resouce starvation if everything runs on the same box
-                matchingEngineLatency = gatewayExecutionReportLatency = 0;
-            
-            roundTripLatency = (execution_report_fix->second.tv_sec - (uint32_t)new_order_single_timestamp_fix->second.tv_sec) * 1000000 +
-                    (execution_report_fix->second.tv_usec - (long)new_order_single_timestamp_fix->second.tv_usec);
+            std::get<ROUND_TRIP>(latency_tuple)  = std::chrono::duration_cast<std::chrono::microseconds>(execution_report_fix - new_order_single_timestamp_fix).count();
 
         }
     
-        OrderHopLatencyMapPtr _orderHopLatencyMapPtr;
+        std::tuple<std::chrono::microseconds,
+                std::chrono::microseconds,
+                std::chrono::microseconds,
+                std::chrono::microseconds > _order_hop_timestamps;
         FIX::Mutex _mutex;
     };
 
@@ -135,10 +141,8 @@ namespace LatencyTest
         };
         
         void getLatencyStats( const std::string& orderId,
-                             uint32_t& gatewayNewOrderSingleLatency,
-                             uint32_t& matchingEngineLatency,
-                             uint32_t& gatewayExecutionReportLatency,
-                             uint32_t& roundTripLatency)
+                             std::tuple<long,long,long,long>& latency_tuple
+                             )
         {
             FIX::Locker l( _mutex );
 
@@ -146,10 +150,7 @@ namespace LatencyTest
             
             if ( latencyStats != _orderLatencyStatsMapPtr->end() )
             {
-                latencyStats->second->getLatencyStats( gatewayNewOrderSingleLatency,
-                                              matchingEngineLatency,
-                                              gatewayExecutionReportLatency,
-                                              roundTripLatency );
+                latencyStats->second->getLatencyStats( latency_tuple );
             }
         }
 
@@ -160,5 +161,4 @@ namespace LatencyTest
 typedef std::shared_ptr<latency_stats> LatencyStatsPtr;
 };
 
-#endif
 

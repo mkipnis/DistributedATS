@@ -1,11 +1,7 @@
-// Don't modify, automatically generated file by QuickFIX2OpenDDS.py
-#ifndef __OrderCancelRequest_h__
-#define __OrderCancelRequest_h__
-
-#include "OrderCancelRequestTypeSupportImpl.h"
+/* Don't modify, automatically generated file by QuickFIX2FastDDS.py*/
+#pragma once
+#include "OrderCancelRequest.h"
 #include <quickfix/Message.h>
-
- using namespace DistributedATS;
 
 #include "HeaderAdapter.hpp"
 
@@ -17,5 +13,3 @@ class OrderCancelRequestAdapter
 		static void DDS2FIX(const DistributedATS_OrderCancelRequest::OrderCancelRequest& ddsMsg, FIX::Message&)  __attribute__ ((visibility ("default")));
 
 };
-#endif
-

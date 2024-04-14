@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -26,65 +26,44 @@
 */
 
 #include "MarketDataRequestDataReaderListenerImpl.h"
-#include <MarketDataSnapshotFullRefreshTypeSupportImpl.h>
 #include <iostream>
+#include <MarketDataRequest.h>
 #include <MarketDataRequestLogger.hpp>
 #include <sstream>
+#include <LoggerHelper.h>
+
+#include <fastdds/dds/subscriber/Subscriber.hpp>
+#include <fastdds/dds/subscriber/DataReader.hpp>
+#include <fastdds/dds/subscriber/DataReaderListener.hpp>
+#include <fastdds/dds/subscriber/SampleInfo.hpp>
+
+static auto logger = log4cxx::Logger::getRootLogger();
+
 
 namespace DistributedATS {
 
-MarketDataRequestDataReaderListenerImpl::~MarketDataRequestDataReaderListenerImpl() {
-	// TODO Auto-generated destructor stub
-}
 
-void MarketDataRequestDataReaderListenerImpl::on_data_available( DDS::DataReader_ptr reader) throw (CORBA::SystemException)
+void MarketDataRequestDataReaderListenerImpl::on_data_available( eprosima::fastdds::dds::DataReader* reader)
 {
-	 try
-	    {
-            DistributedATS_MarketDataRequest::MarketDataRequestDataReader_var
-				market_data_request_dr = DistributedATS_MarketDataRequest::MarketDataRequestDataReader::_narrow(reader);
 
-	        if (CORBA::is_nil ( market_data_request_dr.in() ) )
-	        {
-	            ACE_ERROR ((LM_ERROR, ACE_TEXT("(%P|%t|%D) MarketDataRequestDataReaderListenerImpl::on_data_available: _narrow failed.\n")));
+    DistributedATS_MarketDataRequest::MarketDataRequest marketDataRequest;
+    eprosima::fastdds::dds::SampleInfo info;
+
+    if (reader->take_next_sample(&marketDataRequest, &info) == ReturnCode_t::RETCODE_OK)
+    {
+        if (info.valid_data)
+        {
+        
+            if ( marketDataRequest.header().TargetSubID().compare(_data_service_name))
+            {
+                std::stringstream ss;
+                MarketDataRequestLogger::log(ss, marketDataRequest);
+                LOG4CXX_INFO(logger, "MarketDataRequest : [" <<  ss.str() << "]");
                 
-                ACE_OS::exit(1);
-	        }
-
-	        while( true )
-	        {
-                DistributedATS_MarketDataRequest::MarketDataRequest marketDataRequest;
-	            DDS::SampleInfo si ;
-	            DDS::ReturnCode_t status = market_data_request_dr->take_next_sample( marketDataRequest, si );
-
-	            if (status == DDS::RETCODE_OK)
-	            {
-	                if ( !si.valid_data )
-	                    continue;
-                    
-                    std::stringstream ss;
-                    MarketDataRequestLogger::log(ss, marketDataRequest);
-                    ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%t|%D) MarketDataRequest : %s\n"), ss.str().c_str()));
-
-                    DistributedATS_MarketDataRequest::MarketDataRequest* marketDataRequestPtr = new DistributedATS_MarketDataRequest::MarketDataRequest( marketDataRequest );
-
-                    ACE_Message_Block* msg = new ACE_Message_Block((char*)marketDataRequestPtr, sizeof(marketDataRequest));
-                    _marketDataRequestQueue->enqueue_tail(msg);
-
-	            } else if (status == DDS::RETCODE_NO_DATA) {
-	                    break;
-	            } else {
-                    ACE_ERROR ((LM_ERROR, ACE_TEXT("(%P|%t|%D) Read DATSMarketDataSnapshotFullRefreshDataReader: %d\n"), status));
-	            }
-	        }
-
-	    } catch (CORBA::Exception& e) {
-
-            std::stringstream ss;
-            ss << "Exception caught in read:" << std::endl << e << std::endl;
-            ACE_ERROR ((LM_ERROR, ACE_TEXT("(%P|%t|%D) DATSMarketDataSnapshotFullRefreshDataReader %s.\n"), ss.str().c_str()));
-            ACE_OS::exit(1);
-	    }
+                _marketDataRequestQueuePtr->push(std::make_shared<DistributedATS_MarketDataRequest::MarketDataRequest>( marketDataRequest ));
+            }
+        }
+    }
 }
 
 } /* namespace DistributedATS */

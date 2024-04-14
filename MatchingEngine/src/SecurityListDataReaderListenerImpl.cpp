@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -26,14 +26,17 @@
 */
 
 #include "SecurityListDataReaderListenerImpl.h"
+#include <SecurityList.h>
 #include <SecurityListLogger.hpp>
 
+
 #include <LoggerHelper.h>
+
 
 namespace DistributedATS {
 
 SecurityListDataReaderListenerImpl::SecurityListDataReaderListenerImpl(
-    MarketPtr marketPtr)
+    market_ptr marketPtr)
     : _marketPtr(marketPtr) {
   // TODO Auto-generated constructor stub
 }
@@ -43,57 +46,34 @@ SecurityListDataReaderListenerImpl::~SecurityListDataReaderListenerImpl() {
 }
 
 void SecurityListDataReaderListenerImpl::on_data_available(
-    DDS::DataReader_ptr reader) throw(CORBA::SystemException) {
-  try {
-      DistributedATS_SecurityList::SecurityListDataReader_var security_list_dr =
-      DistributedATS_SecurityList::SecurityListDataReader::_narrow(reader);
-
-    if (CORBA::is_nil(security_list_dr.in())) {
-      std::cerr << "SecurityListDataReaderListenerImpl::on_data_available: "
-                   "_narrow failed."
-                << std::endl;
-      ACE_OS::exit(1);
-    }
-
-    while (true) {
-        DistributedATS_SecurityList::SecurityList security_list;
-      DDS::SampleInfo si;
-      DDS::ReturnCode_t status =
-          security_list_dr->take_next_sample(security_list, si);
-
-      if (status == DDS::RETCODE_OK) {
-        if (!si.valid_data)
-          continue;
-
-        LoggerHelper::log_debug<std::stringstream, SecurityListLogger,
-          DistributedATS_SecurityList::SecurityList>(
-            security_list, "SecurityListLogger");
-
-        for (uint32_t sec_index = 0;
-             sec_index < security_list.c_NoRelatedSym.length(); sec_index++) {
-          std::string instrument =
-              security_list.c_NoRelatedSym[sec_index].Symbol.in();
-
-          std::cout << "Adding book : " << instrument << std::endl;
-
-            _marketPtr->addBook(instrument, true);
+     eprosima::fastdds::dds::DataReader* reader)
+{
+    DistributedATS_SecurityList::SecurityList security_list;
+    eprosima::fastdds::dds::SampleInfo info;
+    
+    if (_marketPtr->is_ready_to_trade())
+        return;
+    
+    if (reader->take_next_sample(&security_list, &info) == ReturnCode_t::RETCODE_OK)
+    {
+        
+        if ( security_list.header().TargetCompID().compare(_marketPtr->getMarketName()) == 0 )
+        {
+            std::stringstream ss;
+            SecurityListLogger::log(ss, security_list);
+            LOG4CXX_INFO(logger, "SecurityList : [" <<  ss.str() << "]");
+            
+            for (uint32_t sec_index = 0;
+                 sec_index < security_list.c_NoRelatedSym().size(); sec_index++) {
+                std::string instrument =
+                security_list.c_NoRelatedSym()[sec_index].Symbol();
+                
+                _marketPtr->addBook(instrument, true);
+            }
+            
+            // request to recieve opening price
+            _marketPtr->publishMarketDataRequest();
         }
-
-        // request to recieve opening price
-        _marketPtr->publishMarketDataRequest();
-
-      } else if (status == DDS::RETCODE_NO_DATA) {
-        break;
-      } else {
-        std::cerr << "ERROR: read DATS::SecurityList: Error: " << status
-                  << std::endl;
-      }
     }
-
-  } catch (CORBA::Exception &e) {
-    std::cerr << "Exception caught in read:" << std::endl << e << std::endl;
-    ACE_OS::exit(1);
-  }
 }
-
 } /* namespace DistributedATS */

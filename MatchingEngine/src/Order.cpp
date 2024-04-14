@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -120,27 +120,24 @@ void Order::onCancelRejected(const char *reason)
 {
     DistributedATS_OrderCancelReject::OrderCancelReject orderCancelReject;
     
-    orderCancelReject.m_Header.TargetSubID =
-        CORBA::string_dup(dataService_.c_str());
-    orderCancelReject.m_Header.TargetCompID = CORBA::string_dup(gateway_.c_str());
-    orderCancelReject.m_Header.SenderSubID =
-        CORBA::string_dup(contra_party_.c_str());
+    orderCancelReject.header().TargetSubID(dataService_);
+    orderCancelReject.header().TargetCompID(gateway_);
+    orderCancelReject.header().SenderSubID(contra_party_);
     
-    orderCancelReject.m_Header.MsgType = CORBA::string_dup("9");
-    orderCancelReject.Text =  reason;
-    orderCancelReject.ClOrdID = CORBA::string_dup(client_order_id_.c_str());
+    orderCancelReject.header().MsgType("9");
+    orderCancelReject.Text(reason);
+    orderCancelReject.ClOrdID(client_order_id_);
     
     LoggerHelper::log_debug<std::stringstream, OrderCancelRejectLogger,
-    DistributedATS_OrderCancelReject::OrderCancelReject>(
+    DistributedATS_OrderCancelReject::OrderCancelReject>(logger,
                                                          orderCancelReject, "OrderCancelReject");
 
-    int ret = dataWriterContainerPtr_->_order_cancel_reject_dw->write(orderCancelReject, NULL);
+    int ret = dataWriterContainerPtr_->order_cancel_reject_dw->write(&orderCancelReject);
 
-    if (ret != DDS::RETCODE_OK) {
-      ACE_ERROR((LM_ERROR,
-                 ACE_TEXT("(%P|%t) ERROR: OrderCancelReject write returned %d.\n"),
-                 ret));
+    if (ret != eprosima::fastrtps::types::ReturnCode_t::RETCODE_OK) {
+        LOG4CXX_ERROR(logger, "OrderCancelReject write returned :" << ret);
     }
+    
 }
 
 void Order::onReplaceRequested(const std::string& replacement_client_order_id,
@@ -180,26 +177,22 @@ void Order::onReplaceRejected(const char *reason)
 {
     DistributedATS_OrderCancelReject::OrderCancelReject orderCancelReject;
     
-    orderCancelReject.m_Header.TargetSubID =
-        CORBA::string_dup(dataService_.c_str());
-    orderCancelReject.m_Header.TargetCompID = CORBA::string_dup(gateway_.c_str());
-    orderCancelReject.m_Header.SenderSubID =
-        CORBA::string_dup(contra_party_.c_str());
+    orderCancelReject.header().TargetSubID(dataService_);
+    orderCancelReject.header().TargetCompID(gateway_);
+    orderCancelReject.header().SenderSubID(contra_party_);
     
-    orderCancelReject.m_Header.MsgType = CORBA::string_dup("9");
-    orderCancelReject.Text =  CORBA::string_dup(reason);
-    orderCancelReject.ClOrdID = CORBA::string_dup(client_order_id_.c_str());
+    orderCancelReject.header().MsgType("9");
+    orderCancelReject.Text(reason);
+    orderCancelReject.ClOrdID(client_order_id_);
     
     LoggerHelper::log_debug<std::stringstream, OrderCancelRejectLogger,
-    DistributedATS_OrderCancelReject::OrderCancelReject>(
+    DistributedATS_OrderCancelReject::OrderCancelReject>( logger,
                                                          orderCancelReject, "OrderCancelReject");
 
-    int ret = dataWriterContainerPtr_->_order_cancel_reject_dw->write(orderCancelReject, NULL);
-
-    if (ret != DDS::RETCODE_OK) {
-      ACE_ERROR((LM_ERROR,
-                 ACE_TEXT("(%P|%t) ERROR: OrderCancelReject write returned %d.\n"),
-                 ret));
+    int ret = dataWriterContainerPtr_->order_cancel_reject_dw->write(&orderCancelReject);
+    
+    if (ret != eprosima::fastrtps::types::ReturnCode_t::RETCODE_OK) {
+        LOG4CXX_ERROR(logger, "OrdereplaceRejected write returned :" << ret);
     }
 }
 
@@ -208,47 +201,46 @@ void Order::populateExecutionReport(
                                     char ExecType)
     {
             
-  executionReport.m_Header.SenderCompID = CORBA::string_dup("MATCHING_ENGINE");
-  executionReport.m_Header.TargetSubID =
-      CORBA::string_dup(dataService_.c_str());
-  executionReport.m_Header.TargetCompID = CORBA::string_dup(gateway_.c_str());
-  executionReport.m_Header.SenderSubID =
-      CORBA::string_dup(contra_party_.c_str());
-  executionReport.m_Header.MsgType = CORBA::string_dup("8");
-  executionReport.OrderID = CORBA::string_dup(client_order_id_.c_str());
-  executionReport.Side = (is_buy() ? '1' : '2');
-  executionReport.Symbol = CORBA::string_dup(symbol().c_str());
-  executionReport.SecurityExchange =
-      CORBA::string_dup(securityExchange_.c_str());
-  executionReport.ExecType = ExecType;
-  executionReport.CumQty = quantityFilled();
-  executionReport.LeavesQty = quantityOnMarket();
-  executionReport.Price = price();
-  executionReport.StopPx = stop_price();
+  executionReport.header().SenderCompID("MATCHING_ENGINE");
+  executionReport.header().TargetSubID(dataService_);
+  executionReport.header().TargetCompID(gateway_);
+  executionReport.header().SenderSubID(contra_party_);
+  executionReport.header().MsgType("8");
+  executionReport.OrderID(client_order_id_);
+  executionReport.Side(is_buy() ? '1' : '2');
+  executionReport.Symbol(symbol());
+  executionReport.SecurityExchange(securityExchange_);
+  executionReport.ExecType(ExecType);
+  executionReport.CumQty(quantityFilled());
+  executionReport.LeavesQty(quantityOnMarket());
+  executionReport.Price(price());
+  executionReport.StopPx(stop_price());
   
   if ( stop_price() !=0 )
-      executionReport.OrdType = FIX::OrdType_STOP;
+      executionReport.OrdType(FIX::OrdType_STOP);
   else if ( price() !=0 )
-      executionReport.OrdType = FIX::OrdType_LIMIT;
+      executionReport.OrdType(FIX::OrdType_LIMIT);
   else
-      executionReport.OrdType = FIX::OrdType_MARKET;
+      executionReport.OrdType(FIX::OrdType_MARKET);
 
   if ( all_or_none() )
-      executionReport.ExecInst = CORBA::string_dup("G");
+      executionReport.ExecInst("G");
       
-  executionReport.TransactTime =
-      (ACE_OS::gettimeofday().sec() * 1000000) + ACE_OS::gettimeofday().usec();
-  executionReport.LastPx = 0;
-  executionReport.LastQty = 0;
+  executionReport.TransactTime(
+    std::chrono::duration_cast<std::chrono::microseconds>
+            (std::chrono::system_clock::now().time_since_epoch()).count());
+    
+  executionReport.LastPx(0);
+  executionReport.LastQty(0);
 
   if ( conditions_ == liquibook::book::OrderCondition::oc_immediate_or_cancel )
   {
-      executionReport.TimeInForce = FIX::TimeInForce_IMMEDIATE_OR_CANCEL;
+      executionReport.TimeInForce(FIX::TimeInForce_IMMEDIATE_OR_CANCEL);
   } else if ( conditions_ == liquibook::book::OrderCondition::oc_fill_or_kill )
   {
-      executionReport.TimeInForce = FIX::TimeInForce_FILL_OR_KILL;
+      executionReport.TimeInForce(FIX::TimeInForce_FILL_OR_KILL);
   } else {
-      executionReport.TimeInForce = FIX::TimeInForce_DAY;
+      executionReport.TimeInForce(FIX::TimeInForce_DAY);
   }
 
 
@@ -256,14 +248,14 @@ void Order::populateExecutionReport(
   // executionReport.TransactTime << std::endl;
 
   if (quantityFilled() > 0)
-    executionReport.AvgPx = std::nearbyint(fillCost() / quantityFilled()); // round to the nearest tick
+    executionReport.AvgPx(std::nearbyint(fillCost() / quantityFilled())); // round to the nearest tick
   else
-    executionReport.AvgPx = 0; // avoid scientific numbers
+    executionReport.AvgPx(0); // avoid scientific numbers
 
-  executionReport.OrderQty = order_qty();
-  executionReport.OrdStatus = ExecType;
-  executionReport.OrdRejReason = 0;
-  executionReport.Text = "OK";
+  executionReport.OrderQty(order_qty());
+  executionReport.OrdStatus(ExecType);
+  executionReport.OrdRejReason(0);
+  executionReport.Text("OK");
 }
 
 std::ostream &operator<<(std::ostream &out, const Order &order) {

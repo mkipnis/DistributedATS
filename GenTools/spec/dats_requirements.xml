@@ -1,22 +1,22 @@
 <requirements>
     <messages>
-        <message name='MarketDataRequest'/>
         <message name='Logon'/>
         <message name='Logout'/>
         <message name='Heartbeat'/>
         <message name='NewOrderSingle'/>
         <message name='ExecutionReport'/> 
-        <message name='MarketDataIncrementalRefresh'/>
+        <message name='MarketDataRequest'/>
         <message name='MarketDataSnapshotFullRefresh'/>
+        <message name='MarketDataIncrementalRefresh'/>
         <message name='OrderCancelRequest'/>
         <message name='OrderMassCancelRequest'/>
         <message name='OrderMassCancelReport'/>
         <message name='OrderCancelReject'/>
         <message name='SecurityListRequest'/>
         <message name='SecurityList'/>
+        <message name='OrderCancelReplaceRequest'/>
         <message name='OrderMassStatusRequest'/>
         <message name='BusinessMessageReject'/>
-        <message name='OrderCancelReplaceRequest'/>
     </messages>
     <components>
         <component name='Header' gen_cpp='Y'/>
@@ -57,22 +57,18 @@
         <field name='OrdType' gen_cpp='Y'/>
 	</fields>
 	<types>
-		<type fix='INT' dds='long'/>	
-		<!-- <type fix='STRING' dds='string' to_fix='CORBA::string_dup(fixMsg.getField(%s).getString().c_str())' to_dds='%s.in()'/> -->
-		<!-- <type fix='STRING' dds='string' to_dds='CORBA::string_dup(((FIX::%s)%s.getField(FIX::FIELD::%s)).getString().c_str())' to_fix='if ( ACE_OS::strlen(%s.%s) > 0 ) { FIX::%s %s ( %s.%s.in() ); %s.setField(%s);};' to_fix_type='string'/> -->
-		<type fix='STRING' dds='string' to_dds='CORBA::string_dup(((FIX::%s)%s.getField(FIX::FIELD::%s)).getString().c_str())' to_fix='DistributedATS::convert_dds_string_to_fix(%s.%s.in(), FIX::FIELD::%s, %s);' to_fix_type='string'/>
-		<type fix='EXCHANGE' dds='string' to_dds='CORBA::string_dup(((FIX::%s)%s.getField(FIX::FIELD::%s)).getString().c_str())' to_fix='DistributedATS::convert_dds_string_to_fix(%s.%s.in(), FIX::FIELD::%s, %s);' to_fix_type='string'/>
-		<type fix='DATA' dds='string' to_dds='CORBA::string_dup(((FIX::%s)%s.getField(FIX::FIELD::%s)).getString().c_str())' to_fix='DistributedATS::convert_dds_string_to_fix(%s.%s.in(), FIX::FIELD::%s, %s);' to_fix_type='string'/>
-		<!-- <type fix='EXCHANGE' dds='string' to_dds='CORBA::string_dup(((FIX::%s)%s.getField(FIX::FIELD::%s)).getString().c_str())' to_fix='if ( ACE_OS::strlen(%s.%s) > 0 ) { FIX::%s %s ( %s.%s.in() ); %s.setField(%s);};' to_fix_type='string'/> -->
-		<!-- <type fix='EXCHANGE' dds='string' to_dds='CORBA::string_dup(((FIX::%s)%s.getField(FIX::FIELD::%s)).getString().c_str())' to_fix='if ( ACE_OS::strlen(%s.%s) > 0 ) { FIX::%s %s ( %s.%s.in() ); %s.setField(%s);};' to_fix_type='string'/> -->
-		<!-- <type fix='DATA' dds='string' to_dds='CORBA::string_dup(((FIX::%s)%s.getField(FIX::FIELD::%s)).getString().c_str())' to_fix='if ( ACE_OS::strlen(%s.%s) > 0 ) { FIX::%s %s ( %s.%s.in() ); %s.setField(%s);};' to_fix_type='string'/> -->
+		<!-- <type fix='INT' dds='long' to_dds='((FIX::%s)%s.getField(FIX::FIELD::%s)).getString().c_str()' to_fix='DistributedATS::convert_dds_string_to_fix(%s.%s(), FIX::FIELD::%s, %s);' to_fix_type='INT'/> -->
+		<!-- <type fix='INT' dds='long'  to_fix='%s.%s() %s, %s' /> -->	
+		<type fix='INT' dds='long' />	
+		<type fix='STRING' dds='string' to_dds='((FIX::%s)%s.getField(FIX::FIELD::%s)).getString().c_str()' to_fix='DistributedATS::convert_dds_string_to_fix(%s.%s(), FIX::FIELD::%s, %s);' to_fix_type='string'/>
+		<type fix='EXCHANGE' dds='string' to_dds='((FIX::%s)%s.getField(FIX::FIELD::%s)).getString().c_str()' to_fix='DistributedATS::convert_dds_string_to_fix(%s.%s(), FIX::FIELD::%s, %s);' to_fix_type='string'/>
+		<type fix='DATA' dds='string' to_dds='((FIX::%s)%s.getField(FIX::FIELD::%s)).getString().c_str()' to_fix='DistributedATS::convert_dds_string_to_fix(%s.%s(), FIX::FIELD::%s, %s);' to_fix_type='string'/>
 		<type fix='CHAR' dds='char'/>
-		<type fix='MULTIPLEVALUESTRING' dds='string' to_dds='CORBA::string_dup(((FIX::%s)%s.getField(FIX::FIELD::%s)).getString().c_str())' to_fix='DistributedATS::convert_dds_string_to_fix(%s.%s.in(), FIX::FIELD::%s, %s);' to_fix_type='string'/>
+		<type fix='MULTIPLEVALUESTRING' dds='string' to_dds='((FIX::%s)%s.getField(FIX::FIELD::%s)).getString().c_str()' to_fix='DistributedATS::convert_dds_string_to_fix(%s.%s(), FIX::FIELD::%s, %s);' to_fix_type='string'/>
 		<type fix='SEQNUM' dds='long'/>
 		<type fix='QTY' dds='long'/>
 		<type fix='PRICE' dds='float'/>
-		<!-- <type fix='UTCTIMESTAMP' dds='unsigned long long' to_dds='((FIX::%s)FIELD_GET_REF( %s,%s)).getValue().getJulianDate()' to_fix='FIX::UtcTimeStamp %sUTC( (time_t)(%s.%s/1000), %s.%s-(%s.%s/1000) );' to_fix_type='utctimestamp'/> -->
-		<type fix='UTCTIMESTAMP' dds='unsigned long long' to_dds='((FIX::%s)FIELD_GET_REF( %s,%s)).getValue().getJulianDate()' to_fix='DistributedATS::convert_dds_timestamp_to_fix(%s.%s, FIX::FIELD::%s, %s);' to_fix_type='utctimestamp'/>
+		<type fix='UTCTIMESTAMP' dds='unsigned long long' to_dds='((FIX::%s)FIELD_GET_REF( %s,%s)).getValue().getJulianDate()' to_fix='DistributedATS::convert_dds_timestamp_to_fix(%s.%s(), FIX::FIELD::%s, %s);' to_fix_type='utctimestamp'/>
 		<type fix='LENGTH' dds='long'/>
 	</types>
 </requirements>

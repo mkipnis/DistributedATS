@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -25,8 +25,7 @@
    SOFTWARE.
 */
 
-#ifndef DATS_APPLICATION_H
-#define DATS_APPLICATION_H
+#pragma once
 
 #include <stdio.h>
 #include <quickfix/Application.h>
@@ -153,10 +152,9 @@ namespace LatencyTest
             std::condition_variable _login_cv;
             std::mutex _login_mutex;
         
-            uint32_t _min_latency {std::numeric_limits<uint32_t>::max()};
-            uint32_t _max_latency {std::numeric_limits<uint32_t>::min()};
-            uint32_t _total_latency {0};
+            long _min_latency {std::numeric_limits<long>::max()};
+            long _max_latency {std::numeric_limits<long>::min()};
+            long _total_latency {0};
     };
 
 };
-#endif /* DATS_APPLICATION_H */

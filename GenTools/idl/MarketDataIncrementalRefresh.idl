@@ -1,4 +1,4 @@
-// Don't modify, automatically generated file by QuickFIX2OpenDDS.py
+/* Don't modify, automatically generated file by QuickFIX2FastDDS.py*/
 #include "Header.idl"
 
 module DistributedATS_MarketDataIncrementalRefresh
@@ -18,10 +18,10 @@ module DistributedATS_MarketDataIncrementalRefresh
 	};
 	typedef sequence<NoMDEntries> NoMDEntriesSeq;
 
-	@topic
+	
 	struct MarketDataIncrementalRefresh
 	{
-	DistributedATS::Header m_Header;
+		DistributedATS::Header header;
 		string MDReqID;
 		NoMDEntriesSeq c_NoMDEntries;
 	};

@@ -1,11 +1,7 @@
-// Don't modify, automatically generated file by QuickFIX2OpenDDS.py
-#ifndef __OrderMassCancelReport_h__
-#define __OrderMassCancelReport_h__
-
-#include "OrderMassCancelReportTypeSupportImpl.h"
+/* Don't modify, automatically generated file by QuickFIX2FastDDS.py*/
+#pragma once
+#include "OrderMassCancelReport.h"
 #include <quickfix/Message.h>
-
- using namespace DistributedATS;
 
 #include "HeaderAdapter.hpp"
 
@@ -17,5 +13,3 @@ class OrderMassCancelReportAdapter
 		static void DDS2FIX(const DistributedATS_OrderMassCancelReport::OrderMassCancelReport& ddsMsg, FIX::Message&)  __attribute__ ((visibility ("default")));
 
 };
-#endif
-

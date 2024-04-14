@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -29,6 +29,7 @@
 #include <LoggerHelper.h>
 #include <OrderMassCancelRequestLogger.hpp>
 
+
 namespace MatchingEngine {
 
 OrderMassCancelRequestDataReaderListenerImpl::
@@ -44,67 +45,42 @@ OrderMassCancelRequestDataReaderListenerImpl::
 }
 
 void OrderMassCancelRequestDataReaderListenerImpl::on_data_available(
-    DDS::DataReader_ptr reader) throw(CORBA::SystemException) {
-  try {
-      DistributedATS_OrderMassCancelRequest::OrderMassCancelRequestDataReader_var
-        order_mass_cancel_request_dr = DistributedATS_OrderMassCancelRequest::
-            OrderMassCancelRequestDataReader::_narrow(reader);
+       eprosima::fastdds::dds::DataReader* reader)
+{
 
-    if (CORBA::is_nil(order_mass_cancel_request_dr.in())) {
-      std::cerr << "OrderMassCancelRequestDataReaderListenerImpl::on_data_"
-                   "available: _narrow failed."
-                << std::endl;
-      ACE_OS::exit(1);
-    }
-
-    while (true) {
-        DistributedATS_OrderMassCancelRequest::OrderMassCancelRequest
+    DistributedATS_OrderMassCancelRequest::OrderMassCancelRequest
           order_mass_cancel_request;
-      DDS::SampleInfo si;
-      DDS::ReturnCode_t status = order_mass_cancel_request_dr->take_next_sample(
-          order_mass_cancel_request, si);
+    eprosima::fastdds::dds::SampleInfo info;
 
-      if (status == DDS::RETCODE_OK) {
-        if (!si.valid_data)
-          continue;
+          
+          if (reader->take_next_sample(&order_mass_cancel_request, &info) == ReturnCode_t::RETCODE_OK)
+          {
+               if (info.valid_data)
+               {
 
         LoggerHelper::log_debug<
             std::stringstream, OrderMassCancelRequestLogger,
-          DistributedATS_OrderMassCancelRequest::OrderMassCancelRequest>(
+          DistributedATS_OrderMassCancelRequest::OrderMassCancelRequest>(logger,
             order_mass_cancel_request, "OrderMassCancelRequest");
 
         std::string contra_party =
-            order_mass_cancel_request.m_Header.SenderSubID.in();
+            order_mass_cancel_request.header().SenderSubID();
 
           DistributedATS_OrderMassCancelReport::OrderMassCancelReport
             order_mass_cancel_report;
-        order_mass_cancel_report.m_Header.SenderCompID =
-            CORBA::string_dup("MATCHING_ENGINE");
-        order_mass_cancel_report.m_Header.TargetCompID =
-            CORBA::string_dup(order_mass_cancel_request.m_Header.SenderCompID);
-        order_mass_cancel_report.m_Header.TargetSubID =
-            CORBA::string_dup(order_mass_cancel_request.m_Header.SenderSubID);
-        order_mass_cancel_report.m_Header.MsgType = CORBA::string_dup("r");
-        order_mass_cancel_report.MassCancelRequestType =
-            FIX::MassCancelRequestType_CANCEL_ALL_ORDERS;
-        order_mass_cancel_report.MassCancelResponse =
-            FIX::MassCancelResponse_CANCEL_ALL_ORDERS;
-        order_mass_cancel_report.OrderID = order_mass_cancel_request.ClOrdID;
+        order_mass_cancel_report.header().SenderCompID("MATCHING_ENGINE");
+        order_mass_cancel_report.header().TargetCompID(order_mass_cancel_request.header().SenderCompID());
+        order_mass_cancel_report.header().TargetSubID(order_mass_cancel_request.header().SenderSubID());
+        order_mass_cancel_report.header().MsgType("r");
+        order_mass_cancel_report.MassCancelRequestType(FIX::MassCancelRequestType_CANCEL_ALL_ORDERS);
+        order_mass_cancel_report.MassCancelResponse(FIX::MassCancelResponse_CANCEL_ALL_ORDERS);
+        order_mass_cancel_report.OrderID(order_mass_cancel_request.ClOrdID());
 
         _market->publishOrderMassCancelReport(order_mass_cancel_report);
 
         _market->mass_cancel(contra_party);
 
-      } else if (status == DDS::RETCODE_NO_DATA) {
-        break;
-      } else {
-        std::cerr << "ERROR: read DATS::Logon: Error: " << status << std::endl;
-      }
-    }
-
-  } catch (CORBA::Exception &e) {
-    std::cerr << "Exception caught in read:" << std::endl << e << std::endl;
-    ACE_OS::exit(1);
+      } 
   }
 }
 

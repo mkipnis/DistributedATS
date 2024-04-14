@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -25,11 +25,23 @@
    SOFTWARE.
 */
 
-#include "MarketDataIncrementalRefreshDataReaderListenerImpl.h"
+
 #include <MarketDataIncrementalRefreshAdapter.hpp>
 #include <MarketDataIncrementalRefreshLogger.hpp>
+#include "MarketDataIncrementalRefreshDataReaderListenerImpl.h"
+
+#include <fastdds/dds/domain/DomainParticipantFactory.hpp>
+#include <fastdds/dds/domain/DomainParticipant.hpp>
+#include <fastdds/dds/topic/TypeSupport.hpp>
+#include <fastdds/dds/publisher/Publisher.hpp>
+#include <fastdds/dds/publisher/DataWriter.hpp>
+#include <fastdds/dds/publisher/DataWriterListener.hpp>
+#include <fastdds/dds/subscriber/DataReaderListener.hpp>
 
 #include <quickfix/fix50/MarketDataIncrementalRefresh.h>
+
+
+#include "Application.hpp"
 
 namespace DistributedATS {
 
@@ -37,27 +49,27 @@ auto const market_data_refresh_processor = [] (DistributedATS::DATSApplication &
 {
         FIX::Message marketDataIncementalRefreshMessage;
 
-        marketDataRefresh.m_Header.SendingTime = 0; // this is precision;
-        HeaderAdapter::DDS2FIX(marketDataRefresh.m_Header,
+        marketDataRefresh.header().SendingTime(0); // this is precision;
+        HeaderAdapter::DDS2FIX(marketDataRefresh.header(),
                                marketDataIncementalRefreshMessage.getHeader());
 
         for (int incremental_update = 0;
-             incremental_update < marketDataRefresh.c_NoMDEntries.length();
+             incremental_update < marketDataRefresh.c_NoMDEntries().size();
              incremental_update++) {
             DistributedATS_MarketDataIncrementalRefresh::NoMDEntries mdEntry =
-              marketDataRefresh.c_NoMDEntries[incremental_update];
+              marketDataRefresh.c_NoMDEntries()[incremental_update];
 
-          if (mdEntry.MDUpdateAction == 0)
+          if (mdEntry.MDUpdateAction() == 0)
             continue;
 
           FIX50::MarketDataIncrementalRefresh::NoMDEntries fixMDEntry;
 
-          FIX::MDUpdateAction updateAction(mdEntry.MDUpdateAction);
-          FIX::Symbol symbol(mdEntry.Symbol.in());
-          FIX::SecurityExchange securityExchange(mdEntry.SecurityExchange.in());
-          FIX::MDEntryType entryType(mdEntry.MDEntryType);
-          FIX::MDEntryPx entryPx(mdEntry.MDEntryPx);
-          FIX::MDEntrySize entrySize(mdEntry.MDEntrySize);
+          FIX::MDUpdateAction updateAction(mdEntry.MDUpdateAction());
+          FIX::Symbol symbol(mdEntry.Symbol());
+          FIX::SecurityExchange securityExchange(mdEntry.SecurityExchange());
+          FIX::MDEntryType entryType(mdEntry.MDEntryType());
+          FIX::MDEntryPx entryPx(mdEntry.MDEntryPx());
+          FIX::MDEntrySize entrySize(mdEntry.MDEntrySize());
 
           fixMDEntry.setField(updateAction);
           fixMDEntry.setField(symbol);
@@ -73,52 +85,27 @@ auto const market_data_refresh_processor = [] (DistributedATS::DATSApplication &
 };
 
 
-MarketDataIncrementalRefreshDataReaderListenerImpl::MarketDataIncrementalRefreshDataReaderListenerImpl(DistributedATS::DATSApplication &application) : _processor(application, market_data_refresh_processor )
+MarketDataIncrementalRefreshDataReaderListenerImpl::MarketDataIncrementalRefreshDataReaderListenerImpl(DistributedATS::DATSApplication &application) :
+    _processor(application, market_data_refresh_processor, "MarketDataIncrementalRefreshDataReaderListenerImpl" )
 {
 }
 
 
 void MarketDataIncrementalRefreshDataReaderListenerImpl::on_data_available(
-    DDS::DataReader_ptr reader) throw(CORBA::SystemException) {
-        
-        static int count = 0;
-  try {
-      DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefreshDataReader_var
-        market_data_incremental_refresh_dr = DistributedATS_MarketDataIncrementalRefresh::
-            MarketDataIncrementalRefreshDataReader::_narrow(reader);
-
-    if (CORBA::is_nil(market_data_incremental_refresh_dr.in())) {
-      std::cerr << "MarketDataIncrementalRefreshDataReaderListenerImpl::on_"
-                   "data_available: _narrow failed."
-                << std::endl;
-      ACE_OS::exit(1);
-    }
-
-    while (true) {
-        DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefresh
-          marketDataRefresh;
-      DDS::SampleInfo si;
-      DDS::ReturnCode_t status =
-          market_data_incremental_refresh_dr->take_next_sample(
-              marketDataRefresh, si);
-
-      if (status == DDS::RETCODE_OK) {
-        if (!si.valid_data)
-          continue;
-          
-          _processor.enqueue_dds_message(marketDataRefresh);
-
-      } else if (status == DDS::RETCODE_NO_DATA) {
-        break;
-      } else {
-        std::cerr << "ERROR: read DATS::Logon: Error: " << status << std::endl;
-      }
-    }
-
-  } catch (CORBA::Exception &e) {
-    std::cerr << "Exception caught in read:" << std::endl << e << std::endl;
-    ACE_OS::exit(1);
-  }
+                                eprosima::fastdds::dds::DataReader* reader)
+{
+    
+    DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefresh
+      marketDataRefresh;
+    eprosima::fastdds::dds::SampleInfo info;
+    
+    if (reader->take_next_sample(&marketDataRefresh, &info) == ReturnCode_t::RETCODE_OK)
+    {
+         if (info.valid_data)
+         {
+             _processor.enqueue_dds_message(marketDataRefresh);
+         }
+     }
 }
 
 } // namespace DistributedATS

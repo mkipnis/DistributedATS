@@ -1,18 +1,23 @@
-#ifndef __LOGGER_HELPER__
-#define __LOGGER_HELPER__
+#pragma once
 
+#include <log4cxx/logger.h>
+#include <log4cxx/basicconfigurator.h>
 
 namespace LoggerHelper
 {
 	template<class STREAM, class DATS_LOGGER, class DATS_CLASS >
-	inline void log_debug( DATS_CLASS& obj, const char* context = "" )
+	inline void log_debug( LOG4CXX_NS::LoggerPtr logger, DATS_CLASS& obj, const std::string& context )
 	{
-	
 		STREAM ss;
 		DATS_LOGGER::log( ss, obj );
-        std::string complete_str = ss.str();
-        ACE_DEBUG( ( LM_DEBUG, ACE_TEXT("(%P|%t|%D) %s : %s\n\n"), context, complete_str.c_str() ) );
+        LOG4CXX_DEBUG(logger, context << ":" << ss.str());
 	};
-};
 
-#endif
+    template<class STREAM, class DATS_LOGGER, class DATS_CLASS >
+    inline void log_info( LOG4CXX_NS::LoggerPtr logger, DATS_CLASS& obj, const std::string& context )
+    {
+        STREAM ss;
+        DATS_LOGGER::log( ss, obj );
+        LOG4CXX_INFO(logger, context << ":" << ss.str());
+    };
+};

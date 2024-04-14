@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -25,15 +25,12 @@
    SOFTWARE.
 */
 
-#ifndef PriceDepthPublisherService_hpp
-#define PriceDepthPublisherService_hpp
+#pragma once
 
 #include <stdio.h>
+#include <thread>
 
-#include <ace/Synch_Traits.h>
-#include <ace/Task_T.h>
-
-#include "MarketDataIncrementalRefreshTypeSupportImpl.h"
+#include "MarketDataIncrementalRefresh.h"
 
 #include "Market.h"
 
@@ -42,24 +39,26 @@ namespace DistributedATS {
 //
 // Market Data Publisher Thread - Price Depth
 //
-class PriceDepthPublisherService : public ACE_Task<ACE_MT_SYNCH> {
+class PriceDepthPublisherService {
 public:
-    PriceDepthPublisherService(DistributedATS_MarketDataIncrementalRefresh::
-                        MarketDataIncrementalRefreshDataWriter_var
+    PriceDepthPublisherService(eprosima::fastdds::dds::DataWriter*
                         market_data_incremental_refresh_dw,
                         PriceDepthPublisherQueuePtr price_depth_publisher_queue_ptr,
                         int price_depth_pub_interval);
+    
+    ~PriceDepthPublisherService();
 
-  virtual int svc(void);
+    int service();
 
 private:
-  PriceDepthPublisherQueuePtr _price_depth_publisher_queue_ptr;
-    DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefreshDataWriter_var
-      _market_data_incremental_refresh_dw;
+    PriceDepthPublisherQueuePtr _price_depth_publisher_queue_ptr;
+    eprosima::fastdds::dds::DataWriter* _market_data_incremental_refresh_dw;
     
-   int _price_depth_pub_interval;
+    std::atomic<bool> _is_running;
+    std::thread _publisher_thread;
+    
+    
+    int _price_depth_pub_interval;
 };
 
 } // namespace DistributedATS
-
-#endif /* MarketDataService_hpp */

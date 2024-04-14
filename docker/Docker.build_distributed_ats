@@ -1,9 +1,7 @@
 FROM ubuntu:latest
 
-FROM ghcr.io/objectcomputing/opendds:DDS-3.23
-
 RUN apt-get update
-RUN apt-get install -y vim sqlite3 libsqlite3-dev libtool 
+RUN apt install -y vim cmake curl build-essential libapr1-dev libaprutil1-dev git libboost-all-dev sqlite3 libsqlite3-dev libtool libasio-dev libtinyxml2-dev
 
 ADD build_deps.sh /
 RUN /build_deps.sh

@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -25,144 +25,133 @@
    SOFTWARE.
 */
 
-#ifndef DataWriterContainer_hpp
-#define DataWriterContainer_hpp
+#pragma once
 
-#include <ace/Singleton.h>
-
-#include <ace/Guard_T.h>
-#include <ace/RW_Mutex.h>
 #include <map>
 #include <memory>
 
-#include <LogonTypeSupportImpl.h>
-#include <MarketDataRequestTypeSupportImpl.h>
-#include <NewOrderSingleTypeSupportImpl.h>
-#include <OrderCancelRequestTypeSupportImpl.h>
-#include <OrderMassCancelRequestTypeSupportImpl.h>
-#include <OrderMassStatusRequestAdapter.hpp>
-#include <SecurityListRequestTypeSupportImpl.h>
-#include <OrderCancelReplaceRequestTypeSupportImpl.h>
-#include <dds/DdsDcpsPublicationC.h>
 
 #include <BasicDomainParticipant.h>
 #include <Common.h>
 
+#include <LogonPubSubTypes.h>
+#include <LogoutPubSubTypes.h>
+#include <MarketDataIncrementalRefreshPubSubTypes.h>
+#include <MarketDataSnapshotFullRefreshPubSubTypes.h>
+#include <NewOrderSinglePubSubTypes.h>
+#include <ExecutionReportPubSubTypes.h>
+#include <OrderCancelRequestPubSubTypes.h>
+#include <OrderCancelRejectPubSubTypes.h>
+#include <OrderMassCancelReportPubSubTypes.h>
+#include <SecurityListPubSubTypes.h>
+#include <OrderMassCancelRequestPubSubTypes.h>
+#include <OrderMassStatusRequestPubSubTypes.h>
+#include <SecurityListRequestPubSubTypes.h>
+#include <MarketDataRequestPubSubTypes.h>
+#include <OrderCancelReplaceRequestPubSubTypes.h>
+
+
 namespace DistributedATS {
 
 struct DataWriterContrainer {
+    
+    distributed_ats_utils::topic_tuple_ptr<DistributedATS_Logon::Logon> _logon_topic_tuple;
+    distributed_ats_utils::topic_tuple_ptr<DistributedATS_NewOrderSingle::NewOrderSingle> _new_order_single_topic_tuple;
+    distributed_ats_utils::topic_tuple_ptr<DistributedATS_OrderCancelRequest::OrderCancelRequest> _order_cancel_request_topic_tuple;
+    distributed_ats_utils::topic_tuple_ptr<DistributedATS_OrderMassCancelRequest::OrderMassCancelRequest> _order_mass_cancel_request_topic_tuple;
+    distributed_ats_utils::topic_tuple_ptr<DistributedATS_OrderMassStatusRequest::OrderMassStatusRequest> _order_mass_status_request_topic_tuple;
+    distributed_ats_utils::topic_tuple_ptr<DistributedATS_SecurityListRequest::SecurityListRequest> _security_list_request_topic_tuple;
+    distributed_ats_utils::topic_tuple_ptr<DistributedATS_SecurityList::SecurityList> _security_list_topic_tuple;
+    distributed_ats_utils::topic_tuple_ptr<DistributedATS_MarketDataRequest::MarketDataRequest> _market_data_request_topic_tuple;
+    distributed_ats_utils::topic_tuple_ptr<DistributedATS_OrderCancelReplaceRequest::OrderCancelReplaceRequest> _order_cancel_replace_request_topic_tuple;
+    
+    distributed_ats_utils::data_writer_ptr _logon_dw;
+    distributed_ats_utils::data_writer_ptr _new_order_single_dw;
+    distributed_ats_utils::data_writer_ptr _order_cancel_request_dw;
+    distributed_ats_utils::data_writer_ptr _order_mass_cancel_request_dw;
+    distributed_ats_utils::data_writer_ptr _security_list_request_dw;
+    distributed_ats_utils::data_writer_ptr _market_data_request_dw;
+    distributed_ats_utils::data_writer_ptr _order_mass_status_request_dw;
+    distributed_ats_utils::data_writer_ptr _order_cancel_replace_request_dw;
+    
+    
   DataWriterContrainer(
-      distributed_ats_utils::BasicDomainParticipantPtr participantPtr) {
+      distributed_ats_utils::basic_domain_participant_ptr participant_ptr) {
     //
     // Topics
     //
-    DDS::Topic_var logon_topic = participantPtr->createTopicAndRegisterType<
-      DistributedATS_Logon::LogonTypeSupport_var, DistributedATS_Logon::LogonTypeSupportImpl>(
+    _logon_topic_tuple = participant_ptr->make_topic<
+      DistributedATS_Logon::LogonPubSubType,
+      DistributedATS_Logon::Logon>(
         LOGON_TOPIC_NAME);
+      
+      _logon_dw = participant_ptr->make_data_writer(_logon_topic_tuple);
+      
 
-    DDS::Topic_var new_order_single_topic =
-        participantPtr->createTopicAndRegisterType<
-      DistributedATS_NewOrderSingle::NewOrderSingleTypeSupport_var,
-            DistributedATS_NewOrderSingle::NewOrderSingleTypeSupportImpl>(
+    _new_order_single_topic_tuple =
+      participant_ptr->make_topic<
+      DistributedATS_NewOrderSingle::NewOrderSinglePubSubType,
+      DistributedATS_NewOrderSingle::NewOrderSingle>(
             NEW_ORDER_SINGLE_TOPIC_NAME);
 
-    DDS::Topic_var order_cancel_request_topic =
-        participantPtr->createTopicAndRegisterType<
-      DistributedATS_OrderCancelRequest::OrderCancelRequestTypeSupport_var,
-      DistributedATS_OrderCancelRequest::OrderCancelRequestTypeSupportImpl>(
+      _new_order_single_dw = participant_ptr->make_data_writer(_new_order_single_topic_tuple);
+
+     _order_cancel_request_topic_tuple =
+      participant_ptr->make_topic<
+      DistributedATS_OrderCancelRequest::OrderCancelRequestPubSubType,
+      DistributedATS_OrderCancelRequest::OrderCancelRequest>(
             ORDER_CANCEL_REQUEST_TOPIC_NAME);
+      
 
-    DDS::Topic_var order_mass_cancel_request_topic =
-        participantPtr->createTopicAndRegisterType<
-      DistributedATS_OrderMassCancelRequest::OrderMassCancelRequestTypeSupport_var,
-      DistributedATS_OrderMassCancelRequest::OrderMassCancelRequestTypeSupportImpl>(
+      _order_cancel_request_dw = participant_ptr->make_data_writer(_order_cancel_request_topic_tuple);
+
+     _order_mass_cancel_request_topic_tuple =
+      participant_ptr->make_topic<
+      DistributedATS_OrderMassCancelRequest::OrderMassCancelRequestPubSubType,
+      DistributedATS_OrderMassCancelRequest::OrderMassCancelRequest>(
             ORDER_MASS_CANCEL_REQUEST_TOPIC_NAME);
+      
 
-    DDS::Topic_var order_mass_status_request_topic =
-        participantPtr->createTopicAndRegisterType<
-      DistributedATS_OrderMassStatusRequest::OrderMassStatusRequestTypeSupport_var,
-      DistributedATS_OrderMassStatusRequest::OrderMassStatusRequestTypeSupportImpl>(
+      _order_mass_cancel_request_dw = participant_ptr->make_data_writer(_order_mass_cancel_request_topic_tuple);
+
+      _order_cancel_replace_request_topic_tuple =
+      participant_ptr->make_topic<
+        DistributedATS_OrderCancelReplaceRequest::OrderCancelReplaceRequestPubSubType,
+        DistributedATS_OrderCancelReplaceRequest::OrderCancelReplaceRequest>(
+            ORDER_CANCEL_REPLACE_REQUEST_TOPIC_NAME);
+      
+      _order_cancel_replace_request_dw = participant_ptr->make_data_writer(_order_cancel_replace_request_topic_tuple);
+      
+     _order_mass_status_request_topic_tuple =
+      participant_ptr->make_topic<
+      DistributedATS_OrderMassStatusRequest::OrderMassStatusRequestPubSubType,
+      DistributedATS_OrderMassStatusRequest::OrderMassStatusRequest>(
             ORDER_MASS_STATUS_REQUEST_TOPIC_NAME);
 
-    DDS::Topic_var security_list_request_topic =
-        participantPtr->createTopicAndRegisterType<
-      DistributedATS_SecurityListRequest::SecurityListRequestTypeSupport_var,
-      DistributedATS_SecurityListRequest::SecurityListRequestTypeSupportImpl>(
+      _order_mass_status_request_dw = participant_ptr->make_data_writer(_order_mass_status_request_topic_tuple);
+      
+
+      _security_list_request_topic_tuple =
+      participant_ptr->make_topic<
+      DistributedATS_SecurityListRequest::SecurityListRequestPubSubType,
+      DistributedATS_SecurityListRequest::SecurityListRequest>(
             SECURITY_LIST_REQUEST_TOPIC_NAME);
-
-    DDS::Topic_var market_data_request_topic =
-        participantPtr->createTopicAndRegisterType<
-      DistributedATS_MarketDataRequest::MarketDataRequestTypeSupport_var,
-      DistributedATS_MarketDataRequest::MarketDataRequestTypeSupportImpl>(
+      
+ 
+      _security_list_request_dw = participant_ptr->make_data_writer(_security_list_request_topic_tuple);
+ 
+      _market_data_request_topic_tuple =
+      participant_ptr->make_topic<
+      DistributedATS_MarketDataRequest::MarketDataRequestPubSubType,
+      DistributedATS_MarketDataRequest::MarketDataRequest>(
             MARKET_DATA_REQUEST_TOPIC_NAME);
-      
-      DDS::Topic_var order_cancel_replace_request_topic =
-          participantPtr->createTopicAndRegisterType<
-        DistributedATS_OrderCancelReplaceRequest::OrderCancelReplaceRequestTypeSupport_var,
-        DistributedATS_OrderCancelReplaceRequest::OrderCancelReplaceRequestTypeSupportImpl>(
-            ORDER_CANCEL_REPLACE_REQUEST_TOPIC_NAME);
 
-    //
-    // Data Writers
-    //
-    _logonDataWriter =
-        participantPtr->createDataWriter<DistributedATS_Logon::LogonDataWriter_var,
-      DistributedATS_Logon::LogonDataWriter>(
-            logon_topic);
+      _market_data_request_dw = participant_ptr->make_data_writer(_market_data_request_topic_tuple);
 
-    _newOrderSingleDataWriter =
-        participantPtr
-            ->createDataWriter<DistributedATS_NewOrderSingle::NewOrderSingleDataWriter_var,
-      DistributedATS_NewOrderSingle::NewOrderSingleDataWriter>(
-                new_order_single_topic);
-
-    _orderCancelRequestDataWriter = participantPtr->createDataWriter<
-      DistributedATS_OrderCancelRequest::OrderCancelRequestDataWriter_var,
-      DistributedATS_OrderCancelRequest::OrderCancelRequestDataWriter>(
-        order_cancel_request_topic);
-
-    _orderMassCancelRequestDataWriter = participantPtr->createDataWriter<
-      DistributedATS_OrderMassCancelRequest::OrderMassCancelRequestDataWriter_var,
-      DistributedATS_OrderMassCancelRequest::OrderMassCancelRequestDataWriter>(
-        order_mass_cancel_request_topic);
-
-    _orderMassStatusRequestDataWriter = participantPtr->createDataWriter<
-      DistributedATS_OrderMassStatusRequest::OrderMassStatusRequestDataWriter_var,
-      DistributedATS_OrderMassStatusRequest::OrderMassStatusRequestDataWriter>(
-        order_mass_status_request_topic);
-
-    _securityListRequestDataWriter = participantPtr->createDataWriter<
-      DistributedATS_SecurityListRequest::SecurityListRequestDataWriter_var,
-      DistributedATS_SecurityListRequest::SecurityListRequestDataWriter>(
-        security_list_request_topic);
-
-    _marketDataRequestDataWriter = participantPtr->createDataWriter<
-      DistributedATS_MarketDataRequest::MarketDataRequestDataWriter_var,
-      DistributedATS_MarketDataRequest::MarketDataRequestDataWriter>(
-        market_data_request_topic);
-      
-    _orderCancelReplaceRequestDataWriter = participantPtr->createDataWriter<
-        DistributedATS_OrderCancelReplaceRequest::OrderCancelReplaceRequestDataWriter_var,
-        DistributedATS_OrderCancelReplaceRequest::OrderCancelReplaceRequestDataWriter>(order_cancel_replace_request_topic);
   }
-
-    DistributedATS_Logon::LogonDataWriter_var _logonDataWriter;
-    DistributedATS_NewOrderSingle::NewOrderSingleDataWriter_var _newOrderSingleDataWriter;
-    DistributedATS_OrderCancelRequest::OrderCancelRequestDataWriter_ptr
-      _orderCancelRequestDataWriter;
-    DistributedATS_OrderMassCancelRequest::OrderMassCancelRequestDataWriter_ptr
-      _orderMassCancelRequestDataWriter;
-    DistributedATS_SecurityListRequest::SecurityListRequestDataWriter_ptr
-      _securityListRequestDataWriter;
-    DistributedATS_MarketDataRequest::MarketDataRequestDataWriter_ptr
-      _marketDataRequestDataWriter;
-    DistributedATS_OrderMassStatusRequest::OrderMassStatusRequestDataWriter_ptr
-      _orderMassStatusRequestDataWriter;
     
-    DistributedATS_OrderCancelReplaceRequest::OrderCancelReplaceRequestDataWriter_ptr
-      _orderCancelReplaceRequestDataWriter;
 };
 
-}; // namespace DistributedATS
+using DataWriterContrainerPtr = std::shared_ptr<DistributedATS::DataWriterContrainer>;
 
-#endif /* DataWriterSingleton_hpp */
+};

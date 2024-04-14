@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -27,55 +27,32 @@
 
 #include <iostream>
 #include "LogoutDataReaderListenerImpl.hpp"
-#include <LogoutTypeSupportImpl.h>
+#include <fastdds/dds/subscriber/SampleInfo.hpp>
+#include <fastdds/dds/subscriber/DataReader.hpp>
+#include <fastdds/dds/subscriber/DataReaderListener.hpp>
+#include <Logout.h>
 #include <LogoutLogger.hpp>
-
 #include <sstream>
 
+#include <log4cxx/logger.h>
+#include <log4cxx/basicconfigurator.h>
 
-void LogoutDataReaderListenerImpl::on_data_available( DDS::DataReader_ptr reader) throw (CORBA::SystemException)
+static auto logger = log4cxx::Logger::getRootLogger();
+
+
+void LogoutDataReaderListenerImpl::on_data_available( eprosima::fastdds::dds::DataReader* reader ) 
 {
-    try
-    {
-        DistributedATS_Logout::LogoutDataReader_var logout_dr = DistributedATS_Logout::LogoutDataReader::_narrow(reader);
-        
-        if (CORBA::is_nil ( logout_dr.in() ) )
-        {
-            ACE_ERROR ((LM_ERROR, ACE_TEXT("(%P|%t|%D) LogoutDataReaderListenerImpl::on_data_available: _narrow failed")));
-            
-            ACE_OS::exit(1);
-        }
-        
-        while( true )
-        {
-            DistributedATS_Logout::Logout logout;
-            DDS::SampleInfo si ;
-            DDS::ReturnCode_t status = logout_dr->take_next_sample( logout, si );
-            
-            if (status == DDS::RETCODE_OK)
-            {
-                if ( !si.valid_data )
-                    continue;
+    DistributedATS_Logout::Logout logout;
+    eprosima::fastdds::dds::SampleInfo info;
     
-                std::stringstream ss;
-                LogoutLogger::log(ss, logout);
-                ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%t|%D) Logout : %s\n"), ss.str().c_str()));
-
-            } else if (status == DDS::RETCODE_NO_DATA) {
-                    break;
-            } else {
-                ACE_ERROR ((LM_ERROR, ACE_TEXT("(%P|%t|%D) Read DATS::Logout: Error:  %d.\n"), status));
-            }
+    if (reader->take_next_sample(&logout, &info) == ReturnCode_t::RETCODE_OK)
+    {
+        if (info.valid_data)
+        {
+            
+            std::stringstream ss;
+            LogoutLogger::log(ss, logout);
+            LOG4CXX_INFO(logger, "Data Reader Logout : [" <<  ss.str() << "]");
         }
-        
-    } catch (CORBA::Exception& e) {
-
-        std::stringstream ss;
-        ss << "Exception caught in read:" << std::endl << e << std::endl;
-        ACE_ERROR ((LM_ERROR, ACE_TEXT("(%P|%t|%D) Logout %s.\n"), ss.str().c_str()));
-
-        ACE_OS::exit(1);
     }
-
-
 }

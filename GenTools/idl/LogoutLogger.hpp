@@ -1,8 +1,5 @@
-// Don't modify, automatically generated file by QuickFIX2OpenDDS.py
-#ifndef __LogoutLogger_h__
-#define __LogoutLogger_h__
-
-#include "LogoutTypeSupportImpl.h"
+/* Don't modify, automatically generated file by QuickFIX2FastDDS.py*/
+#pragma once
 #include "HeaderLogger.hpp"
 ;
 
@@ -13,15 +10,12 @@ class LogoutLogger
 		static void log(std::ostream & out, DistributedATS_Logout::Logout& ddsMsg )  __attribute__ ((visibility ("default")))
 		{
 			;out<< "Message : Logout { " << std::endl;
-			HeaderLogger::log(out, ddsMsg.m_Header);
+			HeaderLogger::log(out, ddsMsg.header());
 
 
 			;out
-			 << "ddsMsg.Text : " << ddsMsg.Text << std::endl
+			 << "ddsMsg.Text : " << ddsMsg.Text() << std::endl
 ;			out << "}";
 		out << std::endl;};
 
 };
-
-#endif
-

@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -30,17 +30,23 @@
 #include <OrderMassCancelReportAdapter.hpp>
 #include <OrderMassCancelReportLogger.hpp>
 
+#include <fastdds/dds/topic/TypeSupport.hpp>
+#include <fastdds/dds/subscriber/Subscriber.hpp>
+#include <fastdds/dds/subscriber/DataReader.hpp>
+#include <fastdds/dds/subscriber/DataReaderListener.hpp>
+#include <fastdds/dds/subscriber/qos/DataReaderQos.hpp>
+#include <fastdds/dds/subscriber/SampleInfo.hpp>
+
 namespace DistributedATS {
 
 auto const order_mass_cencel_report_processor = [] (DistributedATS::DATSApplication &application, DistributedATS_OrderMassCancelReport::OrderMassCancelReport& orderMassCancelReport)
 {
     FIX::Message orderMassCancelReportMessage;
 
-    orderMassCancelReport.m_Header.BeginString =
-        CORBA::string_dup("FIX.4.4");
-    orderMassCancelReport.m_Header.SendingTime = 0; // this is precision;
-    orderMassCancelReport.m_Header.SenderCompID =
-        orderMassCancelReport.m_Header.TargetSubID;
+    orderMassCancelReport.header().BeginString("FIX.4.4");
+    orderMassCancelReport.header().SendingTime(0); // this is precision;
+    orderMassCancelReport.header().SenderCompID(
+        orderMassCancelReport.header().TargetSubID());
 
     OrderMassCancelReportAdapter::DDS2FIX(orderMassCancelReport,
                                           orderMassCancelReportMessage);
@@ -50,47 +56,23 @@ auto const order_mass_cencel_report_processor = [] (DistributedATS::DATSApplicat
 };
 
 
-OrderMassCancelReportDataReaderListenerImpl::OrderMassCancelReportDataReaderListenerImpl(DistributedATS::DATSApplication &application) : _processor(application, order_mass_cencel_report_processor, 500 )
+OrderMassCancelReportDataReaderListenerImpl::OrderMassCancelReportDataReaderListenerImpl(DistributedATS::DATSApplication &application) :
+    _processor(application, order_mass_cencel_report_processor, "OrderMassCancelReportDataReaderListenerImpl", 500 )
 {};
 
 void OrderMassCancelReportDataReaderListenerImpl::on_data_available(
-    DDS::DataReader_ptr reader) throw(CORBA::SystemException) {
-  try {
-      DistributedATS_OrderMassCancelReport::OrderMassCancelReportDataReader_var
-        order_mass_cancel_report_dr =
-      DistributedATS_OrderMassCancelReport::OrderMassCancelReportDataReader::_narrow(
-                reader);
-
-    if (CORBA::is_nil(order_mass_cancel_report_dr.in())) {
-      std::cerr << "OrderCancelReportDataReaderListenerImpl::on_data_available:"
-                   " _narrow failed."
-                << std::endl;
-      ACE_OS::exit(1);
+                            eprosima::fastdds::dds::DataReader* reader) {
+  
+    DistributedATS_OrderMassCancelReport::OrderMassCancelReport orderMassCancelReport;
+    eprosima::fastdds::dds::SampleInfo info;
+    if (reader->take_next_sample(&orderMassCancelReport, &info) == ReturnCode_t::RETCODE_OK)
+    {
+        if (info.valid_data)
+        {
+            _processor.enqueue_dds_message(orderMassCancelReport);
+        }
     }
-
-    while (true) {
-        DistributedATS_OrderMassCancelReport::OrderMassCancelReport orderMassCancelReport;
-      DDS::SampleInfo si;
-      DDS::ReturnCode_t status = order_mass_cancel_report_dr->take_next_sample(
-          orderMassCancelReport, si);
-
-      if (status == DDS::RETCODE_OK) {
-        if (!si.valid_data)
-          continue;
-
-          _processor.enqueue_dds_message(orderMassCancelReport);
-
-      } else if (status == DDS::RETCODE_NO_DATA) {
-        break;
-      } else {
-        std::cerr << "ERROR: read DATS::Logon: Error: " << status << std::endl;
-      }
-    }
-
-  } catch (CORBA::Exception &e) {
-    std::cerr << "Exception caught in read:" << std::endl << e << std::endl;
-    ACE_OS::exit(1);
-  }
+        
 }
 
 } /* namespace DistributedATS */

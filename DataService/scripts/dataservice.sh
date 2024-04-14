@@ -6,35 +6,15 @@ PRG="$0"
 PROGNAME=DataService
 CONFIG_FILE_NAME=$2
 
-if [ "$1" != "start" ] && [ "$1" != "stop" ] && [ "$1" != "check" ] ;
-then
-        echo "Unsupported Command - "$1 : "Supported Commands : (start/stop/check)";
-	exit 1;
-fi
+export LOG_FILE_NAME=$2.log
 
-if [ -z "$CONFIG_FILE_NAME" ]
-then
-        echo "Config File Name is not set";
-        exit 1;
-fi
+. $DATS_HOME/dats_env.sh
 
-#PRGDIR=`dirname "$PRG"`
-
-if [ -z "$BASEDIR" ]
-then
-	BASEDIR=`cd ".." > /dev/null; pwd`
-fi
-
-if [ ! -d "$BASEDIR/logs/" ]
-then
-        mkdir $BASEDIR/logs/
-fi
-
-logfile=$BASEDIR/logs/$PROGNAME.$CONFIG_FILE_NAME.console.log
+logfile=$BASEDIR_ATS/logs/$PROGNAME.$CONFIG_FILE_NAME.console.log
 
 #ldd $DATS_HOME/bin/$PROGNAME >> $logfile
 
-PROCESS="$PROGNAME -c $BASEDIR/config/$CONFIG_FILE_NAME -DCPSConfigFile $DATS_HOME/Protocols/tcp.ini -ORBLogFile $BASEDIR/logs/$PROGNAME.$CONFIG_FILE_NAME.log"
+PROCESS="$PROGNAME -c $BASEDIR_ATS/config/$CONFIG_FILE_NAME"
 #echo PROCESS=$PROCESS >> $logfile
 
 idn=$(id -u)

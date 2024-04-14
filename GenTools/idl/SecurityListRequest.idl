@@ -1,13 +1,13 @@
-// Don't modify, automatically generated file by QuickFIX2OpenDDS.py
+/* Don't modify, automatically generated file by QuickFIX2FastDDS.py*/
 #include "Header.idl"
 
 module DistributedATS_SecurityListRequest
 {
 
-	@topic
+	
 	struct SecurityListRequest
 	{
-	DistributedATS::Header m_Header;
+		DistributedATS::Header header;
 		string SecurityReqID;
 		long SecurityListRequestType;
 		string Symbol;

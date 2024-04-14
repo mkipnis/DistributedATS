@@ -7,7 +7,7 @@
 
 
 
-#### FIX Gateways, Matching Engines and Data Services utilize DDS content filters to filter in published on DDS messages.  [See: Chapter 5 - Content Subscription Profile](http://download.objectcomputing.com/OpenDDS/OpenDDS-latest.pdf)
+#### FIX Gateways, Matching Engines and Data Services utilize DDS content filters to filter in published on DDS messages.  [See: 3.5.8. Filtering data on a Topic](https://fast-dds.docs.eprosima.com/en/latest/fastdds/dds_layer/topic/contentFilteredTopic/createContentFilteredTopic.html)
 
 
 
@@ -16,28 +16,31 @@ Example of Matching Engine filter expression: see [MatchingEngine/src/main.cpp](
 ```
 // Filter expression for the MARKET_NAME specified in config file
 // filter for messages for this market/security exchange 
-std::string filter_str = "m_Header.TargetCompID = 'MATCHING_ENGINE' and SecurityExchange='" + market->getMarketName() + "'";
-// filter for mass cancel
-std::string filter_str_target_only = "m_Header.TargetCompID = 'MATCHING_ENGINE'"; 
+  std::string filter_str =
+            "header.TargetCompID = 'MATCHING_ENGINE' and SecurityExchange='" +
+            market->getMarketName() + "'";
+      // filter for mass cancel
+      std::string filter_str_target_only =
+            "m_Header.TargetCompID = 'MATCHING_ENGINE'";
+      
+      auto participant_ptr =
+          std::make_shared<distributed_ats_utils::basic_domain_participant>(0, "MatchingEngine");
 
-    //  Incoming data
-    ///////////////////////////////////////////////////////////////////////////////////
-    // New Order Single:
-    // Topic
-    DDS::Topic_var new_order_single_topic =
-        participant.createTopicAndRegisterType<
-      DistributedATS_NewOrderSingle::NewOrderSingleTypeSupport_var,
-      DistributedATS_NewOrderSingle::NewOrderSingleTypeSupportImpl>(
-            NEW_ORDER_SINGLE_TOPIC_NAME);
-    // Filter
-    DDS::ContentFilteredTopic_ptr cft =
-        participant.getDomainParticipant()->create_contentfilteredtopic(
-            "FILTER_MATCHING_ENGINE_NEW_ORDER_SINGLE", new_order_single_topic,
-            filter_str.c_str(), DDS::StringSeq());
-    // Data Reader
-    DDS::DataReaderListener_var newOrderSingleDataListener(
-        new MatchingEngine::NewOrderSingleDataReaderListenerImpl(market));
-    participant.createDataReaderListener(cft, newOrderSingleDataListener);
+      participant_ptr->create_subscriber();
+      participant_ptr->create_publisher();
+
+      // Incoming data
+      // New Order Single:
+      // Topic
+      auto  new_order_single_topic_tuple =
+        participant_ptr->make_topic<
+            DistributedATS_NewOrderSingle::NewOrderSinglePubSubType,
+            DistributedATS_NewOrderSingle::NewOrderSingle>(NEW_ORDER_SINGLE_TOPIC_NAME);
+      
+      auto new_order_single_data_reader_tuple =
+        participant_ptr->make_data_reader_tuple(new_order_single_topic_tuple,
+                            new MatchingEngine::NewOrderSingleDataReaderListenerImpl(market),
+                            "FILTER_MATCHING_ENGINE_NEW_ORDER_SINGLE", filter_str);
 ```
 
 Example of a NewOrderSingle received from FIX Client(TRADER_1) on FIX Gateway(FIX_GATEWAY_1) for Symbol(Tag:55) AAA and SecurityExchange(Tag:207) MARKET_Y.
@@ -50,7 +53,7 @@ Example of a NewOrderSingle received from FIX Client(TRADER_1) on FIX Gateway(FI
 Below is a logged version of NewOrderSingle IDL converted by FIX Gateway and published to Matching Engine.  Note, FIX Gateway sets header.TargetSubID to assigned to it Data Service.  This is required for a copy of an Execution Report published by Matching Engine to be consumed by assigned Data Service in order to process consequent order mass status requests.
 
 ```
-(3599678|3599684|2021-02-22 18:25:23.088947) NewOrderSingle : Message : NewOrderSingle {
+NewOrderSingle : Message : NewOrderSingle {
 Header {
 	ddsMsg.BeginString : FIX.4.4
 	ddsMsg.BodyLength : 164
@@ -77,7 +80,7 @@ NewOrderSingle IDL above is being consumed and processed by a MatchingEngine wit
 Upon receiving and processing of NewOrderSingle above, Matching Engine publishes the following execution report on EXECUTION_REPORT_TOPIC:
 
 ```
-(3599678|3599684|2021-02-22 18:25:23.089071) ExecutionReport : Message : ExecutionReport {
+ExecutionReport : Message : ExecutionReport {
 Header {
 	ddsMsg.BeginString :
 	ddsMsg.BodyLength : 30979815

@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -43,10 +43,9 @@ SocketAcceptor::SocketAcceptor(
 
 SocketAcceptor::SocketAcceptor(
     DistributedATS::DATSApplication &application, MessageStoreFactory &factory,
-    const SessionSettings &settings, FIX::LogFactory &logFactory,
-    std::ofstream *dds_input_stream_log_file) throw(ConfigError)
-    : Acceptor(application, factory, settings, logFactory),
-      m_dds_input_stream_log_file(dds_input_stream_log_file), m_pServer(0) {}
+    const SessionSettings &settings, FIX::LogFactory &logFactory/*,
+    std::ofstream *dds_input_stream_log_file*/) throw(ConfigError)
+    : Acceptor(application, factory, settings, logFactory), m_pServer(0) {}
 
 SocketAcceptor::~SocketAcceptor() {
   SocketConnections::iterator iter;
@@ -107,16 +106,7 @@ void SocketAcceptor::onInitialize(const SessionSettings &s) throw(
 }
 
 void SocketAcceptor::onStart() {
-
-  if (m_dds_input_stream_log_file->bad()) {
-    delete m_dds_input_stream_log_file;
-  } else {
-    ACE_LOG_MSG->msg_ostream(m_dds_input_stream_log_file, true);
-  }
-
-  ACE_LOG_MSG->clr_flags(ACE_Log_Msg::STDERR | ACE_Log_Msg::LOGGER);
-  ACE_LOG_MSG->set_flags(ACE_Log_Msg::OSTREAM);
-
+    
   while (!isStopped() && m_pServer && m_pServer->block(*this)) {
     // ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%T|%D) Socket Acceptor\n")));
   }
