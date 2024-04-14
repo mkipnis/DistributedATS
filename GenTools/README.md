@@ -1,8 +1,8 @@
 ## GenTools
 
-QuickFIX2OpenDDS.py converts specified in the requirements file messages, groups, and fields from the FIX specs to the FastDDS IDL libraries and conversion helper classes.
+QuickFIX2FastDDS.py converts specified in the requirements file messages, groups, and fields from the FIX specs to the FastDDS IDL libraries and conversion helper classes.
 
-QuickFIX2OpenDDS/QuickFIX2OpenDDS.py -r <requirements> -s <fix_specs>
+QuickFIX2FastDDS/QuickFIX2FastDDS.py -r <requirements> -s <fix_specs>
  
 Example:
 ```
