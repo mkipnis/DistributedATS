@@ -26,8 +26,8 @@
 */
 
 #include "OrderMassStatusRequestService.h"
-#include <OrderMassStatusRequestPubSubTypes.h>
-#include <ExecutionReportPubSubTypes.h>
+#include <OrderMassStatusRequestPubSubTypes.hpp>
+#include <ExecutionReportPubSubTypes.hpp>
 #include "ExecutionReportDataReaderListenerImpl.h"
 #include <Common.h>
 
@@ -53,7 +53,7 @@ OrderMassStatusRequestService::~OrderMassStatusRequestService()
     _service_thread.join();
 }
 
-void OrderMassStatusRequestService::createOrderMassStatusRequestListener( const std::string& data_service_filter_expression )
+void OrderMassStatusRequestService::createOrderMassStatusRequestListener()
 {
     DistributedATS_OrderMassStatusRequest::OrderMassStatusRequest orderMassStatusRequest;
     
@@ -62,17 +62,18 @@ void OrderMassStatusRequestService::createOrderMassStatusRequestListener( const 
     DistributedATS_OrderMassStatusRequest::OrderMassStatusRequest>
         ( ORDER_MASS_STATUS_REQUEST_TOPIC_NAME );
     
-    std::string data_service_filter_expression_exec_report =
-    data_service_filter_expression + " and header.SenderCompID <> 'DATA_SERVICE'";
+    std::string data_service_filter_expression_exec_report = "DATS_Destination = %0 and DATS_DestinationUser = %1";
     
     
-    _order_mass_status_request_data_reader_tuple = _basic_domain_participant_ptr->make_data_reader_tuple(_order_mass_status_request_topic_tuple,
-                    new DistributedATS::OrderMassStatusRequestDataReaderListenerImpl( _orderMassStatusRequestQueuePtr ),  "MASS_STATUS_REQUEST_FILTER", data_service_filter_expression_exec_report);
+    _order_mass_status_request_data_reader_tuple =
+        _basic_domain_participant_ptr->make_data_reader_tuple(_order_mass_status_request_topic_tuple,
+            new DistributedATS::OrderMassStatusRequestDataReaderListenerImpl( _orderMassStatusRequestQueuePtr ),  "MASS_STATUS_REQUEST_FILTER", data_service_filter_expression_exec_report,
+                                    { "DATA_SERVICE", _basic_domain_participant_ptr->get_participant_name()});
     
 
 }
 
-void OrderMassStatusRequestService::createExecutionReportListener( const std::string& data_service_filter_expression )
+void OrderMassStatusRequestService::createExecutionReportListener()
 {
     DistributedATS_ExecutionReport::ExecutionReport executionReport;
      
@@ -81,12 +82,12 @@ void OrderMassStatusRequestService::createExecutionReportListener( const std::st
             DistributedATS_ExecutionReport::ExecutionReport>
         ( EXECUTION_REPORT_TOPIC_NAME );
     
-    std::string data_service_filter_expression_exec_report =
-    data_service_filter_expression + " and header.SenderCompID <> 'DATA_SERVICE'";
-    
+    std::string data_service_filter_expression_exec_report = "DATS_Source = %0 and DATS_SourceUser = %1";
     
     _execution_report_data_reader_tuple = _basic_domain_participant_ptr->make_data_reader_tuple(_execution_report_topic_tuple,
-                    new DistributedATS::ExecutionReportDataReaderListenerImpl(m_executionReports),  "EXECUTION_REPORT_FILTER", data_service_filter_expression_exec_report);
+                    new DistributedATS::ExecutionReportDataReaderListenerImpl(m_executionReports),
+                    "EXECUTION_REPORT_FILTER", data_service_filter_expression_exec_report,
+                        { "MATCHING_ENGINE", _basic_domain_participant_ptr->get_participant_name()});
     
     
     _execution_report_dw = _basic_domain_participant_ptr->make_data_writer( _execution_report_topic_tuple );
@@ -127,23 +128,23 @@ OrderToExecutionReportMapPtr OrderMassStatusRequestService::getOrderToExecutionR
 bool OrderMassStatusRequestService::processMassOrderStatusServiceRequest( OrderMassStatusRequestPtr&  orderMassStatusRequestPtr )
 {
     
-    LOG4CXX_INFO(logger, "Received Mass Order Status Request : [" <<  orderMassStatusRequestPtr->header().SenderCompID() << ":" <<  orderMassStatusRequestPtr->header().TargetCompID() << "]");
+    LOG4CXX_INFO(logger, "Received Mass Order Status Request : [" <<  orderMassStatusRequestPtr->DATS_Source() << ":" <<  orderMassStatusRequestPtr->DATS_Destination() << "]");
     
-    std::string username = orderMassStatusRequestPtr->header().SenderSubID();
+    auto username = orderMassStatusRequestPtr->DATS_SourceUser();
     
     OrderToExecutionReportMapPtr orderToExecutionReportMapPtr =
     getOrderToExecutionReportMap( username );
     
-    if ( orderToExecutionReportMapPtr != NULL )
+    if ( orderToExecutionReportMapPtr )
     {
         for ( auto& orderToExecReportListPtr : *orderToExecutionReportMapPtr )
         {
             std::cout << "Need to publish execution report for the following order id : " << orderToExecReportListPtr.first << std::endl;
             for ( auto& execReport : *(orderToExecReportListPtr.second) )
             {
-                execReport->header().SenderCompID(orderMassStatusRequestPtr->header().TargetCompID());
-                execReport->header().TargetCompID(orderMassStatusRequestPtr->header().SenderCompID());
-                execReport->header().TargetSubID(username);
+                execReport->DATS_Source(orderMassStatusRequestPtr->DATS_Destination());
+                execReport->DATS_Destination(orderMassStatusRequestPtr->DATS_Source());
+                execReport->DATS_DestinationUser(username);
             
                 int ret = _execution_report_dw->write( execReport.get() );
                 

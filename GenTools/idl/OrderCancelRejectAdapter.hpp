@@ -1,6 +1,6 @@
 /* Don't modify, automatically generated file by QuickFIX2FastDDS.py*/
 #pragma once
-#include "OrderCancelReject.h"
+#include "OrderCancelReject.hpp"
 #include <quickfix/Message.h>
 
 #include "HeaderAdapter.hpp"

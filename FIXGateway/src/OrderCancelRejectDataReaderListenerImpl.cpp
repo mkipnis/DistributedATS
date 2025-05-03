@@ -41,8 +41,8 @@ auto const order_cancel_reject_processor = [] (DistributedATS::DATSApplication &
 
     FIX::Message orderCancelRejectMessage;
 
-    orderCancelReject.header().SendingTime(0); // this is precision;
-    HeaderAdapter::DDS2FIX(orderCancelReject.header(),
+    orderCancelReject.fix_header().SendingTime(0); // this is precision;
+    HeaderAdapter::DDS2FIX(orderCancelReject.fix_header(),
                            orderCancelRejectMessage.getHeader());
     OrderCancelRejectAdapter::DDS2FIX(orderCancelReject,
                                       orderCancelRejectMessage);
@@ -63,7 +63,7 @@ void OrderCancelRejectDataReaderListenerImpl::on_data_available(
     
     DistributedATS_OrderCancelReject::OrderCancelReject orderCancelReject;
     eprosima::fastdds::dds::SampleInfo info;
-     if (reader->take_next_sample(&orderCancelReject, &info) == ReturnCode_t::RETCODE_OK)
+     if (reader->take_next_sample(&orderCancelReject, &info) == eprosima::fastdds::dds::RETCODE_OK)
      {
          if (info.valid_data)
          {

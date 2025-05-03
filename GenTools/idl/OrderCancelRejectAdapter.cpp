@@ -5,7 +5,7 @@
 
 void OrderCancelRejectAdapter::FIX2DDS(const FIX::Message& fixMsg, DistributedATS_OrderCancelReject::OrderCancelReject& ddsMsg )
 {
-	HeaderAdapter::FIX2DDS(fixMsg.getHeader(), ddsMsg.header());
+	HeaderAdapter::FIX2DDS(fixMsg.getHeader(), ddsMsg.fix_header());
 
 	if (fixMsg.isSetField(FIX::FIELD::OrderID) )
 		ddsMsg.OrderID ( ((FIX::OrderID)fixMsg.getField(FIX::FIELD::OrderID)).getString().c_str());
@@ -37,7 +37,7 @@ void OrderCancelRejectAdapter::FIX2DDS(const FIX::Message& fixMsg, DistributedAT
 
 void OrderCancelRejectAdapter::DDS2FIX(const DistributedATS_OrderCancelReject::OrderCancelReject& ddsMsg, FIX::Message& fixMsg)
 {
-	HeaderAdapter::DDS2FIX(ddsMsg.header(), fixMsg.getHeader());
+	HeaderAdapter::DDS2FIX(ddsMsg.fix_header(), fixMsg.getHeader());
 
 	DistributedATS::convert_dds_string_to_fix(ddsMsg.OrderID(), FIX::FIELD::OrderID, fixMsg);
 

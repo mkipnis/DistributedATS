@@ -35,8 +35,8 @@
 #include "SQLiteConnection.hpp"
 #include <iostream>
 #include <BasicDomainParticipant.h>
-#include <Logon.h>
-#include <Logout.h>
+#include <Logon.hpp>
+#include <Logout.hpp>
 #include "LogonDataReaderListenerImpl.hpp"
 
 
@@ -55,8 +55,8 @@ public:
 
     virtual ~AuthService();
     
-    void createLogonTopic( const std::string& data_service_filter_expression );
-    void createLogoutTopic( const std::string& data_service_filter_expression );
+    void createLogonTopic();
+    void createLogoutTopic();
     
     int service (void);
     

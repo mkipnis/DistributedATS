@@ -35,7 +35,7 @@
 #include "Application.hpp"
 
 #include <fastdds/dds/subscriber/DataReaderListener.hpp>
-#include <Logout.h>
+#include <Logout.hpp>
 
 namespace DistributedATS {
 

@@ -5,7 +5,7 @@
 
 void HeartbeatAdapter::FIX2DDS(const FIX::Message& fixMsg, DistributedATS_Heartbeat::Heartbeat& ddsMsg )
 {
-	HeaderAdapter::FIX2DDS(fixMsg.getHeader(), ddsMsg.header());
+	HeaderAdapter::FIX2DDS(fixMsg.getHeader(), ddsMsg.fix_header());
 
 
 };
@@ -14,7 +14,7 @@ void HeartbeatAdapter::FIX2DDS(const FIX::Message& fixMsg, DistributedATS_Heartb
 
 void HeartbeatAdapter::DDS2FIX(const DistributedATS_Heartbeat::Heartbeat& ddsMsg, FIX::Message& fixMsg)
 {
-	HeaderAdapter::DDS2FIX(ddsMsg.header(), fixMsg.getHeader());
+	HeaderAdapter::DDS2FIX(ddsMsg.fix_header(), fixMsg.getHeader());
 
 
 };

@@ -29,7 +29,7 @@
 
 #include <memory>
 #include <boost/lockfree/spsc_queue.hpp>
-#include <MarketDataRequest.h>
+#include <MarketDataRequest.hpp>
 #include <fastdds/dds/subscriber/DataReader.hpp>
 #include <fastdds/dds/subscriber/DataReaderListener.hpp>
 
@@ -44,15 +44,13 @@ typedef std::shared_ptr<MarketDataRequestQueue> MarketDataRequestQueuePtr;
 class MarketDataRequestDataReaderListenerImpl : public eprosima::fastdds::dds::DataReaderListener
 {
 public:
-	MarketDataRequestDataReaderListenerImpl( const std::string& data_service_name,
-                                            MarketDataRequestQueuePtr marketDataRequestQueuePtr )
-    : _marketDataRequestQueuePtr( marketDataRequestQueuePtr ), _data_service_name(data_service_name) {};
+	MarketDataRequestDataReaderListenerImpl( MarketDataRequestQueuePtr marketDataRequestQueuePtr )
+    : _marketDataRequestQueuePtr( marketDataRequestQueuePtr ) {};
     
     void on_data_available( eprosima::fastdds::dds::DataReader* reader ) override;
 
 private:
     MarketDataRequestQueuePtr _marketDataRequestQueuePtr;
-    std::string _data_service_name;
 };
 
 } /* namespace DistributedATS */

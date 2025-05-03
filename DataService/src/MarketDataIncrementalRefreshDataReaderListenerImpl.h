@@ -27,7 +27,7 @@
 
 #pragma once
 
-#include <MarketDataIncrementalRefresh.h>
+#include <MarketDataIncrementalRefresh.hpp>
 #include "MarketDataService.h"
 
 namespace DistributedATS {

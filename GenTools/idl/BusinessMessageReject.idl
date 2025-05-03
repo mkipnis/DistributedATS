@@ -7,7 +7,14 @@ module DistributedATS_BusinessMessageReject
 	
 	struct BusinessMessageReject
 	{
-		DistributedATS::Header header;
+		string DATS_Source;
+     		string DATS_Destination;
+    		string DATS_SourceUser;
+    		string DATS_DestinationUser;
+
+
+		DistributedATS::Header fix_header;
+
 		string RefMsgType;
 		long BusinessRejectReason;
 		string Text;

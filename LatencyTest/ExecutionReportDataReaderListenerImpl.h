@@ -35,7 +35,7 @@
 #include <fastdds/dds/subscriber/DataReaderListener.hpp>
 #include <fastdds/dds/subscriber/qos/DataReaderQos.hpp>
 #include <fastdds/dds/subscriber/SampleInfo.hpp>
-#include <ExecutionReport.h>
+#include <ExecutionReport.hpp>
 
 namespace LatencyTest {
 

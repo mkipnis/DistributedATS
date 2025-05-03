@@ -5,7 +5,7 @@
 
 void MarketDataSnapshotFullRefreshAdapter::FIX2DDS(const FIX::Message& fixMsg, DistributedATS_MarketDataSnapshotFullRefresh::MarketDataSnapshotFullRefresh& ddsMsg )
 {
-	HeaderAdapter::FIX2DDS(fixMsg.getHeader(), ddsMsg.header());
+	HeaderAdapter::FIX2DDS(fixMsg.getHeader(), ddsMsg.fix_header());
 
 	if (fixMsg.isSetField(FIX::FIELD::MDReqID) )
 		ddsMsg.MDReqID ( ((FIX::MDReqID)fixMsg.getField(FIX::FIELD::MDReqID)).getString().c_str());
@@ -59,7 +59,7 @@ void MarketDataSnapshotFullRefreshAdapter::FIX2DDS(const FIX::Message& fixMsg, D
 
 void MarketDataSnapshotFullRefreshAdapter::DDS2FIX(const DistributedATS_MarketDataSnapshotFullRefresh::MarketDataSnapshotFullRefresh& ddsMsg, FIX::Message& fixMsg)
 {
-	HeaderAdapter::DDS2FIX(ddsMsg.header(), fixMsg.getHeader());
+	HeaderAdapter::DDS2FIX(ddsMsg.fix_header(), fixMsg.getHeader());
 
 	DistributedATS::convert_dds_string_to_fix(ddsMsg.MDReqID(), FIX::FIELD::MDReqID, fixMsg);
 

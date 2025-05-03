@@ -53,7 +53,7 @@ void OrderMassCancelRequestDataReaderListenerImpl::on_data_available(
     eprosima::fastdds::dds::SampleInfo info;
 
           
-          if (reader->take_next_sample(&order_mass_cancel_request, &info) == ReturnCode_t::RETCODE_OK)
+          if (reader->take_next_sample(&order_mass_cancel_request, &info) == eprosima::fastdds::dds::RETCODE_OK)
           {
                if (info.valid_data)
                {
@@ -64,14 +64,16 @@ void OrderMassCancelRequestDataReaderListenerImpl::on_data_available(
             order_mass_cancel_request, "OrderMassCancelRequest");
 
         std::string contra_party =
-            order_mass_cancel_request.header().SenderSubID();
+                   order_mass_cancel_request.DATS_SourceUser();
 
           DistributedATS_OrderMassCancelReport::OrderMassCancelReport
             order_mass_cancel_report;
-        order_mass_cancel_report.header().SenderCompID("MATCHING_ENGINE");
-        order_mass_cancel_report.header().TargetCompID(order_mass_cancel_request.header().SenderCompID());
-        order_mass_cancel_report.header().TargetSubID(order_mass_cancel_request.header().SenderSubID());
-        order_mass_cancel_report.header().MsgType("r");
+                   
+        order_mass_cancel_report.DATS_Source("MATCHING_ENGINE");
+        order_mass_cancel_report.DATS_Destination(order_mass_cancel_request.DATS_Source());
+        order_mass_cancel_report.DATS_DestinationUser(order_mass_cancel_request.DATS_SourceUser());
+        
+        order_mass_cancel_report.fix_header().MsgType("r");
         order_mass_cancel_report.MassCancelRequestType(FIX::MassCancelRequestType_CANCEL_ALL_ORDERS);
         order_mass_cancel_report.MassCancelResponse(FIX::MassCancelResponse_CANCEL_ALL_ORDERS);
         order_mass_cancel_report.OrderID(order_mass_cancel_request.ClOrdID());

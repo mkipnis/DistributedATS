@@ -29,8 +29,8 @@
 
 #include <book/types.h>
 
-#include <ExecutionReport.h>
-#include <OrderCancelReject.h>
+#include <ExecutionReport.hpp>
+#include <OrderCancelReject.hpp>
 #include <memory>
 #include <quickfix/FixValues.h>
 #include <string>

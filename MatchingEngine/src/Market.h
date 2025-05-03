@@ -31,12 +31,12 @@
 
 #include "Order.h"
 
-#include <ExecutionReport.h>
-#include <MarketDataIncrementalRefresh.h>
-#include <MarketDataRequest.h>
-#include <OrderCancelReject.h>
-#include <OrderMassCancelReport.h>
-#include <SecurityListRequest.h>
+#include <ExecutionReport.hpp>
+#include <MarketDataIncrementalRefresh.hpp>
+#include <MarketDataRequest.hpp>
+#include <OrderCancelReject.hpp>
+#include <OrderMassCancelReport.hpp>
+#include <SecurityListRequest.hpp>
 #include <algorithm>
 #include <iostream>
 #include <map>

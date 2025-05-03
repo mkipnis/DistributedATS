@@ -50,7 +50,7 @@ void SecurityListRequestDataReaderListenerImpl::on_data_available( eprosima::fas
     DistributedATS_SecurityListRequest::SecurityListRequest security_list_request;
     eprosima::fastdds::dds::SampleInfo info;
     
-    if (reader->take_next_sample(&security_list_request, &info) == ReturnCode_t::RETCODE_OK)
+    if (reader->take_next_sample(&security_list_request, &info) == eprosima::fastdds::dds::RETCODE_OK)
     {
          if (info.valid_data)
          {

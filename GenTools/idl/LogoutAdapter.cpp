@@ -5,7 +5,7 @@
 
 void LogoutAdapter::FIX2DDS(const FIX::Message& fixMsg, DistributedATS_Logout::Logout& ddsMsg )
 {
-	HeaderAdapter::FIX2DDS(fixMsg.getHeader(), ddsMsg.header());
+	HeaderAdapter::FIX2DDS(fixMsg.getHeader(), ddsMsg.fix_header());
 
 	if (fixMsg.isSetField(FIX::FIELD::Text) )
 		ddsMsg.Text ( ((FIX::Text)fixMsg.getField(FIX::FIELD::Text)).getString().c_str());
@@ -17,7 +17,7 @@ void LogoutAdapter::FIX2DDS(const FIX::Message& fixMsg, DistributedATS_Logout::L
 
 void LogoutAdapter::DDS2FIX(const DistributedATS_Logout::Logout& ddsMsg, FIX::Message& fixMsg)
 {
-	HeaderAdapter::DDS2FIX(ddsMsg.header(), fixMsg.getHeader());
+	HeaderAdapter::DDS2FIX(ddsMsg.fix_header(), fixMsg.getHeader());
 
 	DistributedATS::convert_dds_string_to_fix(ddsMsg.Text(), FIX::FIELD::Text, fixMsg);
 

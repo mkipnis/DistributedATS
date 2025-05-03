@@ -125,31 +125,22 @@ std::string AuthServiceHelper::getConnectionToken(const FIX::Message &message) {
 }
 
 void AuthServiceHelper::processDDSLogon(FIX::Message &message) {
-  std::string connectionToken = getConnectionToken(message);
 
-  FIX::BeginString beginString;
-  FIX::TargetCompID clTargetCompID;
-  FIX::SenderCompID clLogonSenderCompID;
-  FIX::RawData clSessionQualifier;
+    auto connectionToken = getConnectionToken(message);
+    
+    auto beginString = message.getHeader().getField(FIX::FIELD::BeginString);
+    //auto senderCompID = message.getHeader().getField(FIX::FIELD::SenderCompID);
+    auto targetCompID = message.getHeader().getField(FIX::FIELD::TargetCompID);
+    auto targetSubID = message.getHeader().getField(FIX::FIELD::TargetSubID);
+    auto clSessionQualifier = message.getField(FIX::FIELD::RawData);
 
-  message.getHeader().getField(beginString);
-  message.getHeader().getField(clTargetCompID);
-  message.getHeader().getField(clLogonSenderCompID);
-  message.getField(clSessionQualifier);
+    LOG4CXX_INFO(logger, "Received Session ID for Logon : [" << _senderCompID.c_str() << "] Session :[" << clSessionQualifier<<"]");
     
-  //for ( auto& registredSessionId : )
- 
-  //FIX::SessionID newFixSessionID(beginString, _senderCompID, clTargetCompID,
-  //                               "");
-    
-    LOG4CXX_INFO(logger, "Received Session ID for Logon : [" << _senderCompID.c_str() << "] Session :[" << clSessionQualifier.getValue()<<"]");
-    
+    FIX::Session *session = NULL;
 
-  FIX::Session *session = NULL;
+    auto activeSessionID = m_activeUserMap.find(targetSubID);
   
-  auto activeSessionID = m_activeUserMap.find(clTargetCompID.getValue());
-  
-  if ( activeSessionID != m_activeUserMap.end() )
+    if ( activeSessionID != m_activeUserMap.end() )
       session =  FIX::Session::lookupSession(activeSessionID->second);
   
 
@@ -157,7 +148,7 @@ void AuthServiceHelper::processDDSLogon(FIX::Message &message) {
   if (session != NULL) {
     // Reconnection to the same gateway
     if (session->isLoggedOn() &&
-        clLogonSenderCompID.getValue().compare(_senderCompID) == 0)
+        targetCompID.compare(_senderCompID) == 0)
     {
       FIX44::Logout logoutMessage;
 
@@ -184,16 +175,16 @@ void AuthServiceHelper::processDDSLogon(FIX::Message &message) {
     }
   }
     
-  if (clLogonSenderCompID.getValue().compare(_senderCompID) == 0)
+  if (targetCompID.compare(_senderCompID) == 0)
     {
-        FIX::SessionID newFixSessionID(beginString, _senderCompID, clTargetCompID,
-                                       clSessionQualifier.getValue());
+        FIX::SessionID newFixSessionID(beginString, _senderCompID, targetSubID,
+                                       clSessionQualifier);
        session = AuthServiceHelper::createSessionFromAuthMessage(newFixSessionID,
                                                               message, "");
         
     if (session)
     {
-        m_activeUserMap[clTargetCompID.getValue()] = newFixSessionID;
+        m_activeUserMap[targetSubID] = newFixSessionID;
     } else {
       std::cerr << "Something is wrong unable to create session object!!!!!"
                 << std::endl;

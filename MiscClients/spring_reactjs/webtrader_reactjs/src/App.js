@@ -175,7 +175,7 @@ function App()
 
       }
 
-      if ( sessionState.sessionState != 3 )
+      if ( sessionState.sessionState != SessionStateWrapper.STATE_LOGGED_OUT )
       {
         const intervalId = setInterval(() => {
                 const requestOptionsResults = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(session_state_request) };

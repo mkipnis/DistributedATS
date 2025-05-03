@@ -5,7 +5,7 @@
 
 void OrderMassStatusRequestAdapter::FIX2DDS(const FIX::Message& fixMsg, DistributedATS_OrderMassStatusRequest::OrderMassStatusRequest& ddsMsg )
 {
-	HeaderAdapter::FIX2DDS(fixMsg.getHeader(), ddsMsg.header());
+	HeaderAdapter::FIX2DDS(fixMsg.getHeader(), ddsMsg.fix_header());
 
 	if (fixMsg.isSetField(FIX::FIELD::MassStatusReqID) )
 		ddsMsg.MassStatusReqID ( ((FIX::MassStatusReqID)fixMsg.getField(FIX::FIELD::MassStatusReqID)).getString().c_str());
@@ -28,7 +28,7 @@ void OrderMassStatusRequestAdapter::FIX2DDS(const FIX::Message& fixMsg, Distribu
 
 void OrderMassStatusRequestAdapter::DDS2FIX(const DistributedATS_OrderMassStatusRequest::OrderMassStatusRequest& ddsMsg, FIX::Message& fixMsg)
 {
-	HeaderAdapter::DDS2FIX(ddsMsg.header(), fixMsg.getHeader());
+	HeaderAdapter::DDS2FIX(ddsMsg.fix_header(), fixMsg.getHeader());
 
 	DistributedATS::convert_dds_string_to_fix(ddsMsg.MassStatusReqID(), FIX::FIELD::MassStatusReqID, fixMsg);
 

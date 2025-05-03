@@ -5,7 +5,7 @@
 
 void LogonAdapter::FIX2DDS(const FIX::Message& fixMsg, DistributedATS_Logon::Logon& ddsMsg )
 {
-	HeaderAdapter::FIX2DDS(fixMsg.getHeader(), ddsMsg.header());
+	HeaderAdapter::FIX2DDS(fixMsg.getHeader(), ddsMsg.fix_header());
 
 	if (fixMsg.isSetField(FIX::FIELD::EncryptMethod) )
 		ddsMsg.EncryptMethod ( FIELD_GET_REF( fixMsg,EncryptMethod));
@@ -33,7 +33,7 @@ void LogonAdapter::FIX2DDS(const FIX::Message& fixMsg, DistributedATS_Logon::Log
 
 void LogonAdapter::DDS2FIX(const DistributedATS_Logon::Logon& ddsMsg, FIX::Message& fixMsg)
 {
-	HeaderAdapter::DDS2FIX(ddsMsg.header(), fixMsg.getHeader());
+	HeaderAdapter::DDS2FIX(ddsMsg.fix_header(), fixMsg.getHeader());
 
 	FIX::EncryptMethod fixEncryptMethod(ddsMsg.EncryptMethod());
 	fixMsg.setField(fixEncryptMethod);

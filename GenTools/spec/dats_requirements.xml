@@ -49,8 +49,8 @@
         <field name='SecurityExchange' gen_cpp='Y' />
         <field name='RawData' gen_cpp='Y' />
         <field name='TransactTime' gen_cpp='Y' />
-        <field name='SenderSubID' gen_cpp='N'/>
-        <field name='TargetSubID' gen_cpp='N'/>
+        <field name='SenderSubID' gen_cpp='Y'/>
+        <field name='TargetSubID' gen_cpp='Y'/>
         <field name='TimeInForce' gen_cpp='Y' />
         <field name='ExecInst' gen_cpp='Y' />
         <field name='StopPx' gen_cpp='Y'/>

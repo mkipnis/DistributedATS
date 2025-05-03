@@ -32,7 +32,7 @@
 #include "FIXMsgComposerThread.h"
 
 #include <fastdds/dds/subscriber/DataReaderListener.hpp>
-#include <OrderMassCancelReport.h>
+#include <OrderMassCancelReport.hpp>
 
 namespace DistributedATS {
 

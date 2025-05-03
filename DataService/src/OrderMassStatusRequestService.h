@@ -36,7 +36,7 @@
 
 #include "OrderMassStatusRequestDataReaderListenerImpl.h"
 
-#include <ExecutionReport.h>
+#include <ExecutionReport.hpp>
 
 typedef std::shared_ptr<DistributedATS_ExecutionReport::ExecutionReport> ExecutionReportPtr;
 typedef std::list<ExecutionReportPtr> ExecutionReportPtrList;
@@ -56,8 +56,8 @@ public:
     OrderMassStatusRequestService( std::shared_ptr<distributed_ats_utils::basic_domain_participant> );
     virtual ~OrderMassStatusRequestService();
     
-    void createOrderMassStatusRequestListener( const std::string& data_service_filter_expression );
-    void createExecutionReportListener( const std::string& data_service_filter_expression );
+    void createOrderMassStatusRequestListener();
+    void createExecutionReportListener();
     
     OrderToExecutionReportMapPtr getOrderToExecutionReportMap( std::string& senderCompId );
     bool processMassOrderStatusServiceRequest( OrderMassStatusRequestPtr& orderMassStatusRequestPtr );

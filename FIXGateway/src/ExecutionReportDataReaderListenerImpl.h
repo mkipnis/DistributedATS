@@ -29,7 +29,7 @@
 
 #include <ExecutionReportAdapter.hpp>
 #include "FIXMsgComposerThread.h"
-#include <ExecutionReport.h>
+#include <ExecutionReport.hpp>
 
 #include <fastdds/dds/domain/DomainParticipantFactory.hpp>
 #include <fastdds/dds/domain/DomainParticipant.hpp>

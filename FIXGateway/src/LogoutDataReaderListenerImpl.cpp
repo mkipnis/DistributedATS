@@ -51,17 +51,11 @@ auto const logout_processor = [] (DistributedATS::DATSApplication &application, 
     LOG4CXX_INFO(logger, "Data Reader Logout : [" <<  ss.str() << "]");
 
     FIX::Message logoutMessage;
-    logout.header().SendingTime(0);
+    logout.fix_header().SendingTime(0);
 
     LogoutAdapter::DDS2FIX(logout, logoutMessage);
 
-    std::string connectionToken =
-        logout.header().TargetSubID(); // Kludge : Connection token is populated in RawData in
-                   // Logon message, but because there is no RawData in
-                   // Logout message, DataService populates TargetSubID with
-                   // the Connection Token of the session that needs to be
-                   // Logged out and disconnected in case of invalid
-                   // credentials.
+    std::string connectionToken = logout.DATS_DestinationUser();
     application.processDDSLogout(connectionToken, logoutMessage);
 };
 
@@ -80,7 +74,7 @@ void LogoutDataReaderListenerImpl::on_data_available(
     DistributedATS_Logout::Logout logout;
     eprosima::fastdds::dds::SampleInfo info;
     
-    if (reader->take_next_sample(&logout, &info) == ReturnCode_t::RETCODE_OK)
+    if (reader->take_next_sample(&logout, &info) == eprosima::fastdds::dds::RETCODE_OK)
     {
         if (info.valid_data)
         {
@@ -88,39 +82,5 @@ void LogoutDataReaderListenerImpl::on_data_available(
         }
     }
     
-    /*
-  try {
-      DistributedATS_Logout::LogoutDataReader_var logout_dr =
-      DistributedATS_Logout::LogoutDataReader::_narrow(reader);
-
-    if (CORBA::is_nil(logout_dr.in())) {
-      std::cerr
-          << "LogoutDataReaderListenerImpl::on_data_available: _narrow failed."
-          << std::endl;
-      ACE_OS::exit(1);
-    }
-
-    while (true) {
-        DistributedATS_Logout::Logout logout;
-      DDS::SampleInfo si;
-      DDS::ReturnCode_t status = logout_dr->take_next_sample(logout, si);
-
-      if (status == DDS::RETCODE_OK) {
-        if (!si.valid_data)
-          continue;
-          
-          _processor.enqueue_dds_message(logout);
-
-      } else if (status == DDS::RETCODE_NO_DATA) {
-        break;
-      } else {
-        std::cerr << "ERROR: read DATS::Logout: Error: " << status << std::endl;
-      }
-    }
-
-  } catch (CORBA::Exception &e) {
-    std::cerr << "Exception caught in read:" << std::endl << e << std::endl;
-    ACE_OS::exit(1);
-  }*/
 }
 }; // namespace DistributedATS

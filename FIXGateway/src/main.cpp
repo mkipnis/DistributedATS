@@ -135,11 +135,9 @@ int main(int argc, char **argv)
         sender_comp_id = settings->get().getString("SenderCompID");
         data_service_name = default_dictionary->getString("DataService");
                                                                                                              
-                                                                                                               
-        std::string fix_prefix = "FIXGateway-" + sender_comp_id + "." + data_service_name;
-      
+                                                                                                
         auto participant_ptr =
-            std::make_shared<distributed_ats_utils::basic_domain_participant>(0, fix_prefix);
+            std::make_shared<distributed_ats_utils::basic_domain_participant>(0, sender_comp_id);
 
         participant_ptr->create_publisher();
         participant_ptr->create_subscriber();
@@ -153,7 +151,7 @@ int main(int argc, char **argv)
       
         LOG4CXX_INFO(logger, "SenderCompID : [" << sender_comp_id << "] | DataService : ["<< data_service_name << "]");
 
-        // content filtering for messages directed to instances of gateways
+        /* // content filtering for messages directed to instances of gateways
         // with given sender comp id.  These messages include Logon/Logout,
         // ExectionReports, MassStatus, etc.
         std::string target_comp_id_filter =
@@ -161,7 +159,10 @@ int main(int argc, char **argv)
             "'";
       
         LOG4CXX_INFO(logger, "TargetCompID filter : [" << target_comp_id_filter << "]");
+         */
 
+        std::string fix_prefix = "FIXGateway-" + sender_comp_id + "." + data_service_name;
+        
         FIX::FileStoreFactory store_factory(dats_log_home);
         DistributedATS::FileLogFactory log_factory(*settings, fix_prefix);
 
@@ -184,14 +185,14 @@ int main(int argc, char **argv)
         }
       
         auto data_reader_container =
-            std::make_shared<DistributedATS::DataReaderContrainer>(participant_ptr, application, target_comp_id_filter);
+        std::make_shared<DistributedATS::DataReaderContrainer>(participant_ptr, application, sender_comp_id);
       
         auto authService = std::make_shared<AuthServiceHelper>( settings, session_factory, default_dictionary, sender_comp_id);
         application.setAuthService(authService);
 
         acceptor->start();
 
-        boost::asio::io_service io_service;
+        boost::asio::io_context io_service;
         boost::asio::signal_set signals(io_service, SIGINT, SIGTERM);
       
         signals.async_wait([&](const boost::system::error_code& ec, int signal_number) {

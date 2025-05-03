@@ -30,7 +30,7 @@
 #include <fastdds/dds/subscriber/SampleInfo.hpp>
 #include <fastdds/dds/subscriber/DataReader.hpp>
 #include <fastdds/dds/subscriber/DataReaderListener.hpp>
-#include <Logout.h>
+#include <Logout.hpp>
 #include <LogoutLogger.hpp>
 #include <sstream>
 
@@ -45,7 +45,7 @@ void LogoutDataReaderListenerImpl::on_data_available( eprosima::fastdds::dds::Da
     DistributedATS_Logout::Logout logout;
     eprosima::fastdds::dds::SampleInfo info;
     
-    if (reader->take_next_sample(&logout, &info) == ReturnCode_t::RETCODE_OK)
+    if (reader->take_next_sample(&logout, &info) == eprosima::fastdds::dds::RETCODE_OK)
     {
         if (info.valid_data)
         {

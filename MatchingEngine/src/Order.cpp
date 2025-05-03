@@ -120,21 +120,20 @@ void Order::onCancelRejected(const char *reason)
 {
     DistributedATS_OrderCancelReject::OrderCancelReject orderCancelReject;
     
-    orderCancelReject.header().TargetSubID(dataService_);
-    orderCancelReject.header().TargetCompID(gateway_);
-    orderCancelReject.header().SenderSubID(contra_party_);
+    orderCancelReject.DATS_SourceUser(dataService_);
+    orderCancelReject.DATS_Destination(gateway_);
+    orderCancelReject.DATS_DestinationUser(contra_party_);
     
-    orderCancelReject.header().MsgType("9");
+    orderCancelReject.fix_header().MsgType("9");
     orderCancelReject.Text(reason);
     orderCancelReject.ClOrdID(client_order_id_);
     
     LoggerHelper::log_debug<std::stringstream, OrderCancelRejectLogger,
-    DistributedATS_OrderCancelReject::OrderCancelReject>(logger,
-                                                         orderCancelReject, "OrderCancelReject");
+    DistributedATS_OrderCancelReject::OrderCancelReject>(logger,orderCancelReject, "OrderCancelReject");
 
     int ret = dataWriterContainerPtr_->order_cancel_reject_dw->write(&orderCancelReject);
 
-    if (ret != eprosima::fastrtps::types::ReturnCode_t::RETCODE_OK) {
+    if (ret != eprosima::fastdds::dds::RETCODE_OK) {
         LOG4CXX_ERROR(logger, "OrderCancelReject write returned :" << ret);
     }
     
@@ -177,11 +176,11 @@ void Order::onReplaceRejected(const char *reason)
 {
     DistributedATS_OrderCancelReject::OrderCancelReject orderCancelReject;
     
-    orderCancelReject.header().TargetSubID(dataService_);
-    orderCancelReject.header().TargetCompID(gateway_);
-    orderCancelReject.header().SenderSubID(contra_party_);
+    orderCancelReject.DATS_SourceUser(dataService_);
+    orderCancelReject.DATS_Destination(gateway_);
+    orderCancelReject.DATS_DestinationUser(contra_party_);
     
-    orderCancelReject.header().MsgType("9");
+    orderCancelReject.fix_header().MsgType("9");
     orderCancelReject.Text(reason);
     orderCancelReject.ClOrdID(client_order_id_);
     
@@ -191,7 +190,7 @@ void Order::onReplaceRejected(const char *reason)
 
     int ret = dataWriterContainerPtr_->order_cancel_reject_dw->write(&orderCancelReject);
     
-    if (ret != eprosima::fastrtps::types::ReturnCode_t::RETCODE_OK) {
+    if (ret != eprosima::fastdds::dds::RETCODE_OK) {
         LOG4CXX_ERROR(logger, "OrdereplaceRejected write returned :" << ret);
     }
 }
@@ -201,11 +200,12 @@ void Order::populateExecutionReport(
                                     char ExecType)
     {
             
-  executionReport.header().SenderCompID("MATCHING_ENGINE");
-  executionReport.header().TargetSubID(dataService_);
-  executionReport.header().TargetCompID(gateway_);
-  executionReport.header().SenderSubID(contra_party_);
-  executionReport.header().MsgType("8");
+  executionReport.DATS_Source("MATCHING_ENGINE");
+  executionReport.DATS_SourceUser(dataService_);
+  executionReport.DATS_Destination(gateway_);
+  executionReport.DATS_DestinationUser(contra_party_);
+    
+  executionReport.fix_header().MsgType("8");
   executionReport.OrderID(client_order_id_);
   executionReport.Side(is_buy() ? '1' : '2');
   executionReport.Symbol(symbol());

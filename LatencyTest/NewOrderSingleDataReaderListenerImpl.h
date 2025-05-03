@@ -27,7 +27,7 @@
 
 #pragma once
 
-#include <NewOrderSingle.h>
+#include <NewOrderSingle.hpp>
 #include <fastdds/dds/subscriber/Subscriber.hpp>
 #include <fastdds/dds/subscriber/DataReader.hpp>
 #include <fastdds/dds/subscriber/DataReaderListener.hpp>

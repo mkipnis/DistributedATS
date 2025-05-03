@@ -41,9 +41,12 @@
 auto const exec_report_processor = [] (DistributedATS::DATSApplication &application, DistributedATS_ExecutionReport::ExecutionReport& executionReport)
 {
     FIX::Message executionReportMessage;
-    executionReport.header().SendingTime(0); // this is precision; -- TODO: move to auto gen
-    executionReport.header().BeginString("FIX.4.4");
-    executionReport.header().SenderCompID(executionReport.header().SenderSubID());
+
+    executionReport.fix_header().BeginString("FIX.4.4");
+    executionReport.fix_header().TargetCompID(executionReport.DATS_Destination());
+    executionReport.fix_header().SenderCompID(executionReport.DATS_DestinationUser());
+    executionReport.fix_header().SendingTime(0);
+    
     ExecutionReportAdapter::DDS2FIX(executionReport, executionReportMessage);
 
     DistributedATS::DATSApplication::publishToClient(executionReportMessage);
@@ -63,7 +66,7 @@ void ExecutionReportDataReaderListenerImpl::on_data_available(
     DistributedATS_ExecutionReport::ExecutionReport executionReport;
     eprosima::fastdds::dds::SampleInfo info;
     
-    if (reader->take_next_sample(&executionReport, &info) == ReturnCode_t::RETCODE_OK)
+    if (reader->take_next_sample(&executionReport, &info) == eprosima::fastdds::dds::RETCODE_OK)
     {
         if (info.valid_data)
         {

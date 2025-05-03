@@ -5,7 +5,7 @@
 
 void SecurityListAdapter::FIX2DDS(const FIX::Message& fixMsg, DistributedATS_SecurityList::SecurityList& ddsMsg )
 {
-	HeaderAdapter::FIX2DDS(fixMsg.getHeader(), ddsMsg.header());
+	HeaderAdapter::FIX2DDS(fixMsg.getHeader(), ddsMsg.fix_header());
 
 	if (fixMsg.isSetField(FIX::FIELD::SecurityReqID) )
 		ddsMsg.SecurityReqID ( ((FIX::SecurityReqID)fixMsg.getField(FIX::FIELD::SecurityReqID)).getString().c_str());
@@ -48,7 +48,7 @@ void SecurityListAdapter::FIX2DDS(const FIX::Message& fixMsg, DistributedATS_Sec
 
 void SecurityListAdapter::DDS2FIX(const DistributedATS_SecurityList::SecurityList& ddsMsg, FIX::Message& fixMsg)
 {
-	HeaderAdapter::DDS2FIX(ddsMsg.header(), fixMsg.getHeader());
+	HeaderAdapter::DDS2FIX(ddsMsg.fix_header(), fixMsg.getHeader());
 
 	DistributedATS::convert_dds_string_to_fix(ddsMsg.SecurityReqID(), FIX::FIELD::SecurityReqID, fixMsg);
 

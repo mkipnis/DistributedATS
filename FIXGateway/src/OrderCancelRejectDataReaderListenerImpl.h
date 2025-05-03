@@ -32,7 +32,7 @@
 
 #include "FIXMsgComposerThread.h"
 #include <fastdds/dds/subscriber/DataReaderListener.hpp>
-#include <OrderCancelReject.h>
+#include <OrderCancelReject.hpp>
 #include <OrderCancelRejectAdapter.hpp>
 
 

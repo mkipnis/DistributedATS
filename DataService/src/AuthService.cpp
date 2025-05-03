@@ -28,8 +28,8 @@
 #include <BasicDomainParticipant.h>
 #include "AuthService.h"
 #include <sstream>
-#include <LogonPubSubTypes.h>
-#include <LogoutPubSubTypes.h>
+#include <LogonPubSubTypes.hpp>
+#include <LogoutPubSubTypes.hpp>
 #include <quickfix/FixValues.h>
 #include <LogonLogger.hpp>
 #include <LogoutLogger.hpp>
@@ -58,32 +58,29 @@ AuthService::~AuthService()
     _service_thread.join();
 }
 
-void AuthService::createLogonTopic( const std::string& data_service_filter_expression )
+void AuthService::createLogonTopic()
 {
     _logon_topic_tuple =
     _basic_domain_participant_ptr->make_topic < DistributedATS_Logon::LogonPubSubType, DistributedATS_Logon::Logon  >
     ( LOGON_TOPIC_NAME );
 
-    
-    std::string data_service_filter_expression_auth = data_service_filter_expression +
-        "and header.TargetCompID='AUTH'";
+    std::string data_service_filter_expression_auth = "DATS_DestinationUser = %0";
+
     
     _logon_data_reader_tuple = _basic_domain_participant_ptr->make_data_reader_tuple(_logon_topic_tuple,
-                new LogonDataReaderListenerImpl( _logon_request_queue ),
-                "FILTERED_LOGON", data_service_filter_expression_auth);
-
+                new LogonDataReaderListenerImpl( _logon_request_queue ), "FILTERED_LOGON", data_service_filter_expression_auth,
+                { _basic_domain_participant_ptr->get_participant_name()});
+    
     m_logon_dw = _basic_domain_participant_ptr->make_data_writer<DistributedATS_Logon::Logon>( _logon_topic_tuple );
 }
 
 
-void AuthService::createLogoutTopic( const std::string& data_service_filter_expression )
+void AuthService::createLogoutTopic()
 {
     _logout_topic_tuple =
     _basic_domain_participant_ptr->make_topic < DistributedATS_Logout::LogoutPubSubType, DistributedATS_Logout::Logout >
     ( LOGOUT_TOPIC_NAME );
     
-    std::string data_service_filter_expression_auth = data_service_filter_expression +
-    " and header.TargetCompID = 'AUTH'";
     
     m_logout_dw = _basic_domain_participant_ptr->make_data_writer( _logout_topic_tuple );
 }
@@ -124,9 +121,10 @@ bool AuthService::authenticate( std::shared_ptr<DistributedATS::SQLiteConnection
     
     if ( authenticate( sqliteConnectionPtr, logon->Username(), logon->Password(), textOut ) )
     {
-        logon->header().TargetCompID(logon->header().SenderCompID());
-        logon->header().SenderCompID("AUTH");
-        logon->header().TargetSubID( logon->Username() );
+        logon->DATS_Source(logon->DATS_Destination());
+        logon->DATS_Destination(logon->DATS_Source());
+        logon->DATS_SourceUser("AUTH");
+        logon->DATS_DestinationUser( logon->Username() );
         
         LOG4CXX_INFO(logger, "Auth Service Logon Success: [" <<  ss_logon.str() << "]");
         
@@ -142,13 +140,13 @@ bool AuthService::authenticate( std::shared_ptr<DistributedATS::SQLiteConnection
 
         DistributedATS_Logout::Logout logout;
         
-        logout.header().BeginString(logon->header().BeginString());
-        logout.header().MsgType(FIX::MsgType_Logout);
+        logout.fix_header().BeginString(logon->fix_header().BeginString());
+        logout.fix_header().MsgType(FIX::MsgType_Logout);
+        logout.fix_header().SendingTime(0);
         
-        logout.header().TargetCompID(logon->header().SenderCompID());
-        logout.header().SenderCompID("AUTH");
-        logout.header().TargetSubID(logon->RawData());
-        logout.header().SendingTime(0);
+        logout.DATS_Source(logon->DATS_Destination());
+        logout.DATS_Destination(logon->DATS_Source());
+        logout.DATS_DestinationUser(logon->RawData());
         
         logout.Text(textOut);
 

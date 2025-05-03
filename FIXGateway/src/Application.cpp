@@ -90,10 +90,10 @@ void DATSApplication::publishToDDS(const FIX::Message &message,
         return;
     }
     
-    ddsMessage.header().SenderCompID(sender);
-    ddsMessage.header().TargetCompID(target);
-    ddsMessage.header().SenderSubID(senderSubID);
-    ddsMessage.header().TargetSubID(_dataService);
+    ddsMessage.DATS_Source(sender);
+    ddsMessage.DATS_SourceUser(senderSubID);
+    ddsMessage.DATS_Destination(target);
+    ddsMessage.DATS_DestinationUser(_dataService);
     
     std::stringstream ss;
     LOGGER::log(ss, ddsMessage);
@@ -102,7 +102,7 @@ void DATSApplication::publishToDDS(const FIX::Message &message,
     
     auto ret = dataWriter->write(&ddsMessage);
     
-    if (!ret) {
+    if (ret != eprosima::fastdds::dds::RETCODE_OK) {
         LOG4CXX_ERROR(logger, "Unable to publishing to DDS:" << ss.str());
     }
     
@@ -332,7 +332,7 @@ bool DATSApplication::insertPendingLogonSocketConnection(
   publishToDDS<LogonAdapter, DistributedATS_Logon::Logon,
                LogonLogger>(
       pendingLogon, _dataWriterContainer->_logon_dw,
-      clTargetCompID.getValue(), "AUTH", clSenderCompID.getValue());
+      clTargetCompID.getValue(), "DATA_SERVICE", clSenderCompID.getValue());
 
   return true;
 }

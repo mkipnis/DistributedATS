@@ -12,21 +12,13 @@ if(NOT fastcdr_FOUND)
     find_package(fastcdr REQUIRED)
 endif()
 
-if(NOT fastrtps_FOUND)
-    find_package(fastrtps REQUIRED)
+if(NOT fastdds_FOUND)
+    find_package(fastdds 3 REQUIRED)
 endif()
 
-# Set C++11
-include(CheckCXXCompilerFlag)
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANG OR
-        CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    check_cxx_compiler_flag(-std=c++11 SUPPORTS_CXX11 -g)
-    if(SUPPORTS_CXX11)
-        add_compile_options(-std=c++11 -g)
-    else()
-        message(FATAL_ERROR "Compiler doesn't support C++11")
-    endif()
-endif()
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 FIND_PACKAGE( Boost 1.40 COMPONENTS program_options REQUIRED )
 INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIR} )
@@ -46,10 +38,20 @@ add_subdirectory(LatencyTest)
 set(CMAKE_XCODE_ATTRIBUTE_OTHER_CODE_SIGN_FLAGS "-o linker-signed")
 
 install(DIRECTORY MiscATS DESTINATION ${CMAKE_INSTALL_PREFIX})
+install(CODE "
+    file(GLOB_RECURSE SCRIPT_FILES
+        \"\${CMAKE_INSTALL_PREFIX}/MiscATS/*.sh\")
+    foreach(script \${SCRIPT_FILES})
+        execute_process(COMMAND chmod +x \${script})
+    endforeach()
+")
 install(FILES 	FIXGateway/scripts/fixgateway.sh 
 		DataService/scripts/dataservice.sh 
 		MatchingEngine/scripts/matchingengine.sh 
-		DESTINATION scripts)
+		DESTINATION scripts
+   		PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
+                GROUP_READ GROUP_EXECUTE
+                WORLD_READ WORLD_EXECUTE)
 
 install(FILES 	config/log4cxx.xml DESTINATION config)
 install(FILES 	FIXGateway/spec/FIX44.xml DESTINATION spec)

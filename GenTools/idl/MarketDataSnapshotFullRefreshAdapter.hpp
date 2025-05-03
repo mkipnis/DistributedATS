@@ -1,6 +1,6 @@
 /* Don't modify, automatically generated file by QuickFIX2FastDDS.py*/
 #pragma once
-#include "MarketDataSnapshotFullRefresh.h"
+#include "MarketDataSnapshotFullRefresh.hpp"
 #include <quickfix/Message.h>
 
 #include "HeaderAdapter.hpp"

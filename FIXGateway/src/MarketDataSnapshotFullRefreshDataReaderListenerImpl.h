@@ -32,7 +32,7 @@
 
 #include "FIXMsgComposerThread.h"
 #include <fastdds/dds/subscriber/DataReaderListener.hpp>
-#include <MarketDataSnapshotFullRefresh.h>
+#include <MarketDataSnapshotFullRefresh.hpp>
 
 namespace DistributedATS {
 

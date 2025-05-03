@@ -53,7 +53,11 @@ class Entity:
 
         if self.item.tag == "message":
             # comp_str += "\t@topic\n\tstruct " + self.entity_name + "\n\t{\n\tDistributedATS::Header m_Header;\n";
-            comp_str += "\t\n\tstruct " + self.entity_name + "\n\t{\n\t\tDistributedATS::Header header;\n";
+            comp_str += "\t\n\tstruct " + self.entity_name + \
+                        "\n\t{\n\t\tstring DATS_Source;\n " \
+                        "    \t\tstring DATS_Destination;\n" \
+                        "    \t\tstring DATS_SourceUser;\n" \
+                        "    \t\tstring DATS_DestinationUser;\n\n\n\t\tDistributedATS::Header fix_header;\n\n"
         elif self.item.tag == 'group':
             comp_str += "\tstruct " + self.entity_name + "\n\t{\n"
         else:
@@ -75,10 +79,16 @@ class Entity:
     def get_entity_logger(self, class_prefix):
 
         comp_str = "\n\nclass " + self.entity_name + "Logger\n{\n\tpublic:\n"
-        if self.is_message == True:
+        if self.is_message:
             comp_str += "\t\tstatic void log(std::ostream & out, " + class_prefix + self.entity_name + "::" + self.entity_name + "& ddsMsg )  __attribute__ ((visibility (\"default\")))\n"
             comp_str += "\t\t{\n\t\t\t;out<< \"Message : " + self.entity_name + " { \" << std::endl;\n"
-            comp_str += "\t\t\tHeaderLogger::log(out, ddsMsg.header());\n\n"
+
+            comp_str += "\n\t\t\t;out \n\t\t\t << \"ddsMsg.DATS_Source : \" << ddsMsg.DATS_Source() << " \
+                        "std::endl "
+            comp_str += "\n\t\t\t << \"ddsMsg.DATS_Destination : \" << ddsMsg.DATS_Destination() << std::endl"
+            comp_str += "\n\t\t\t << \"ddsMsg.DATS_SourceUser : \" << ddsMsg.DATS_SourceUser() << std::endl"
+            comp_str += "\n\t\t\t << \"ddsMsg.DATS_DestinationUser : \" << ddsMsg.DATS_DestinationUser() << std::endl;"
+            comp_str += "\n\n\t\t\tHeaderLogger::log(out, ddsMsg.fix_header());\n"
         else:
             comp_str += "\t\tstatic void log(std::ostream & out, DistributedATS::" + self.entity_name + "& ddsMsg )  __attribute__ ((visibility (\"default\")))\n\t\t{\n"
             comp_str += "\n\t\t\t;out<< \"" + self.entity_name + " { \"  << std::endl\n"
@@ -112,7 +122,7 @@ class Entity:
 
         if self.is_message == True:
             comp_str = "\n\nvoid " + self.entity_name + "Adapter::FIX2DDS(const FIX::Message& fixMsg, " + class_prefix + self.entity_name + "::" + self.entity_name + "& ddsMsg )\n{\n"
-            comp_str += "\tHeaderAdapter::FIX2DDS(fixMsg.getHeader(), ddsMsg.header());\n\n"
+            comp_str += "\tHeaderAdapter::FIX2DDS(fixMsg.getHeader(), ddsMsg.fix_header());\n\n"
         else:
             comp_str = "\n\n"  # + self.group_templates + "\n";
             comp_str += "void " + self.entity_name + "Adapter::FIX2DDS(const FIX::FieldMap& fixMsg, DistributedATS::" + self.entity_name + "& ddsMsg )\n{\n"
@@ -130,7 +140,7 @@ class Entity:
         # comp_str += "\n\nvoid " + self.entity_name+"Adapter::DDS2FIX(const "+class_prefix + self.entity_name + "::"+ self.entity_name+"& ddsMsg, FIX::FieldMap& fixMsg)\n{\n";
         if self.is_message == True:
             comp_str += "\n\nvoid " + self.entity_name + "Adapter::DDS2FIX(const " + class_prefix + self.entity_name + "::" + self.entity_name + "& ddsMsg, FIX::Message& fixMsg)\n{\n";
-            comp_str += "\tHeaderAdapter::DDS2FIX(ddsMsg.header(), fixMsg.getHeader());\n\n"
+            comp_str += "\tHeaderAdapter::DDS2FIX(ddsMsg.fix_header(), fixMsg.getHeader());\n\n"
         else:
             comp_str += "\n\nvoid " + self.entity_name + "Adapter::DDS2FIX( const DistributedATS::" + self.entity_name + "& ddsMsg, FIX::FieldMap& fixMsg)\n{\n";
         comp_str += dds2fix

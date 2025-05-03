@@ -122,8 +122,8 @@ class ComponentParser:
                 component_members = self.compenent_dict.get(item_name)
 
                 if component_members is not None:
-                    component_entity = self.parse_components_rec(item_name, component_members.item, self.components, order_list,
-                                                         required_fields, False)
+                    component_entity = self.parse_components_rec(item_name, component_members.item, self.components,
+                                                                 order_list, required_fields, False)
 
                     for member in component_entity.members:
                         entity.add_member(member)
@@ -183,9 +183,8 @@ class ComponentParser:
 
             hpp_file.write(QuickFIX2FastDDS.DONT_MODIFY_TEXT)
             hpp_file.write("#pragma once\n")
-            #hpp_file.write("#include \"" + component_name + "TypeSupportImpl.h\"\n")
-            #hpp_file.write("#include <quickfix/Message.h>\n\nusing namespace DistributedATS;\n\n")
-            hpp_file.write("#include \"" + component_name + ".h\"\n")
+            
+            hpp_file.write("#include \"" + component_name + ".hpp\"\n")
             hpp_file.write("#include <quickfix/Message.h>\n\n")
 
             cpp_file.write(QuickFIX2FastDDS.DONT_MODIFY_TEXT)

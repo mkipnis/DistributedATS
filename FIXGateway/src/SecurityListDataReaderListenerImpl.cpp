@@ -53,13 +53,12 @@ auto const security_list_processor = [] (DistributedATS::DATSApplication &applic
 
     FIX44::SecurityList securityListMessage;
 
-    securityList.header().SendingTime(0); // this is precision;
+    securityList.fix_header().SendingTime(0); // this is precision;
 
-    securityList.header().SenderCompID(
-        securityList.header()
-            .TargetSubID()); // security_list.m_Header.TargetCompID;*/
-    HeaderAdapter::DDS2FIX(securityList.header(),
-                           securityListMessage.getHeader());
+    securityList.fix_header().TargetCompID(securityList.DATS_Destination());
+    securityList.fix_header().SenderCompID(securityList.DATS_DestinationUser());
+    
+    HeaderAdapter::DDS2FIX(securityList.fix_header(), securityListMessage.getHeader());
 
     FIX::SecurityReqID securityReqID(securityList.SecurityReqID());
     securityListMessage.setField(securityReqID);
@@ -105,8 +104,7 @@ auto const security_list_processor = [] (DistributedATS::DATSApplication &applic
 };
 
 SecurityListDataReaderListenerImpl::SecurityListDataReaderListenerImpl(DistributedATS::DATSApplication &application)
-        : _processor(application, security_list_processor, "SecurityListDataReaderListenerImpl" ),
-        _fix_gateway_name(application.fix_gateway_name())
+        : _processor(application, security_list_processor, "SecurityListDataReaderListenerImpl" )
 {
 };
 
@@ -116,18 +114,15 @@ void SecurityListDataReaderListenerImpl::on_data_available(
     
     DistributedATS_SecurityList::SecurityList security_list;
     eprosima::fastdds::dds::SampleInfo info;
-    if (reader->take_next_sample(&security_list, &info) == ReturnCode_t::RETCODE_OK)
+    if (reader->take_next_sample(&security_list, &info) == eprosima::fastdds::dds::RETCODE_OK)
     {
         if (info.valid_data)
         {
-            if ( security_list.header().TargetCompID().compare(_fix_gateway_name) == 0 )
-            {
-                std::stringstream ss;
-                SecurityListLogger::log(ss, security_list);
-                LOG4CXX_INFO(logger, "SecurityList : [" <<  ss.str() << "]");
+            std::stringstream ss;
+            SecurityListLogger::log(ss, security_list);
+            LOG4CXX_INFO(logger, "SecurityList : [" <<  ss.str() << "]");
                 
-                _processor.enqueue_dds_message(security_list);
-            }
+            _processor.enqueue_dds_message(security_list);
         }
     }
   

@@ -10,8 +10,14 @@ class OrderMassCancelReportLogger
 		static void log(std::ostream & out, DistributedATS_OrderMassCancelReport::OrderMassCancelReport& ddsMsg )  __attribute__ ((visibility ("default")))
 		{
 			;out<< "Message : OrderMassCancelReport { " << std::endl;
-			HeaderLogger::log(out, ddsMsg.header());
 
+			;out 
+			 << "ddsMsg.DATS_Source : " << ddsMsg.DATS_Source() << std::endl 
+			 << "ddsMsg.DATS_Destination : " << ddsMsg.DATS_Destination() << std::endl
+			 << "ddsMsg.DATS_SourceUser : " << ddsMsg.DATS_SourceUser() << std::endl
+			 << "ddsMsg.DATS_DestinationUser : " << ddsMsg.DATS_DestinationUser() << std::endl;
+
+			HeaderLogger::log(out, ddsMsg.fix_header());
 
 			;out
 			 << "ddsMsg.OrderID : " << ddsMsg.OrderID() << std::endl

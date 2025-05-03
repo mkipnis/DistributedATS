@@ -30,7 +30,7 @@
 
 #include <thread>
 #include <fastdds/dds/subscriber/DataReaderListener.hpp>
-#include <SecurityList.h>
+#include <SecurityList.hpp>
 
 #include "Application.hpp"
 
@@ -48,7 +48,6 @@ public:
    
     private:
         fix_message_composer_thread<DistributedATS_SecurityList::SecurityList> _processor;
-        std::string _fix_gateway_name;
 };
 
 } /* namespace DistributedATS */

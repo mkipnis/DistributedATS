@@ -5,7 +5,7 @@
 
 void BusinessMessageRejectAdapter::FIX2DDS(const FIX::Message& fixMsg, DistributedATS_BusinessMessageReject::BusinessMessageReject& ddsMsg )
 {
-	HeaderAdapter::FIX2DDS(fixMsg.getHeader(), ddsMsg.header());
+	HeaderAdapter::FIX2DDS(fixMsg.getHeader(), ddsMsg.fix_header());
 
 	if (fixMsg.isSetField(FIX::FIELD::RefMsgType) )
 		ddsMsg.RefMsgType ( ((FIX::RefMsgType)fixMsg.getField(FIX::FIELD::RefMsgType)).getString().c_str());
@@ -25,7 +25,7 @@ void BusinessMessageRejectAdapter::FIX2DDS(const FIX::Message& fixMsg, Distribut
 
 void BusinessMessageRejectAdapter::DDS2FIX(const DistributedATS_BusinessMessageReject::BusinessMessageReject& ddsMsg, FIX::Message& fixMsg)
 {
-	HeaderAdapter::DDS2FIX(ddsMsg.header(), fixMsg.getHeader());
+	HeaderAdapter::DDS2FIX(ddsMsg.fix_header(), fixMsg.getHeader());
 
 	DistributedATS::convert_dds_string_to_fix(ddsMsg.RefMsgType(), FIX::FIELD::RefMsgType, fixMsg);
 

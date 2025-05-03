@@ -27,7 +27,7 @@
 
 #include "MarketDataRequestDataReaderListenerImpl.h"
 #include <iostream>
-#include <MarketDataRequest.h>
+#include <MarketDataRequest.hpp>
 #include <MarketDataRequestLogger.hpp>
 #include <sstream>
 #include <LoggerHelper.h>
@@ -49,19 +49,15 @@ void MarketDataRequestDataReaderListenerImpl::on_data_available( eprosima::fastd
     DistributedATS_MarketDataRequest::MarketDataRequest marketDataRequest;
     eprosima::fastdds::dds::SampleInfo info;
 
-    if (reader->take_next_sample(&marketDataRequest, &info) == ReturnCode_t::RETCODE_OK)
+    if (reader->take_next_sample(&marketDataRequest, &info) == eprosima::fastdds::dds::RETCODE_OK)
     {
         if (info.valid_data)
         {
-        
-            if ( marketDataRequest.header().TargetSubID().compare(_data_service_name))
-            {
-                std::stringstream ss;
-                MarketDataRequestLogger::log(ss, marketDataRequest);
-                LOG4CXX_INFO(logger, "MarketDataRequest : [" <<  ss.str() << "]");
+            std::stringstream ss;
+            MarketDataRequestLogger::log(ss, marketDataRequest);
+            LOG4CXX_INFO(logger, "MarketDataRequest : [" <<  ss.str() << "]");
                 
-                _marketDataRequestQueuePtr->push(std::make_shared<DistributedATS_MarketDataRequest::MarketDataRequest>( marketDataRequest ));
-            }
+            _marketDataRequestQueuePtr->push(std::make_shared<DistributedATS_MarketDataRequest::MarketDataRequest>( marketDataRequest ));
         }
     }
 }

@@ -34,8 +34,8 @@ class Member:
         self.name = name
         self.fixObj = fixObj
         self.ddsObj = ddsObj
-        if self.ddsObj == "ddsMsg.c_NoMDEntries[NoMDEntries_group_cnt_index]":
-            print("->>>" + self.ddsObj)
+        #if self.ddsObj == "ddsMsg.c_NoMDEntries[NoMDEntries_group_cnt_index]":
+        #    print("->>>" + self.ddsObj)
         self.gen_requirements = gen_requirements
 
     def get_idl_statement(self):
@@ -58,7 +58,6 @@ class Member:
         else:
             fix2dds_cpp_def += "\t\t"+self.ddsObj+"." + member_name + " ( FIELD_GET_REF( " + self.fixObj + "," + member_name + "));\n"
 
-        #print("DDS_TYPE : " + self.type.attrib['dds'])
         if self.type.attrib['dds'] == 'float' or self.type.attrib['dds'] == 'long' or self.type.attrib['dds'] == 'unsigned long long':
             fix2dds_cpp_def += '\telse \n'
             fix2dds_cpp_def += "\t\t"+self.ddsObj+"." + member_name + " ( 0 );\n\n"
@@ -67,16 +66,9 @@ class Member:
 
         to_fix = self.type.get("to_fix")
         if to_fix is not None:
-          to_fix_type=self.type.get("to_fix_type");
-	  #if to_fix_type == "string" : 
-	  #print("To FIX: " + to_fix );
+          #to_fix_type=self.type.get("to_fix_type");
           formatted_statement = (to_fix % ( self.ddsObj, member_name,  member_name,  self.fixObj ) );
           dds2fix_cpp_def += "\t" + formatted_statement+"\n\n";
-	 # elif to_fix_type == "utctimestamp":
-         #   formatted_statement = (to_fix % ( member_name, self.ddsObj, member_name, self.ddsObj, member_name, self.ddsObj, member_name  ) );
-         #   dds2fix_cpp_def += "\t" + formatted_statement+"\n";
-         #   dds2fix_cpp_def += "\tFIX::" + member_name + " " + var_name + "("+member_name+"UTC);\n";
-         #   dds2fix_cpp_def += "\t"+self.fixObj+".setField("+var_name+");\n\n";
         else:
             dds2fix_cpp_def += "\tFIX::" + member_name + " " + var_name + "("+self.ddsObj+"."+ member_name+"());\n";
             dds2fix_cpp_def += "\t"+self.fixObj+".setField("+var_name+");\n\n";

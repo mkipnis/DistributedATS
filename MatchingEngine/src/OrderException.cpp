@@ -32,7 +32,7 @@ namespace DistributedATS {
 OrderException::OrderException(
     const DistributedATS_NewOrderSingle::NewOrderSingle &newOrderSingle, const int reason)
     : _client_order_id(newOrderSingle.ClOrdID()),
-      _counter_partry(newOrderSingle.header().SenderCompID()),
+    _counter_partry(newOrderSingle.DATS_SourceUser()),
       _reason(reason) {
   // TODO Auto-generated constructor stub
 }

@@ -34,8 +34,8 @@
 
 #include "MarketDataRequestDataReaderListenerImpl.h"
 
-#include <MarketDataIncrementalRefresh.h>
-#include <MarketDataSnapshotFullRefresh.h>
+#include <MarketDataIncrementalRefresh.hpp>
+#include <MarketDataSnapshotFullRefresh.hpp>
 
 #include "RefDataService.h"
 #include "SQLiteConnection.hpp"
@@ -57,7 +57,7 @@ public:
 
 	void initialize();
     
-    void createMarketDataRequestListener( const std::string& data_service_filter_expression );
+    void createMarketDataRequestListener();
     void createMarketDataIncrementalRefreshListener();
     void createMarketDataFullRefreshDataWriter();
     
