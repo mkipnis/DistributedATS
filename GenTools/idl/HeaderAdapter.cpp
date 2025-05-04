@@ -29,6 +29,12 @@ void HeaderAdapter::FIX2DDS(const FIX::FieldMap& fixMsg, DistributedATS::Header&
 	else 
 		ddsMsg.MsgSeqNum ( 0 );
 
+	if (fixMsg.isSetField(FIX::FIELD::SenderSubID) )
+		ddsMsg.SenderSubID ( ((FIX::SenderSubID)fixMsg.getField(FIX::FIELD::SenderSubID)).getString().c_str());
+
+	if (fixMsg.isSetField(FIX::FIELD::TargetSubID) )
+		ddsMsg.TargetSubID ( ((FIX::TargetSubID)fixMsg.getField(FIX::FIELD::TargetSubID)).getString().c_str());
+
 	if (fixMsg.isSetField(FIX::FIELD::SendingTime) )
 		ddsMsg.SendingTime ( ((FIX::SendingTime)FIELD_GET_REF( fixMsg,SendingTime)).getValue().getJulianDate());
 	else 
@@ -54,6 +60,10 @@ void HeaderAdapter::DDS2FIX( const DistributedATS::Header& ddsMsg, FIX::FieldMap
 
 	FIX::MsgSeqNum fixMsgSeqNum(ddsMsg.MsgSeqNum());
 	fixMsg.setField(fixMsgSeqNum);
+
+	DistributedATS::convert_dds_string_to_fix(ddsMsg.SenderSubID(), FIX::FIELD::SenderSubID, fixMsg);
+
+	DistributedATS::convert_dds_string_to_fix(ddsMsg.TargetSubID(), FIX::FIELD::TargetSubID, fixMsg);
 
 	DistributedATS::convert_dds_timestamp_to_fix(ddsMsg.SendingTime(), FIX::FIELD::SendingTime, fixMsg);
 

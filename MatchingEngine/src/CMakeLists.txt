@@ -11,23 +11,16 @@ if(NOT fastcdr_FOUND)
     find_package(fastcdr REQUIRED)
 endif()
 
-if(NOT fastrtps_FOUND)
-    find_package(fastrtps REQUIRED)
+if(NOT fastdds_FOUND)
+    find_package(fastdds 3 REQUIRED)
 endif()
 
 find_package(log4cxx REQUIRED)
 
 # Set C++11
-include(CheckCXXCompilerFlag)
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANG OR
-        CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    check_cxx_compiler_flag(-std=c++11 SUPPORTS_CXX11)
-    if(SUPPORTS_CXX11)
-        add_compile_options(-std=c++11)
-    else()
-        message(FATAL_ERROR "Compiler doesn't support C++11")
-    endif()
-endif()
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 include_directories(${LIQUIBOOK_HOME})
 #include_directories(${QUICKFIX_INSTALL_PREFIX}/include)

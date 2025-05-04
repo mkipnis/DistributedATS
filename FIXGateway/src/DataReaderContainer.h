@@ -27,15 +27,15 @@
 
 #pragma once
 
-#include <LogonPubSubTypes.h>
-#include <LogoutPubSubTypes.h>
-#include <MarketDataIncrementalRefreshPubSubTypes.h>
-#include <MarketDataSnapshotFullRefreshPubSubTypes.h>
-#include <ExecutionReportPubSubTypes.h>
-#include <OrderCancelRejectPubSubTypes.h>
-#include <OrderMassCancelReportPubSubTypes.h>
-#include <SecurityListPubSubTypes.h>
-#include <SecurityList.h>
+#include <LogonPubSubTypes.hpp>
+#include <LogoutPubSubTypes.hpp>
+#include <MarketDataIncrementalRefreshPubSubTypes.hpp>
+#include <MarketDataSnapshotFullRefreshPubSubTypes.hpp>
+#include <ExecutionReportPubSubTypes.hpp>
+#include <OrderCancelRejectPubSubTypes.hpp>
+#include <OrderMassCancelReportPubSubTypes.hpp>
+#include <SecurityListPubSubTypes.hpp>
+#include <SecurityList.hpp>
 
 
 
@@ -78,7 +78,7 @@ struct DataReaderContrainer {
   DataReaderContrainer(
       distributed_ats_utils::basic_domain_participant_ptr participant_ptr,
       DistributedATS::DATSApplication &application,
-      std::string targetCompIdFilter) {
+      std::string gateway_name) {
       
     //
     // Data Reader Topic
@@ -86,10 +86,10 @@ struct DataReaderContrainer {
 
       auto& logon_topic_tuple = application.get_data_writer_container()->_logon_topic_tuple;
     
-      std::string authCompIdFilter = "header.SenderCompID='AUTH'";
+      std::string authCompIdFilter = "DATS_SourceUser=%0";
       
       _logon_data_reader_tuple = participant_ptr->make_data_reader_tuple(logon_topic_tuple,
-                        new DistributedATS::LogonDataReaderListenerImpl(application), "FILTERED_LOGON", authCompIdFilter);
+                        new DistributedATS::LogonDataReaderListenerImpl(application), "FILTERED_LOGON", authCompIdFilter, {"AUTH"});
       
 
 
@@ -99,7 +99,7 @@ struct DataReaderContrainer {
         LOGOUT_TOPIC_NAME);
       
       _logout_data_reader_tuple = participant_ptr->make_data_reader_tuple(_logout_topic_tuple,
-                        new DistributedATS::LogoutDataReaderListenerImpl(application),"FILTERED_LOGOUT", authCompIdFilter);
+                                                                          new DistributedATS::LogoutDataReaderListenerImpl(application),"FILTERED_LOGOUT", authCompIdFilter, {"AUTH"});
 
 
       _security_list_topic_tuple =
@@ -108,10 +108,10 @@ struct DataReaderContrainer {
       DistributedATS_SecurityList::SecurityList>(
                SECURITY_LIST_TOPIC_NAME);
       
-      
+      std::string target_comp_id_filter = "DATS_Destination=%0";
       
       _security_list_data_reader_tuple = participant_ptr->make_data_reader_tuple(_security_list_topic_tuple,
-                                                                                 new DistributedATS::SecurityListDataReaderListenerImpl(application)); //,"FILTERED_REF_DATA", targetCompIdFilter);
+                                                                                 new DistributedATS::SecurityListDataReaderListenerImpl(application) ,"FILTERED_REF_DATA", target_comp_id_filter, {gateway_name});
       
 
       _market_data_incremental_refresh_topic_tuple =
@@ -148,7 +148,7 @@ struct DataReaderContrainer {
        
       _execution_report_data_reader_tuple = participant_ptr->make_data_reader_tuple(_execution_report_topic_tuple,
                                         new DistributedATS::ExecutionReportDataReaderListenerImpl(application),
-                                            "FILTERED_EXEC_REPORT", targetCompIdFilter);
+                                          "FILTERED_EXEC_REPORT", target_comp_id_filter, {gateway_name});
       
       _order_cancel_reject_topic_tuple =
       participant_ptr->make_topic<
@@ -158,7 +158,7 @@ struct DataReaderContrainer {
       
       _order_cancel_reject_data_reader_tuple = participant_ptr->make_data_reader_tuple(_order_cancel_reject_topic_tuple,
                         new DistributedATS::OrderCancelRejectDataReaderListenerImpl(application),
-                        "FILTERED_ORDER_CANCEL_REJECT", targetCompIdFilter);
+                                "FILTERED_ORDER_CANCEL_REJECT", target_comp_id_filter, {gateway_name});
     
 
       _order_mass_cancel_report_topic_tuple =
@@ -169,7 +169,7 @@ struct DataReaderContrainer {
       
       _order_mass_cancel_report_data_reader_tuple = participant_ptr->make_data_reader_tuple(_order_mass_cancel_report_topic_tuple,
                         new DistributedATS::OrderMassCancelReportDataReaderListenerImpl(application),
-                            "FILTERED_ORDER_MASS_CANCEL", targetCompIdFilter);
+                            "FILTERED_ORDER_MASS_CANCEL",  target_comp_id_filter, {gateway_name});
   };
 };
 }; // namespace DistributedATS

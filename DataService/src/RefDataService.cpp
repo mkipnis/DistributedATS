@@ -29,10 +29,10 @@
 #include <quickfix/FixValues.h>
 
 #include <Common.h>
-#include <SecurityList.h>
+#include <SecurityList.hpp>
 #include <SecurityListLogger.hpp>
-#include <SecurityListPubSubTypes.h>
-#include <SecurityListRequestPubSubTypes.h>
+#include <SecurityListPubSubTypes.hpp>
+#include <SecurityListRequestPubSubTypes.hpp>
 #include "SecurityListRequestDataReaderListenerImpl.hpp"
 
 #include <log4cxx/logger.h>
@@ -126,7 +126,7 @@ void RefDataService::populateUserGroupInstrumentMap()
 
 
 
-void RefDataService::createSecurityListRequestListener( const std::string& data_service_filter_expression )
+void RefDataService::createSecurityListRequestListener()
 {
     _security_list_request_topic_tuple = _basic_domain_participant_ptr->make_topic
      <  DistributedATS_SecurityListRequest::SecurityListRequestPubSubType,
@@ -134,8 +134,7 @@ void RefDataService::createSecurityListRequestListener( const std::string& data_
      ( SECURITY_LIST_REQUEST_TOPIC_NAME );
      
      _security_list_request_data_reader_tuple = _basic_domain_participant_ptr->make_data_reader_tuple(_security_list_request_topic_tuple,
-     new SecurityListRequestDataReaderListenerImpl( _security_list_queue_ptr ),
-     "SECURITY_LIST_REQUEST_FILTER", data_service_filter_expression);
+                                            new SecurityListRequestDataReaderListenerImpl( _security_list_queue_ptr ),"SECURITY_LIST_REQUEST_FILTER", "DATS_DestinationUser = %0",{_basic_domain_participant_ptr->get_participant_name()});
 
     std::atomic_init(&_is_running, true);
 
@@ -156,26 +155,25 @@ void RefDataService::createSecurityListDataWriter()
 bool RefDataService::processRefDataRequest( const SecurityListRequestPtr& securityListRequestPtr )
 {
     LOG4CXX_INFO(logger, "Received Security List Request : "
-                 << ":" << securityListRequestPtr->header().SenderCompID()
-                 << ":" << securityListRequestPtr->header().TargetCompID() << ":" << securityListRequestPtr->SecurityReqID());
+                 << ":" << securityListRequestPtr->DATS_Source()
+                 << ":" << securityListRequestPtr->DATS_Destination() << ":" << securityListRequestPtr->SecurityReqID());
     
     
     auto instrumentListPtr = std::make_shared<DistributedATS::InstrumentList> ( DistributedATS::InstrumentList() );
     
-    std::string username = securityListRequestPtr->header().SenderSubID();
+    std::string username = securityListRequestPtr->DATS_SourceUser();
     
     if ( username.empty() )
-        username = securityListRequestPtr->header().SenderCompID();
+        username = securityListRequestPtr->DATS_Source();
     
     populateUserInstrumentList( username, instrumentListPtr );
     
     DistributedATS_SecurityList::SecurityList securityList;
     
-    securityList.header().MsgType(FIX::MsgType_SecurityList);
-    securityList.header().SenderCompID(securityListRequestPtr->header().TargetCompID());
-    securityList.header().TargetCompID(securityListRequestPtr->header().SenderCompID());
-    
-    securityList.header().TargetSubID(securityListRequestPtr->header().SenderSubID());
+    securityList.fix_header().MsgType(FIX::MsgType_SecurityList);
+    securityList.DATS_Source(securityListRequestPtr->DATS_Destination());
+    securityList.DATS_Destination(securityListRequestPtr->DATS_Source());
+    securityList.DATS_DestinationUser(securityListRequestPtr->DATS_SourceUser());
     
     securityList.SecurityReqID(securityListRequestPtr->SecurityReqID());
     securityList.SecurityResponseID("1");
@@ -183,7 +181,8 @@ bool RefDataService::processRefDataRequest( const SecurityListRequestPtr& securi
 
     securityList.c_NoRelatedSym().resize( instrumentListPtr->size() );
     
-    LOG4CXX_INFO(logger, "SecurityList Target : [" <<  securityList.header().SenderCompID() << ":" <<  securityList.header().TargetCompID()  << "]");
+    LOG4CXX_INFO(logger, "SecurityList Target : [" <<  securityList.DATS_Destination() << ":" <<
+                 securityList.DATS_Source()  << "]");
     
     
     int instrument_index = 0;

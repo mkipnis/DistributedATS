@@ -45,7 +45,7 @@ void NewOrderSingleDataReaderListenerImpl::on_data_available( eprosima::fastdds:
     DistributedATS_NewOrderSingle::NewOrderSingle new_order_single;
     eprosima::fastdds::dds::SampleInfo info;
     
-    if (reader->take_next_sample(&new_order_single, &info) == ReturnCode_t::RETCODE_OK)
+    if (reader->take_next_sample(&new_order_single, &info) == eprosima::fastdds::dds::RETCODE_OK)
     {
         if (info.valid_data)
         {

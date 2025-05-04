@@ -55,7 +55,7 @@ void OrderCancelRequestDataReaderListenerImpl::on_data_available(
     order_cancel_request;
     eprosima::fastdds::dds::SampleInfo info;
     
-    if (reader->take_next_sample(&order_cancel_request, &info) == ReturnCode_t::RETCODE_OK)
+    if (reader->take_next_sample(&order_cancel_request, &info) == eprosima::fastdds::dds::RETCODE_OK)
     {
          if (info.valid_data)
          {
@@ -75,15 +75,15 @@ void OrderCancelRequestDataReaderListenerImpl::on_data_available(
 
                std::string client_order_id = order_cancel_request.OrigClOrdID();
                std::string contra_party =
-                   order_cancel_request.header().SenderSubID();
+                   order_cancel_request.DATS_SourceUser();
 
                _market->cancel_order(book, contra_party, client_order_id);
 
              } catch (DistributedATS::OrderException &orderException) {
                  DistributedATS_OrderCancelReject::OrderCancelReject orderCancelReject;
-               orderCancelReject.header().SenderCompID("MATCHING_ENGINE");
-               orderCancelReject.header().TargetCompID(order_cancel_request.header().SenderCompID());
-               orderCancelReject.header().MsgType("9");
+               orderCancelReject.DATS_Source("MATCHING_ENGINE");
+               orderCancelReject.DATS_Destination(order_cancel_request.DATS_Source());
+               orderCancelReject.fix_header().MsgType("9");
                orderCancelReject.Text("Cancel Rejected REJECT");
                orderCancelReject.ClOrdID(order_cancel_request.ClOrdID());
 
@@ -91,76 +91,6 @@ void OrderCancelRequestDataReaderListenerImpl::on_data_available(
              }
          }
      }
-    
-    /*
-  try {
-      DistributedATS_OrderCancelRequest::OrderCancelRequestDataReader_var
-        order_cancel_request_dr =
-      DistributedATS_OrderCancelRequest::OrderCancelRequestDataReader::_narrow(
-                reader);
-
-    if (CORBA::is_nil(order_cancel_request_dr.in())) {
-      std::cerr << "OrderCancelRequestDataReaderListenerImpl::on_data_"
-                   "available: _narrow failed."
-                << std::endl;
-      ACE_OS::exit(1);
-    }
-
-    while (true) {
-        DistributedATS_OrderCancelRequest::OrderCancelRequest order_cancel_request;
-      DDS::SampleInfo si;
-      DDS::ReturnCode_t status =
-          order_cancel_request_dr->take_next_sample(order_cancel_request, si);
-
-      if (status == DDS::RETCODE_OK) {
-        if (!si.valid_data)
-          continue;
-
-        LoggerHelper::log_debug<std::stringstream, OrderCancelRequestLogger,
-          DistributedATS_OrderCancelRequest::OrderCancelRequest>(
-            order_cancel_request, "OrderCancelRequest");
-
-        std::string symbol = order_cancel_request.Symbol.in();
-
-        try {
-          auto book = _market->findBook(symbol);
-
-          if (!book) {
-            std::cerr << "Order book not found to cancel order : " << symbol
-                      << std::endl;
-            break;
-          }
-
-          std::string client_order_id = order_cancel_request.OrigClOrdID.in();
-          std::string contra_party =
-              order_cancel_request.m_Header.SenderSubID.in();
-
-          _market->cancel_order(book, contra_party, client_order_id);
-
-        } catch (DistributedATS::OrderException &orderException) {
-            DistributedATS_OrderCancelReject::OrderCancelReject orderCancelReject;
-          orderCancelReject.m_Header.SenderCompID =
-              CORBA::string_dup("MATCHING_ENGINE");
-          orderCancelReject.m_Header.TargetCompID =
-              CORBA::string_dup(order_cancel_request.m_Header.SenderCompID);
-          orderCancelReject.m_Header.MsgType = CORBA::string_dup("9");
-          orderCancelReject.Text = "Cancel Rejected REJECT";
-          orderCancelReject.ClOrdID = order_cancel_request.ClOrdID;
-
-          _market->publishOrderCancelReject(orderCancelReject);
-        }
-
-      } else if (status == DDS::RETCODE_NO_DATA) {
-        break;
-      } else {
-        std::cerr << "ERROR: read DATS::Logon: Error: " << status << std::endl;
-      }
-    }
-
-  } catch (CORBA::Exception &e) {
-    std::cerr << "Exception caught in read:" << std::endl << e << std::endl;
-    ACE_OS::exit(1);
-  }*/
 }
 
 } /* namespace MatchingEngine */

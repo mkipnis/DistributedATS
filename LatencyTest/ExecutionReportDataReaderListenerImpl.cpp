@@ -46,7 +46,7 @@ void ExecutionReportDataReaderListenerImpl::on_data_available( eprosima::fastdds
     DistributedATS_ExecutionReport::ExecutionReport executionReport;
     eprosima::fastdds::dds::SampleInfo info;
     
-    if (reader->take_next_sample(&executionReport, &info) == ReturnCode_t::RETCODE_OK)
+    if (reader->take_next_sample(&executionReport, &info) == eprosima::fastdds::dds::RETCODE_OK)
     {
 
                 

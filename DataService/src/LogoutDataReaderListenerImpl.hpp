@@ -29,7 +29,7 @@
 
 #include <memory>
 #include <boost/lockfree/spsc_queue.hpp>
-#include <Logout.h>
+#include <Logout.hpp>
 #include <fastdds/dds/subscriber/DataReaderListener.hpp>
 #include <fastdds/dds/publisher/DataWriter.hpp>
 

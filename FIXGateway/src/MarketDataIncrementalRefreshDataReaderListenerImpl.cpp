@@ -49,8 +49,8 @@ auto const market_data_refresh_processor = [] (DistributedATS::DATSApplication &
 {
         FIX::Message marketDataIncementalRefreshMessage;
 
-        marketDataRefresh.header().SendingTime(0); // this is precision;
-        HeaderAdapter::DDS2FIX(marketDataRefresh.header(),
+        marketDataRefresh.fix_header().SendingTime(0); // this is precision;
+        HeaderAdapter::DDS2FIX(marketDataRefresh.fix_header(),
                                marketDataIncementalRefreshMessage.getHeader());
 
         for (int incremental_update = 0;
@@ -99,7 +99,7 @@ void MarketDataIncrementalRefreshDataReaderListenerImpl::on_data_available(
       marketDataRefresh;
     eprosima::fastdds::dds::SampleInfo info;
     
-    if (reader->take_next_sample(&marketDataRefresh, &info) == ReturnCode_t::RETCODE_OK)
+    if (reader->take_next_sample(&marketDataRefresh, &info) == eprosima::fastdds::dds::RETCODE_OK)
     {
          if (info.valid_data)
          {

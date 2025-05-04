@@ -40,8 +40,8 @@
 #include <iostream>
 #include <fstream>
 #include <BasicDomainParticipant.h>
-#include <NewOrderSinglePubSubTypes.h>
-#include <ExecutionReportPubSubTypes.h>
+#include <NewOrderSinglePubSubTypes.hpp>
+#include <ExecutionReportPubSubTypes.hpp>
 
 #include "LatencyTest.h"
 

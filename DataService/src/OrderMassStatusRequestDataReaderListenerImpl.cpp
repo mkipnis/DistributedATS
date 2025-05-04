@@ -50,7 +50,7 @@ void OrderMassStatusRequestDataReaderListenerImpl::on_data_available( eprosima::
     DistributedATS_OrderMassStatusRequest::OrderMassStatusRequest orderMassStatusRequest;
     eprosima::fastdds::dds::SampleInfo info;
     
-    if (reader->take_next_sample(&orderMassStatusRequest, &info) == ReturnCode_t::RETCODE_OK)
+    if (reader->take_next_sample(&orderMassStatusRequest, &info) == eprosima::fastdds::dds::RETCODE_OK)
     {
         if (info.valid_data)
         {

@@ -29,9 +29,9 @@
 #include <BasicDomainParticipant.h>
 #include <iostream>
 #include <quickfix/FixValues.h>
-#include <MarketDataRequestPubSubTypes.h>
-#include <MarketDataIncrementalRefreshPubSubTypes.h>
-#include <MarketDataSnapshotFullRefreshPubSubTypes.h>
+#include <MarketDataRequestPubSubTypes.hpp>
+#include <MarketDataIncrementalRefreshPubSubTypes.hpp>
+#include <MarketDataSnapshotFullRefreshPubSubTypes.hpp>
 #include "MarketDataIncrementalRefreshDataReaderListenerImpl.h"
 
 #include <log4cxx/logger.h>
@@ -95,11 +95,6 @@ void MarketDataService::initialize()
         std::string market = query.getValue(instrument_index,1);
         int last_trade_price = std::atoi(query.getValue(instrument_index,2).c_str());
 
-        std::cout << "Last traded Price : " << symbol << "|" << market << "|" << last_trade_price << std::endl;
-
-        /*Instrument instrument(instrument_group, symbol);
-        std::list<DATSMarketDataIncrementalRefresh::NoMDEntries> initial_list;*/
-
         DistributedATS_MarketDataIncrementalRefresh::NoMDEntries last_price_entry;
         last_price_entry.MDUpdateAction(FIX::MDUpdateAction_NEW);
         last_price_entry.MDEntryType(FIX::MDEntryType_OPENING_PRICE);
@@ -113,7 +108,7 @@ void MarketDataService::initialize()
 
 }
 
-void MarketDataService::createMarketDataRequestListener( const std::string& data_service_name )
+void MarketDataService::createMarketDataRequestListener()
 {
     
     DistributedATS_MarketDataRequest::MarketDataRequest marketDataRequest;
@@ -124,8 +119,14 @@ void MarketDataService::createMarketDataRequestListener( const std::string& data
     DistributedATS_MarketDataRequest::MarketDataRequest>
         ( MARKET_DATA_REQUEST_TOPIC_NAME );
     
+    std::string filter_data_service = "DATS_DestinationUser = %0";
     
-    _market_data_request_data_reader_tuple =  _basic_domain_participant_ptr->make_data_reader_tuple(_market_data_request_topic_tuple, new DistributedATS::MarketDataRequestDataReaderListenerImpl ( data_service_name, _markat_data_request_queue_ptr ) );
+    _market_data_request_data_reader_tuple = _basic_domain_participant_ptr->make_data_reader_tuple(_market_data_request_topic_tuple,
+                new DistributedATS::MarketDataRequestDataReaderListenerImpl ( _markat_data_request_queue_ptr ),
+                "FILTERED_MARKET_DATA_REQUEST", filter_data_service, { _basic_domain_participant_ptr->get_participant_name() });
+    
+    
+    //_market_data_request_data_reader_tuple =  _basic_domain_participant_ptr->make_data_reader_tuple(_market_data_request_topic_tuple, new DistributedATS::MarketDataRequestDataReaderListenerImpl ( data_service_name, _markat_data_request_queue_ptr ) );
     
 }
 
@@ -157,9 +158,9 @@ void MarketDataService::createMarketDataFullRefreshDataWriter()
     
 bool MarketDataService::processMarketDataRequest( const MarketDataRequestPtr& marketDataRequestPtr )
 {
-    std::cout << ">>>> Received MarketDataRequest : " << marketDataRequestPtr->header().SenderCompID() << ":"
-		<< marketDataRequestPtr->header().TargetCompID()
-		<< ":" << marketDataRequestPtr->header().SenderSubID() << std::endl;
+    std::cout << ">>>> Received MarketDataRequest : " << marketDataRequestPtr->DATS_Source() << ":"
+        << marketDataRequestPtr->DATS_Destination()
+        << ":" << marketDataRequestPtr->DATS_SourceUser() << std::endl;
     
     for ( int symbol_index = 0; symbol_index<marketDataRequestPtr->c_NoRelatedSym().size(); ++symbol_index )
     {
@@ -167,12 +168,13 @@ bool MarketDataService::processMarketDataRequest( const MarketDataRequestPtr& ma
         
         DistributedATS_MarketDataSnapshotFullRefresh::MarketDataSnapshotFullRefresh marketDataSnapshotFullRefresh;
         
-        marketDataSnapshotFullRefresh.header().BeginString(marketDataRequestPtr->header().BeginString());
-        marketDataSnapshotFullRefresh.header().TargetCompID(marketDataRequestPtr->header().SenderCompID());
-        marketDataSnapshotFullRefresh.header().SenderCompID(marketDataRequestPtr->header().TargetCompID());
-        marketDataSnapshotFullRefresh.header().TargetSubID(marketDataRequestPtr->header().SenderSubID());
-        marketDataSnapshotFullRefresh.header().MsgType("W");
-        
+        marketDataSnapshotFullRefresh.fix_header().BeginString(marketDataRequestPtr->fix_header().BeginString());
+        marketDataSnapshotFullRefresh.fix_header().MsgType("W");
+
+        marketDataSnapshotFullRefresh.DATS_Source(marketDataRequestPtr->DATS_Destination());
+        marketDataSnapshotFullRefresh.DATS_Destination(marketDataRequestPtr->DATS_Source());
+        marketDataSnapshotFullRefresh.DATS_DestinationUser(marketDataRequestPtr->DATS_SourceUser());
+
         if ( populateMarketDataSnapshotFullRefresh( DistributedATS::Instrument( 
 			marketDataRequestPtr->c_NoRelatedSym()[symbol_index].SecurityExchange(),
 			marketDataRequestPtr->c_NoRelatedSym()[symbol_index].Symbol() ), marketDataSnapshotFullRefresh ) )

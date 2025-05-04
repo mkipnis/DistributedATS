@@ -54,7 +54,7 @@ void OrderCancelReplaceRequestDataReaderListenerImpl::on_data_available(
     DistributedATS_OrderCancelReplaceRequest::OrderCancelReplaceRequest order_cancel_replace_request;
     eprosima::fastdds::dds::SampleInfo info;
     
-    if (reader->take_next_sample(&order_cancel_replace_request, &info) == ReturnCode_t::RETCODE_OK)
+    if (reader->take_next_sample(&order_cancel_replace_request, &info) == eprosima::fastdds::dds::RETCODE_OK)
     {
          if (info.valid_data)
          {
@@ -76,8 +76,7 @@ void OrderCancelReplaceRequestDataReaderListenerImpl::on_data_available(
 
           std::string orig_client_order_id = order_cancel_replace_request.OrigClOrdID();
           std::string client_order_id = order_cancel_replace_request.ClOrdID();
-          std::string contra_party =
-            order_cancel_replace_request.header().SenderSubID();
+          std::string contra_party = order_cancel_replace_request.DATS_SourceUser();
 
           _market->replace_order(book, contra_party,
                                  orig_client_order_id,
@@ -87,13 +86,16 @@ void OrderCancelReplaceRequestDataReaderListenerImpl::on_data_available(
 
         } catch (DistributedATS::OrderException &orderException) {
             DistributedATS_OrderCancelReject::OrderCancelReject orderCancelReject;
-          orderCancelReject.header().SenderCompID("MATCHING_ENGINE");
-          orderCancelReject.header().TargetCompID(order_cancel_replace_request.header().SenderCompID());
-          orderCancelReject.header().MsgType("9");
-          orderCancelReject.Text("Cancel Replace Rejected");
-          orderCancelReject.ClOrdID(order_cancel_replace_request.ClOrdID());
+            
+            orderCancelReject.DATS_Source("MATCHING_ENGINE");
+            orderCancelReject.DATS_Destination(order_cancel_replace_request.DATS_Source());
+            orderCancelReject.DATS_DestinationUser(order_cancel_replace_request.DATS_SourceUser());
 
-          _market->publishOrderCancelReject(orderCancelReject);
+            orderCancelReject.fix_header().MsgType("9");
+            orderCancelReject.Text("Cancel Replace Rejected");
+            orderCancelReject.ClOrdID(order_cancel_replace_request.ClOrdID());
+
+            _market->publishOrderCancelReject(orderCancelReject);
         }
 
       }

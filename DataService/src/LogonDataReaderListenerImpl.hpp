@@ -29,8 +29,8 @@
 
 #include <memory>
 #include <boost/lockfree/spsc_queue.hpp>
-#include <Logon.h>
-#include <Logout.h>
+#include <Logon.hpp>
+#include <Logout.hpp>
 #include <fastdds/dds/subscriber/DataReaderListener.hpp>
 
 namespace DistributedATS {

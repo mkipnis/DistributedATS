@@ -53,11 +53,10 @@ class MessageParser:
 
             required_fields = self.requiredFieldsComponents.required_fields
 
-            message_entity = self.component_parser.parse_components_rec(message_name, item, self.messages, message_list_comp, required_fields, True)
-
+            message_entity = self.component_parser.parse_components_rec(message_name, item, self.messages,
+                                                                        message_list_comp, required_fields, True)
             current_dependency_list = message_list_comp
 
-            # in order to generate correct MPC file, we need all depenecies used by all components
             for component_dependency in message_list_comp:
                 self.populate_component_dependency_list(component_dependency, current_dependency_list, component_dependencies)
 
@@ -67,7 +66,7 @@ class MessageParser:
             self.message_dep_dict[message_name] = message_list_comp
             self.message_dict[message_name] = message_entity
 
-    # Triverse all dependencies
+
     def populate_component_dependency_list(self, component_dependency_name, current_depency_list, component_dependencies):
 
         print("Checking dependency [" + component_dependency_name + "]")
@@ -92,6 +91,7 @@ class MessageParser:
             for msg_dep in msg_deps:
                 self.populate_all_dependences(self, msg_dep)
 
+
     def store_idls(self, message_name, message_contexts, dependency_list):
         idl_file = open("../idl/" + message_name + ".idl", "w")
         idl_file.write(QuickFIX2FastDDS.DONT_MODIFY_TEXT)
@@ -104,16 +104,12 @@ class MessageParser:
         idl_file.write("\n")
 
         idl_file.write("module DistributedATS_" + message_name + "\n")
-        #idl_file.write("{\n#pragma DCPS_DATA_TYPE \"DistributedATS_" + message_name + "::" + message_name + "\"\n\n");
-
-        #idl_file.write("{\n\t@topic\n");
 
         idl_file.write("{\n\n")
-
         idl_file.write(message_contexts.get_entity_idl())
         idl_file.write("};\n")
-
         idl_file.close()
+
 
     def store_logger(self, message_name, message_contexts, dependency_list):
 
@@ -121,9 +117,6 @@ class MessageParser:
 
         logger_file.write(QuickFIX2FastDDS.DONT_MODIFY_TEXT);
         logger_file.write("#pragma once\n")
-        #logger_file.write("#define __" + message_name + "Logger_h__\n\n")
-
-        #logger_file.write("#include \"" + message_name + "TypeSupportImpl.h\"\n")
 
         for dependency_name in dependency_list:
             logger_file.write("#include \"" + dependency_name + "Logger.hpp\"\n")
@@ -132,11 +125,8 @@ class MessageParser:
                 self.component_parser.complete_dependency_list.append(dependency_name)
 
         logger_file.write(";\n")
-
         logger_file.write(message_contexts.get_entity_logger("DistributedATS_"))
         logger_file.write("\n};\n")
-
-        #logger_file.write("\n#endif\n\n")
         logger_file.close()
 
     def store_hpp_cpp(self, message_name, message_contexts, dependency_list):
@@ -153,9 +143,7 @@ class MessageParser:
         # hpp_file.write("#define __" + message_name + "_h__\n\n")
         hpp_file.write("#pragma once\n")
 
-        #hpp_file.write("#include \"" + message_name + "TypeSupportImpl.h\"\n")
-        #hpp_file.write("#include <quickfix/Message.h>\n\n using namespace DistributedATS;\n\n")
-        hpp_file.write("#include \"" + message_name + ".h\"\n")
+        hpp_file.write("#include \"" + message_name + ".hpp\"\n")
         hpp_file.write("#include <quickfix/Message.h>\n\n")
 
         for dependency_name in dependency_list:
@@ -167,9 +155,8 @@ class MessageParser:
         hpp_file.write(message_contexts.get_entity_hpp("DistributedATS_"))
         cpp_file.write(message_contexts.get_entity_cpp("DistributedATS_"))
 
-
-        #hpp_file.write("\n#endif\n\n")
         hpp_file.close()
+
 
     def store_message(self):
 
@@ -180,9 +167,6 @@ class MessageParser:
 
             dependency_list = self.message_dep_dict[message_name]
 
-            #self.store_mpc(message_name, dependency_list)
             self.store_idls(message_name, message_contexts, dependency_list)
             self.store_hpp_cpp(message_name, message_contexts, dependency_list)
             self.store_logger(message_name, message_contexts, dependency_list)
-
-        #self.store_adapter_mpc(self.message_dict.keys(), self.component_parser.complete_dependency_list)

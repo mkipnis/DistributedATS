@@ -7,6 +7,13 @@ module DistributedATS_Heartbeat
 	
 	struct Heartbeat
 	{
-		DistributedATS::Header header;
+		string DATS_Source;
+     		string DATS_Destination;
+    		string DATS_SourceUser;
+    		string DATS_DestinationUser;
+
+
+		DistributedATS::Header fix_header;
+
 	};
 };

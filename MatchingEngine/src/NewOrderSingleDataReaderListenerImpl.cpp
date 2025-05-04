@@ -57,7 +57,7 @@ void NewOrderSingleDataReaderListenerImpl::on_data_available(
     DistributedATS_NewOrderSingle::NewOrderSingle new_order_single;
     eprosima::fastdds::dds::SampleInfo info;
         
-    if (reader->take_next_sample(&new_order_single, &info) == ReturnCode_t::RETCODE_OK)
+    if (reader->take_next_sample(&new_order_single, &info) == eprosima::fastdds::dds::RETCODE_OK)
     {
         if (info.valid_data)
         {
@@ -84,9 +84,10 @@ void NewOrderSingleDataReaderListenerImpl::on_data_available(
                 if (new_order_single.Side() == '1')
                     buy_side = true;
                 
-                std::string gateway = new_order_single.header().SenderCompID();
-                std::string dataService = new_order_single.header().TargetSubID();
-                std::string contra_party = new_order_single.header().SenderSubID();
+                std::string gateway = new_order_single.DATS_Source();
+                std::string dataService = new_order_single.DATS_DestinationUser();
+                std::string contra_party = new_order_single.DATS_SourceUser();
+                
                 auto quantity = new_order_single.OrderQty();
                 auto price = new_order_single.Price();
                 auto stop_price = new_order_single.StopPx();
@@ -120,11 +121,13 @@ void NewOrderSingleDataReaderListenerImpl::on_data_available(
                 
             } catch (DistributedATS::OrderException &orderException) {
                 DistributedATS_ExecutionReport::ExecutionReport executionReport;
-                executionReport.header().SenderCompID("MATCHING_ENGINE");
-                executionReport.header().SenderSubID(new_order_single.header().SenderSubID());
-                executionReport.header().TargetCompID(new_order_single.header().SenderCompID());
-                executionReport.header().TargetSubID(new_order_single.header().TargetSubID());
-                executionReport.header().MsgType("8");
+                
+                executionReport.DATS_Source("MATCHING_ENGINE");
+                executionReport.DATS_SourceUser(new_order_single.DATS_DestinationUser());
+                executionReport.DATS_Destination(new_order_single.DATS_Source());
+                executionReport.DATS_DestinationUser(new_order_single.DATS_SourceUser());
+                
+                executionReport.fix_header().MsgType("8");
                 executionReport.Symbol(symbol);
                 executionReport.SecurityExchange(securityExchange);
                 executionReport.Side(new_order_single.Side());
@@ -135,6 +138,10 @@ void NewOrderSingleDataReaderListenerImpl::on_data_available(
                 executionReport.TimeInForce(new_order_single.TimeInForce());
                 executionReport.OrdType(new_order_single.OrdType());
                 executionReport.ExecInst(new_order_single.ExecInst());
+                
+                executionReport.TransactTime(
+                  std::chrono::duration_cast<std::chrono::microseconds>
+                          (std::chrono::system_clock::now().time_since_epoch()).count());
                 
                 orderException.populateExecutionReportWithRejectCode(executionReport);
                 

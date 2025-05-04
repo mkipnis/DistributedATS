@@ -34,7 +34,7 @@
 #include "Application.hpp"
 #include "FIXMsgComposerThread.h"
 
-#include <Logon.h>
+#include <Logon.hpp>
 #include <LogonAdapter.hpp>
 #include <fastdds/dds/subscriber/DataReaderListener.hpp>
 

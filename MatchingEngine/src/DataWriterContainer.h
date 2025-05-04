@@ -30,16 +30,16 @@
 #include <map>
 #include <memory>
 
-#include <Logon.h>
-#include <MarketDataIncrementalRefresh.h>
-#include <MarketDataRequest.h>
-#include <NewOrderSingle.h>
-#include <OrderCancelRequest.h>
-#include <OrderMassCancelRequest.h>
-#include <OrderMassStatusRequest.h>
+#include <Logon.hpp>
+#include <MarketDataIncrementalRefresh.hpp>
+#include <MarketDataRequest.hpp>
+#include <NewOrderSingle.hpp>
+#include <OrderCancelRequest.hpp>
+#include <OrderMassCancelRequest.hpp>
+#include <OrderMassStatusRequest.hpp>
 #include <OrderMassCancelReportAdapter.hpp>
-#include <SecurityListRequest.h>
-#include <OrderCancelReplaceRequest.h>
+#include <SecurityListRequest.hpp>
+#include <OrderCancelReplaceRequest.hpp>
 
 #include <BasicDomainParticipant.h>
 #include <Common.h>

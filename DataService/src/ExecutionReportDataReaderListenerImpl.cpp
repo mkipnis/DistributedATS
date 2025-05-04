@@ -40,7 +40,6 @@ namespace DistributedATS {
 
 
 ExecutionReportDataReaderListenerImpl::~ExecutionReportDataReaderListenerImpl() {
-    // TODO Auto-generated destructor stub
 }
 
 
@@ -49,7 +48,7 @@ void ExecutionReportDataReaderListenerImpl::on_data_available( eprosima::fastdds
     DistributedATS_ExecutionReport::ExecutionReport executionReport;
     eprosima::fastdds::dds::SampleInfo info;
     
-    if (reader->take_next_sample(&executionReport, &info) == ReturnCode_t::RETCODE_OK)
+    if (reader->take_next_sample(&executionReport, &info) == eprosima::fastdds::dds::RETCODE_OK)
     {
         if (info.valid_data)
         {
@@ -57,7 +56,7 @@ void ExecutionReportDataReaderListenerImpl::on_data_available( eprosima::fastdds
             ExecutionReportLogger::log(ss, executionReport);
             LOG4CXX_INFO(logger, "Execution Report: [" <<  ss.str() << "]");
             
-            std::string username = executionReport.header().SenderSubID();
+            std::string username = executionReport.DATS_DestinationUser();
             
             auto clientOrderMap = _execution_reports->find( username );
             

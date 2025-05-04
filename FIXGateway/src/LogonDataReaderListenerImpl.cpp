@@ -49,13 +49,11 @@ auto const logon_processor = [] (DistributedATS::DATSApplication &application, D
     LOG4CXX_INFO(logger, "Data Reader Logon  : [" <<  ss.str() << "]");
    
     FIX::Message logonMessage;
-    logon.header().SendingTime(0); // this is precision;
-    std::string logonSenderCompID(logon.header().TargetSubID());
+    logon.fix_header().SendingTime(0); // this is precision;
 
-    logon.header().SenderCompID(logon.header().TargetCompID());
-    logon.header().TargetCompID(logonSenderCompID);
-   // logon.RawData = logon.RawData; // Session Ticker/Identifier
-
+    //logon.fix_header().SenderCompID(logon.DATS_Destination());
+    logon.fix_header().TargetSubID(logon.DATS_DestinationUser());
+ 
     LogonAdapter::DDS2FIX(logon, logonMessage);
     application.processDDSLogon(logonMessage);
 };
@@ -74,7 +72,7 @@ void LogonDataReaderListenerImpl::on_data_available(
     DistributedATS_Logon::Logon logon;
     eprosima::fastdds::dds::SampleInfo info;
     
-    if (reader->take_next_sample(&logon, &info) == ReturnCode_t::RETCODE_OK)
+    if (reader->take_next_sample(&logon, &info) == eprosima::fastdds::dds::RETCODE_OK)
     {
         if (info.valid_data)
         {

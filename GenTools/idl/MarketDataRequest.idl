@@ -20,7 +20,14 @@ module DistributedATS_MarketDataRequest
 	
 	struct MarketDataRequest
 	{
-		DistributedATS::Header header;
+		string DATS_Source;
+     		string DATS_Destination;
+    		string DATS_SourceUser;
+    		string DATS_DestinationUser;
+
+
+		DistributedATS::Header fix_header;
+
 		string MDReqID;
 		char SubscriptionRequestType;
 		long MarketDepth;

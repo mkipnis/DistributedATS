@@ -48,28 +48,22 @@ void MarketDataSnapshotFullRefreshDataReaderListenerImpl::on_data_available(
     
     eprosima::fastdds::dds::SampleInfo info;
     
-    if (reader->take_next_sample(&marketDataSnapshotFullRefresh, &info) == ReturnCode_t::RETCODE_OK)
+    if (reader->take_next_sample(&marketDataSnapshotFullRefresh, &info) == eprosima::fastdds::dds::RETCODE_OK)
     {
         if (info.valid_data)
         {
-            
-            if ( marketDataSnapshotFullRefresh.header().TargetCompID().compare(_market->getMarketName()) == 0 )
-            {
-                LoggerHelper::log_info<
+            LoggerHelper::log_info<
                 std::stringstream, MarketDataSnapshotFullRefreshLogger,
                 DistributedATS_MarketDataSnapshotFullRefresh::MarketDataSnapshotFullRefresh>
-                (logger, marketDataSnapshotFullRefresh, "MarketDataSnapshotFullRefresh");
+                    (logger, marketDataSnapshotFullRefresh, "MarketDataSnapshotFullRefresh");
                 
-                for (int index = 0;
+            for (int index = 0;
                      index < marketDataSnapshotFullRefresh.c_NoMDEntries().size();
                      index++) {
-                    {
-                        std::string symbol = marketDataSnapshotFullRefresh.Symbol();
+                {
+                    auto symbol = marketDataSnapshotFullRefresh.Symbol();
                         
-                        _market->set_market_price(
-                                                  symbol,
-                                                  marketDataSnapshotFullRefresh.c_NoMDEntries()[index].MDEntryPx());
-                    }
+                    _market->set_market_price( symbol, marketDataSnapshotFullRefresh.c_NoMDEntries()[index].MDEntryPx() );
                 }
             }
         }

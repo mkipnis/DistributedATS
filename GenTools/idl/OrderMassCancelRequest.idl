@@ -7,7 +7,14 @@ module DistributedATS_OrderMassCancelRequest
 	
 	struct OrderMassCancelRequest
 	{
-		DistributedATS::Header header;
+		string DATS_Source;
+     		string DATS_Destination;
+    		string DATS_SourceUser;
+    		string DATS_DestinationUser;
+
+
+		DistributedATS::Header fix_header;
+
 		string ClOrdID;
 		char MassCancelRequestType;
 		string Symbol;

@@ -45,12 +45,12 @@ auto const market_data_full_snapshot_processor = [] (DistributedATS::DATSApplica
 {
     FIX::Message marketDataSnapshotFullRefreshMessage;
 
-    marketDataSnapshotFullRefresh.header().SendingTime(0); // this is precision;
-    marketDataSnapshotFullRefresh.header().SenderCompID(
-        marketDataSnapshotFullRefresh.header().TargetSubID());
-
+    marketDataSnapshotFullRefresh.fix_header().SendingTime(0); // this is precision;
+    marketDataSnapshotFullRefresh.fix_header().TargetCompID(marketDataSnapshotFullRefresh.DATS_Destination());
+    marketDataSnapshotFullRefresh.fix_header().SenderCompID(marketDataSnapshotFullRefresh.DATS_DestinationUser());
+    
     HeaderAdapter::DDS2FIX(
-        marketDataSnapshotFullRefresh.header(),
+        marketDataSnapshotFullRefresh.fix_header(),
         marketDataSnapshotFullRefreshMessage.getHeader());
 
     FIX::Symbol symbol(marketDataSnapshotFullRefresh.Symbol());
@@ -102,18 +102,15 @@ void MarketDataSnapshotFullRefreshDataReaderListenerImpl::on_data_available(
       marketDataSnapshotFullRefresh;
     eprosima::fastdds::dds::SampleInfo info;
     
-    if (reader->take_next_sample(&marketDataSnapshotFullRefresh, &info) == ReturnCode_t::RETCODE_OK)
+    if (reader->take_next_sample(&marketDataSnapshotFullRefresh, &info) == eprosima::fastdds::dds::RETCODE_OK)
     {
         if (info.valid_data)
         {
-            if ( marketDataSnapshotFullRefresh.header().TargetCompID().compare(_fix_gateway_name) == 0 )
-            {
-                std::stringstream ss;
-                MarketDataSnapshotFullRefreshLogger::log(ss, marketDataSnapshotFullRefresh);
-                LOG4CXX_INFO(logger, "marketDataSnapshotFullRefresh : [" <<  ss.str() << "]");
+            std::stringstream ss;
+            MarketDataSnapshotFullRefreshLogger::log(ss, marketDataSnapshotFullRefresh);
+            LOG4CXX_INFO(logger, "marketDataSnapshotFullRefresh : [" <<  ss.str() << "]");
                 
-                _processor.enqueue_dds_message(marketDataSnapshotFullRefresh);
-            }
+            _processor.enqueue_dds_message(marketDataSnapshotFullRefresh);
         }
     }
     

@@ -26,7 +26,7 @@
 */
 
 #include "SecurityListDataReaderListenerImpl.h"
-#include <SecurityList.h>
+#include <SecurityList.hpp>
 #include <SecurityListLogger.hpp>
 
 
@@ -54,26 +54,20 @@ void SecurityListDataReaderListenerImpl::on_data_available(
     if (_marketPtr->is_ready_to_trade())
         return;
     
-    if (reader->take_next_sample(&security_list, &info) == ReturnCode_t::RETCODE_OK)
+    if (reader->take_next_sample(&security_list, &info) == eprosima::fastdds::dds::RETCODE_OK)
     {
-        
-        if ( security_list.header().TargetCompID().compare(_marketPtr->getMarketName()) == 0 )
+        std::stringstream ss;
+        SecurityListLogger::log(ss, security_list);
+        LOG4CXX_INFO(logger, "SecurityList : [" <<  ss.str() << "]");
+            
+        for (uint32_t sec_index = 0; sec_index < security_list.c_NoRelatedSym().size(); sec_index++)
         {
-            std::stringstream ss;
-            SecurityListLogger::log(ss, security_list);
-            LOG4CXX_INFO(logger, "SecurityList : [" <<  ss.str() << "]");
-            
-            for (uint32_t sec_index = 0;
-                 sec_index < security_list.c_NoRelatedSym().size(); sec_index++) {
-                std::string instrument =
-                security_list.c_NoRelatedSym()[sec_index].Symbol();
-                
-                _marketPtr->addBook(instrument, true);
-            }
-            
-            // request to recieve opening price
-            _marketPtr->publishMarketDataRequest();
+            std::string instrument = security_list.c_NoRelatedSym()[sec_index].Symbol();
+            _marketPtr->addBook(instrument, true);
         }
+            
+        // request to recieve opening price
+        _marketPtr->publishMarketDataRequest();
     }
 }
 } /* namespace DistributedATS */

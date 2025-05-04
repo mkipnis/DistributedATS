@@ -36,7 +36,7 @@
 #include <fastdds/dds/subscriber/qos/DataReaderQos.hpp>
 #include <fastdds/dds/subscriber/SampleInfo.hpp>
 
-#include <MarketDataIncrementalRefresh.h>
+#include <MarketDataIncrementalRefresh.hpp>
 
 #include "Application.hpp"
 #include "FIXMsgComposerThread.h"

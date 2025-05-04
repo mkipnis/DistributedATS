@@ -34,21 +34,21 @@
 #include <BasicDomainParticipant.h>
 #include <Common.h>
 
-#include <LogonPubSubTypes.h>
-#include <LogoutPubSubTypes.h>
-#include <MarketDataIncrementalRefreshPubSubTypes.h>
-#include <MarketDataSnapshotFullRefreshPubSubTypes.h>
-#include <NewOrderSinglePubSubTypes.h>
-#include <ExecutionReportPubSubTypes.h>
-#include <OrderCancelRequestPubSubTypes.h>
-#include <OrderCancelRejectPubSubTypes.h>
-#include <OrderMassCancelReportPubSubTypes.h>
-#include <SecurityListPubSubTypes.h>
-#include <OrderMassCancelRequestPubSubTypes.h>
-#include <OrderMassStatusRequestPubSubTypes.h>
-#include <SecurityListRequestPubSubTypes.h>
-#include <MarketDataRequestPubSubTypes.h>
-#include <OrderCancelReplaceRequestPubSubTypes.h>
+#include <LogonPubSubTypes.hpp>
+#include <LogoutPubSubTypes.hpp>
+#include <MarketDataIncrementalRefreshPubSubTypes.hpp>
+#include <MarketDataSnapshotFullRefreshPubSubTypes.hpp>
+#include <NewOrderSinglePubSubTypes.hpp>
+#include <ExecutionReportPubSubTypes.hpp>
+#include <OrderCancelRequestPubSubTypes.hpp>
+#include <OrderCancelRejectPubSubTypes.hpp>
+#include <OrderMassCancelReportPubSubTypes.hpp>
+#include <SecurityListPubSubTypes.hpp>
+#include <OrderMassCancelRequestPubSubTypes.hpp>
+#include <OrderMassStatusRequestPubSubTypes.hpp>
+#include <SecurityListRequestPubSubTypes.hpp>
+#include <MarketDataRequestPubSubTypes.hpp>
+#include <OrderCancelReplaceRequestPubSubTypes.hpp>
 
 
 namespace DistributedATS {

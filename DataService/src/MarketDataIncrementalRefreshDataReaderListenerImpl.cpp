@@ -47,7 +47,7 @@ void MarketDataIncrementalRefreshDataReaderListenerImpl::on_data_available(epros
     DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefresh marketDataRefresh;
     eprosima::fastdds::dds::SampleInfo info;
     
-    if (reader->take_next_sample(&marketDataRefresh, &info) == ReturnCode_t::RETCODE_OK)
+    if (reader->take_next_sample(&marketDataRefresh, &info) == eprosima::fastdds::dds::RETCODE_OK)
     {
         if (info.valid_data)
         {

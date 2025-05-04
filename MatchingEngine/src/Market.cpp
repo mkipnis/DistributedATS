@@ -126,9 +126,10 @@ void Market::publishSecurityListRequest( eprosima::fastdds::dds::DataWriter* dwr
 {
     DistributedATS_SecurityListRequest::SecurityListRequest securityListRequest;
     
-    securityListRequest.header().TargetCompID("REF_DATA_SERVICE");
-    securityListRequest.header().SenderCompID(getMarketName());
-    securityListRequest.header().TargetSubID(_dataServiceName);
+    securityListRequest.DATS_Destination("DATA_SERVICE");
+    securityListRequest.DATS_DestinationUser(_dataServiceName);
+    securityListRequest.DATS_Source("MATCHINE_ENGINE");
+    securityListRequest.DATS_SourceUser(getMarketName());
 
     LoggerHelper::log_info<std::stringstream, SecurityListRequestLogger, DistributedATS_SecurityListRequest::SecurityListRequest>(logger,securityListRequest, "SecurityListRequest");
 
@@ -143,11 +144,12 @@ void Market::publishMarketDataRequest()
 {
     DistributedATS_MarketDataRequest::MarketDataRequest marketDataRequest;
     
-    marketDataRequest.header().TargetCompID("DATA_SERVICE");
-    marketDataRequest.header().SenderCompID(getMarketName());
-    marketDataRequest.header().TargetSubID(_dataServiceName);
+    marketDataRequest.DATS_Destination("DATA_SERVICE");
+    marketDataRequest.DATS_DestinationUser(_dataServiceName);
+    marketDataRequest.DATS_Source("MATCHING_ENGINE");
+    marketDataRequest.DATS_SourceUser(getMarketName());
 
-    marketDataRequest.c_NoMDEntryTypes().reserve(1);
+    marketDataRequest.c_NoMDEntryTypes().resize(1);
     marketDataRequest.c_NoMDEntryTypes()[0].MDEntryType(FIX::MDEntryType_TRADE); // Last trade price
 
     marketDataRequest.c_NoRelatedSym().resize(books_.size());
@@ -430,8 +432,8 @@ void Market::on_depth_change(const DepthOrderBook *book,
     auto md_update = std::make_shared<DistributedATS::MarketDataUpdate>();
     md_update->symbol = book->symbol();
 
-    md_update->priceDepth.header().SenderCompID("MATCHING_ENGINE");
-    md_update->priceDepth.header().MsgType("X");
+    md_update->priceDepth.DATS_Source("MATCHING_ENGINE");
+    md_update->priceDepth.fix_header().MsgType("X");
 
     md_update->priceDepth.c_NoMDEntries().resize(15);
 

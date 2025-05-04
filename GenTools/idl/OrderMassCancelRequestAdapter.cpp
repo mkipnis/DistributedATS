@@ -5,7 +5,7 @@
 
 void OrderMassCancelRequestAdapter::FIX2DDS(const FIX::Message& fixMsg, DistributedATS_OrderMassCancelRequest::OrderMassCancelRequest& ddsMsg )
 {
-	HeaderAdapter::FIX2DDS(fixMsg.getHeader(), ddsMsg.header());
+	HeaderAdapter::FIX2DDS(fixMsg.getHeader(), ddsMsg.fix_header());
 
 	if (fixMsg.isSetField(FIX::FIELD::ClOrdID) )
 		ddsMsg.ClOrdID ( ((FIX::ClOrdID)fixMsg.getField(FIX::FIELD::ClOrdID)).getString().c_str());
@@ -34,7 +34,7 @@ void OrderMassCancelRequestAdapter::FIX2DDS(const FIX::Message& fixMsg, Distribu
 
 void OrderMassCancelRequestAdapter::DDS2FIX(const DistributedATS_OrderMassCancelRequest::OrderMassCancelRequest& ddsMsg, FIX::Message& fixMsg)
 {
-	HeaderAdapter::DDS2FIX(ddsMsg.header(), fixMsg.getHeader());
+	HeaderAdapter::DDS2FIX(ddsMsg.fix_header(), fixMsg.getHeader());
 
 	DistributedATS::convert_dds_string_to_fix(ddsMsg.ClOrdID(), FIX::FIELD::ClOrdID, fixMsg);
 

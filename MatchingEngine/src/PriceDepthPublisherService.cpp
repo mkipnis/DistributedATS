@@ -100,8 +100,8 @@ int PriceDepthPublisherService::service()
     DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefresh
         chunkedIncrementalMarketDataRefresh;
 
-    chunkedIncrementalMarketDataRefresh.header().SenderCompID("MATCHING_ENGINE");
-    chunkedIncrementalMarketDataRefresh.header().MsgType("X");
+    chunkedIncrementalMarketDataRefresh.DATS_Source("MATCHING_ENGINE");
+    chunkedIncrementalMarketDataRefresh.fix_header().MsgType("X");
 
     int max_chunk_size = 10;
 
@@ -132,9 +132,7 @@ int PriceDepthPublisherService::service()
             chunkedIncrementalMarketDataRefresh,
             "MarketDataIncrementalRefresh");
 
-        std::cout << "Publishing chunk of "
-                  << chunkedIncrementalMarketDataRefresh.c_NoMDEntries().size()
-                  << " updates" << std::endl;
+        std::cout << "Publishing chunk of " << chunkedIncrementalMarketDataRefresh.c_NoMDEntries().size() << " updates" << std::endl;
 
         std::stringstream ss;
         MarketDataIncrementalRefreshLogger::log(
@@ -143,29 +141,16 @@ int PriceDepthPublisherService::service()
         int ret = _market_data_incremental_refresh_dw->write(
             &chunkedIncrementalMarketDataRefresh);
           
-          if (ret != eprosima::fastrtps::types::ReturnCode_t::RETCODE_OK) {
+          if (ret != eprosima::fastdds::dds::RETCODE_OK) {
               LOG4CXX_ERROR(logger, "MarketDataIncrementalRefresh :" << ret);
           }
 
-
-          /*
-        chunk_index = 0;
-
-        auto next_chunk_size =
-            latestMarketDataUpdates.size() - market_data_update_index >
-                    max_chunk_size
-                ? max_chunk_size
-                : (latestMarketDataUpdates.size() -
-                                 market_data_update_index);
-
-        chunkedIncrementalMarketDataRefresh.c_NoMDEntries().resize(
-            next_chunk_size * 14);*/
       }
     }
 
     latestMarketDataUpdates.clear();
 
-      std::this_thread::sleep_for(std::chrono::duration<long double, std::micro>(_price_depth_pub_interval));
+    std::this_thread::sleep_for(std::chrono::duration<long double, std::micro>(_price_depth_pub_interval));
   }
 
   return 0;

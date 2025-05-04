@@ -1,6 +1,6 @@
 /* Don't modify, automatically generated file by QuickFIX2FastDDS.py*/
 #pragma once
-#include "BusinessMessageReject.h"
+#include "BusinessMessageReject.hpp"
 #include <quickfix/Message.h>
 
 #include "HeaderAdapter.hpp"

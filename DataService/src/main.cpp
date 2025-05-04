@@ -58,6 +58,8 @@ int main(int argc, char* argv[] )
 {
     LOG4CXX_INFO(logger, "DataService");
     
+    eprosima::fastdds::dds::Log::SetVerbosity(eprosima::fastdds::dds::Log::Info);
+    
     try {
 
         if ( argc < 2 )
@@ -83,12 +85,6 @@ int main(int argc, char* argv[] )
         else if (vm.count("config"))
             data_service_config_file = vm["config"].as<std::string>();
         
-        
-        distributed_ats_utils::basic_domain_participant_ptr basic_domain_participant_ptr =
-            std::make_shared<distributed_ats_utils::basic_domain_participant>( 0, "DataService" );
-        
-        basic_domain_participant_ptr->create_subscriber();
-        basic_domain_participant_ptr->create_publisher();
 
 
         if ( data_service_config_file.empty() )
@@ -107,6 +103,12 @@ int main(int argc, char* argv[] )
         
         std::string data_service_name = pt.get<std::string>("dataservice.name");
         std::string database_file = pt.get<std::string>("database.database_file");
+        
+        distributed_ats_utils::basic_domain_participant_ptr basic_domain_participant_ptr =
+            std::make_shared<distributed_ats_utils::basic_domain_participant>( 0, data_service_name );
+        
+        basic_domain_participant_ptr->create_subscriber();
+        basic_domain_participant_ptr->create_publisher();
 
         FIX::DatabaseConnectionID databaseConnectionID(std::string(base_dir_ats) + "/data/" + database_file,"", "", "", 0);
         
@@ -130,30 +132,28 @@ int main(int argc, char* argv[] )
         
        auto orderMassStatusServicePtr =
                 std::make_shared<DistributedATS::OrderMassStatusRequestService>( basic_domain_participant_ptr );
-        
-        std::string data_service_filter_expression = "header.TargetSubID = '" + data_service_name + "'";
-        
+                
         // Ref Data
-        refServicePtr->createSecurityListRequestListener(data_service_filter_expression);
+        refServicePtr->createSecurityListRequestListener();
         refServicePtr->createSecurityListDataWriter();
         
         // Authentication
-        authServicePtr->createLogonTopic(data_service_filter_expression);
-        authServicePtr->createLogoutTopic(data_service_filter_expression);
+        authServicePtr->createLogonTopic();
+        authServicePtr->createLogoutTopic();
         
         
         // Market Data
-        marketDataServicePtr->createMarketDataRequestListener(data_service_name);
+        marketDataServicePtr->createMarketDataRequestListener();
         marketDataServicePtr->createMarketDataIncrementalRefreshListener();
         marketDataServicePtr->createMarketDataFullRefreshDataWriter();
         
         // Order Status
-        orderMassStatusServicePtr->createOrderMassStatusRequestListener(data_service_filter_expression);
-        orderMassStatusServicePtr->createExecutionReportListener(data_service_filter_expression);
+        orderMassStatusServicePtr->createOrderMassStatusRequestListener();
+        orderMassStatusServicePtr->createExecutionReportListener();
         
         std::atomic_init(&is_running, true);
 
-        boost::asio::io_service io_service;
+        boost::asio::io_context io_service;
         boost::asio::signal_set signals(io_service, SIGINT, SIGTERM);
         
         signals.async_wait([&](const boost::system::error_code& ec, int signal_number) {

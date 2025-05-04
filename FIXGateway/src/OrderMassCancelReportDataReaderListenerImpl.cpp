@@ -43,10 +43,10 @@ auto const order_mass_cencel_report_processor = [] (DistributedATS::DATSApplicat
 {
     FIX::Message orderMassCancelReportMessage;
 
-    orderMassCancelReport.header().BeginString("FIX.4.4");
-    orderMassCancelReport.header().SendingTime(0); // this is precision;
-    orderMassCancelReport.header().SenderCompID(
-        orderMassCancelReport.header().TargetSubID());
+    orderMassCancelReport.fix_header().BeginString("FIX.4.4");
+    orderMassCancelReport.fix_header().SendingTime(0); // this is precision;
+    orderMassCancelReport.fix_header().SenderCompID(
+        orderMassCancelReport.fix_header().TargetSubID());
 
     OrderMassCancelReportAdapter::DDS2FIX(orderMassCancelReport,
                                           orderMassCancelReportMessage);
@@ -65,7 +65,7 @@ void OrderMassCancelReportDataReaderListenerImpl::on_data_available(
   
     DistributedATS_OrderMassCancelReport::OrderMassCancelReport orderMassCancelReport;
     eprosima::fastdds::dds::SampleInfo info;
-    if (reader->take_next_sample(&orderMassCancelReport, &info) == ReturnCode_t::RETCODE_OK)
+    if (reader->take_next_sample(&orderMassCancelReport, &info) == eprosima::fastdds::dds::RETCODE_OK)
     {
         if (info.valid_data)
         {

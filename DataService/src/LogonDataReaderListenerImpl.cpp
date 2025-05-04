@@ -49,15 +49,15 @@ void LogonDataReaderListenerImpl::on_data_available( eprosima::fastdds::dds::Dat
     DistributedATS_Logon::Logon logon;
     eprosima::fastdds::dds::SampleInfo info;
     
-    if (reader->take_next_sample(&logon, &info) == ReturnCode_t::RETCODE_OK)
+    if (reader->take_next_sample(&logon, &info) == eprosima::fastdds::dds::RETCODE_OK)
     {
         if (info.valid_data)
         {
             std::stringstream ss;
             LogonLogger::log(ss, logon);
-            LOG4CXX_INFO(logger, "Data Reader Logon : [" <<  ss.str() << "]" << logon.header().TargetCompID() );
+            LOG4CXX_INFO(logger, "Data Reader Logon : [" <<  ss.str() << "]" << logon.DATS_Destination() );
             
-            if (logon.header().TargetCompID().compare("AUTH") == 0)
+            if (logon.DATS_Destination().compare("DATA_SERVICE") == 0)
                 _logonQueuePtr->push(std::make_shared<DistributedATS_Logon::Logon>(logon));
             
         }

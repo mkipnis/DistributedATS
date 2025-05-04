@@ -85,8 +85,9 @@ def generate( requirements, fix_spec):
     print("--------------------------------------------------------------\n")
 
     print("----- Processing Required Fields for QuickFIX Header -----")
-    header_out = component_parser.parse_components_rec('Header', fix_specs.find('header'),header_messages, header_list_comp, required_header_fields, False)
-    component_dependency_dictionary = component_parser.component_dep_dict # this list is required to populate dependecies for MPC to work
+    header_out = component_parser.parse_components_rec('Header', fix_specs.find('header'),
+                                                       header_messages, header_list_comp, required_header_fields, False)
+    component_dependency_dictionary = component_parser.component_dep_dict
     print("--------------------------------------------------------------\n")
 
     print("----- Processing Required Fields for QuickFIX Message -----")
@@ -99,6 +100,7 @@ def generate( requirements, fix_spec):
 
     message_parser.store_message()
     component_parser.store_components()
-#/Users/mkipnis/Fast-DDS/Fast-DDS-Gen/scripts/fastddsgen *.idl -typeobject
+#/Users/mkipnis/Fast-DDS/Fast-DDS-Gen/scripts/fastddsgen *.idl
+
 if __name__ == "__main__":
    main(sys.argv[1:])

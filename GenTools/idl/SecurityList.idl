@@ -15,7 +15,14 @@ module DistributedATS_SecurityList
 	
 	struct SecurityList
 	{
-		DistributedATS::Header header;
+		string DATS_Source;
+     		string DATS_Destination;
+    		string DATS_SourceUser;
+    		string DATS_DestinationUser;
+
+
+		DistributedATS::Header fix_header;
+
 		string SecurityReqID;
 		string SecurityResponseID;
 		long SecurityRequestResult;

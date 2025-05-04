@@ -28,7 +28,7 @@
 #pragma once
 
 #include <memory>
-#include <OrderMassStatusRequest.h>
+#include <OrderMassStatusRequest.hpp>
 #include <BasicDomainParticipant.h>
 #include <boost/lockfree/spsc_queue.hpp>
 
@@ -46,25 +46,6 @@ public:
     ~OrderMassStatusRequestDataReaderListenerImpl() override;
 
     void on_data_available(  eprosima::fastdds::dds::DataReader* reader ) override;
-
-    /*
-	virtual void on_requested_deadline_missed ( DDS::DataReader_ptr reader, const DDS::RequestedDeadlineMissedStatus & status)
-	throw (CORBA::SystemException) {};
-
-	virtual void on_requested_incompatible_qos ( DDS::DataReader_ptr reader, const DDS::RequestedIncompatibleQosStatus & status)
-	throw (CORBA::SystemException) {};
-
-	virtual void on_liveliness_changed ( DDS::DataReader_ptr reader, const DDS::LivelinessChangedStatus & status)
-	throw (CORBA::SystemException) {};
-
-	virtual void on_subscription_matched ( DDS::DataReader_ptr reader, const DDS::SubscriptionMatchedStatus & status)
-	throw (CORBA::SystemException) {};
-
-	virtual void on_sample_rejected( DDS::DataReader_ptr reader, const DDS::SampleRejectedStatus& status)
-	throw (CORBA::SystemException) {};
-
-	virtual void on_sample_lost( DDS::DataReader_ptr reader, const DDS::SampleLostStatus& status)
-	throw (CORBA::SystemException) {};*/
     
 private:
 

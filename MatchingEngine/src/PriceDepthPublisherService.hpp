@@ -30,7 +30,7 @@
 #include <stdio.h>
 #include <thread>
 
-#include "MarketDataIncrementalRefresh.h"
+#include "MarketDataIncrementalRefresh.hpp"
 
 #include "Market.h"
 

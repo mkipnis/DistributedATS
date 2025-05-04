@@ -41,8 +41,8 @@
 #include <thread>
 
 #include <BasicDomainParticipant.h>
-#include <SecurityList.h>
-#include <SecurityListRequest.h>
+#include <SecurityList.hpp>
+#include <SecurityListRequest.hpp>
 #include "SecurityListRequestDataReaderListenerImpl.hpp"
 
 
@@ -105,7 +105,7 @@ public:
 
     int service (void);
     
-    void createSecurityListRequestListener( const std::string& data_service_filter_expression );
+    void createSecurityListRequestListener();
     void createSecurityListDataWriter();
     
     bool processRefDataRequest( const SecurityListRequestPtr& );

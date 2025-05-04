@@ -40,18 +40,18 @@
 #include "DataWriterContainer.h"
 #include "PriceDepthPublisherService.hpp"
 
-#include <MarketDataSnapshotFullRefreshPubSubTypes.h>
-#include <NewOrderSinglePubSubTypes.h>
-#include <ExecutionReportPubSubTypes.h>
-#include <OrderCancelRejectPubSubTypes.h>
-#include <OrderMassCancelReportPubSubTypes.h>
-#include <OrderCancelRequestPubSubTypes.h>
-#include <SecurityListPubSubTypes.h>
-#include <OrderMassCancelRequestPubSubTypes.h>
-#include <OrderCancelReplaceRequestPubSubTypes.h>
-#include <SecurityListRequestPubSubTypes.h>
-#include <MarketDataIncrementalRefreshPubSubTypes.h>
-#include <MarketDataRequestPubSubTypes.h>
+#include <MarketDataSnapshotFullRefreshPubSubTypes.hpp>
+#include <NewOrderSinglePubSubTypes.hpp>
+#include <ExecutionReportPubSubTypes.hpp>
+#include <OrderCancelRejectPubSubTypes.hpp>
+#include <OrderMassCancelReportPubSubTypes.hpp>
+#include <OrderCancelRequestPubSubTypes.hpp>
+#include <SecurityListPubSubTypes.hpp>
+#include <OrderMassCancelRequestPubSubTypes.hpp>
+#include <OrderCancelReplaceRequestPubSubTypes.hpp>
+#include <SecurityListRequestPubSubTypes.hpp>
+#include <MarketDataIncrementalRefreshPubSubTypes.hpp>
+#include <MarketDataRequestPubSubTypes.hpp>
 
 #include "NewOrderSingleDataReaderListenerImpl.h"
 #include "OrderCancelRequestDataReaderListenerImpl.h"
@@ -136,17 +136,19 @@ int main(int argc, char *argv[]) {
 
       std::atomic_init(&is_running, true);
 
-      // Filter expression for the MARKET_NAME specified in config file
+      // filter expression for the MARKET_NAME specified in config file
       // filter for messages for this market/security exchange
-      std::string filter_str =
-            "header.TargetCompID = 'MATCHING_ENGINE' and SecurityExchange='" +
-            market->getMarketName() + "'";
-      // filter for mass cancel
-      std::string filter_str_target_only =
-            "m_Header.TargetCompID = 'MATCHING_ENGINE'";
+      std::string destination_market_filter = "DATS_Destination = %0 and SecurityExchange = %1";
+      
+      // filter for mass cancel - when client disconnects all orders get cancelled
+      std::string matching_engine_filter = "DATS_Destination = %0";
+
+      // market filter: Securities List, Open Prices(Market Data Snap Shot)
+      std::string market_filter = "DATS_DestinationUser = %0";
+
       
       auto participant_ptr =
-          std::make_shared<distributed_ats_utils::basic_domain_participant>(0, "MatchingEngine");
+          std::make_shared<distributed_ats_utils::basic_domain_participant>(0, market_name);
 
       participant_ptr->create_subscriber();
       participant_ptr->create_publisher();
@@ -162,7 +164,8 @@ int main(int argc, char *argv[]) {
       auto new_order_single_data_reader_tuple =
         participant_ptr->make_data_reader_tuple(new_order_single_topic_tuple,
                             new MatchingEngine::NewOrderSingleDataReaderListenerImpl(market),
-                            "FILTER_MATCHING_ENGINE_NEW_ORDER_SINGLE", filter_str);
+                            "FILTER_MATCHING_ENGINE_NEW_ORDER_SINGLE", destination_market_filter,
+                                                { "MATCHING_ENGINE", market_name});
     
       
       auto order_cancel_request_topic_tuple = participant_ptr->make_topic<
@@ -171,8 +174,10 @@ int main(int argc, char *argv[]) {
       
       auto order_cancel_request_data_reader_tuple =
         participant_ptr->make_data_reader_tuple(order_cancel_request_topic_tuple,
-                              new MatchingEngine::OrderCancelRequestDataReaderListenerImpl(market)/*,
-                              "FILTER_MATCHING_ENGINE_ORDER_CANCEL_REQUEST", filter_str*/);
+                              new MatchingEngine::OrderCancelRequestDataReaderListenerImpl(market),
+                                                "FILTER_MATCHING_ENGINE_ORDER_CANCEL_REQUEST",
+                                                destination_market_filter,
+                                                { "MATCHING_ENGINE", market_name});
    
       
       auto order_mass_cancel_request_topic_tuple = participant_ptr->make_topic<
@@ -180,24 +185,26 @@ int main(int argc, char *argv[]) {
       DistributedATS_OrderMassCancelRequest::OrderMassCancelRequest>(ORDER_MASS_CANCEL_REQUEST_TOPIC_NAME);
       auto order_mass_cancel_request_topic_data_reader_tuple =
         participant_ptr->make_data_reader_tuple(order_mass_cancel_request_topic_tuple,
-                              new MatchingEngine::OrderMassCancelRequestDataReaderListenerImpl(market)/*,
-                              "FILTER_MATCHING_ENGINE_ORDER_MASS_CANCEL_REQUEST", filter_str*/);
+                              new MatchingEngine::OrderMassCancelRequestDataReaderListenerImpl(market),
+                                                "FILTER_MATCHING_ENGINE_ORDER_MASS_CANCEL_REQUEST",
+                                                matching_engine_filter, {"MATCHING_ENGINE"});
       
       auto order_cancel_replace_request_topic_tuple = participant_ptr->make_topic<
       DistributedATS_OrderCancelReplaceRequest::OrderCancelReplaceRequestPubSubType,
       DistributedATS_OrderCancelReplaceRequest::OrderCancelReplaceRequest>(ORDER_CANCEL_REPLACE_REQUEST_TOPIC_NAME);
       auto order_cancel_replace_request_data_reader_tuple =
         participant_ptr->make_data_reader_tuple(order_cancel_replace_request_topic_tuple,
-                              new MatchingEngine::OrderCancelReplaceRequestDataReaderListenerImpl(market)/*,
-                              "FILTER_MATCHING_ENGINE_ORDER_CANCEL_REPLACE_REQUEST", filter_str*/);
+                              new MatchingEngine::OrderCancelReplaceRequestDataReaderListenerImpl(market),
+                              "FILTER_MATCHING_ENGINE_ORDER_CANCEL_REPLACE_REQUEST",  destination_market_filter,
+                                                { "MATCHING_ENGINE", "SecurityExchange"});
   
       auto security_list_topic_tuple = participant_ptr->make_topic<
       DistributedATS_SecurityList::SecurityListPubSubType,
       DistributedATS_SecurityList::SecurityList>(SECURITY_LIST_TOPIC_NAME);
       auto security_list_topic_request_data_reader_tuple =
         participant_ptr->make_data_reader_tuple(security_list_topic_tuple,
-                              new DistributedATS::SecurityListDataReaderListenerImpl(market)/*,
-                              "FILTER_MATCHING_ENGINE_SECURITY_LIST", std::string("header.TargetCompID = '" + market->getMarketName() + "'")*/);
+                              new DistributedATS::SecurityListDataReaderListenerImpl(market),
+                                                "FILTER_MATCHING_ENGINE_SECURITY_LIST", market_filter, { market->getMarketName() });
       
       auto market_data_snapshot_full_refresh_topic_tuple = participant_ptr->make_topic<
       DistributedATS_MarketDataSnapshotFullRefresh::
@@ -206,8 +213,8 @@ int main(int argc, char *argv[]) {
                 MarketDataSnapshotFullRefresh>(MARKET_DATA_SNAPSHOT_FULL_REFRESH_TOPIC_NAME);
       auto market_data_snapshot_full_refresh_data_reader_tuple =
         participant_ptr->make_data_reader_tuple(market_data_snapshot_full_refresh_topic_tuple,
-                              new DistributedATS::MarketDataSnapshotFullRefreshDataReaderListenerImpl(market)/*,
-                              "FILTER_MATCHING_ENGINE_FULL_SNAPSHOT_REQUEST", std::string("header.TargetCompID = '" + market->getMarketName() + "'")*/);
+                              new DistributedATS::MarketDataSnapshotFullRefreshDataReaderListenerImpl(market),
+                                                "FILTER_MATCHING_ENGINE_FULL_SNAPSHOT_REQUEST", market_filter, { market->getMarketName() });
       
       //
       // Outgoing data
@@ -298,7 +305,7 @@ int main(int argc, char *argv[]) {
       
       std::atomic_init(&is_running, true);
 
-      boost::asio::io_service io_service;
+      boost::asio::io_context io_service;
       boost::asio::signal_set signals(io_service, SIGINT, SIGTERM);
       
       signals.async_wait([&](const boost::system::error_code& ec, int signal_number) {
