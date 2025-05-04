@@ -25,9 +25,7 @@ function App()
   const histRef = React.useRef();
   const marketDataAndPositionsRef = React.useRef();
 
-  const url = "http://localhost:8080/";
-  //const url = "https://dats.ustreasuries.online/";
-  //const url = window.location.href;
+  const url = window.location.href;
 
   const last_sequence_number = useRef(0); // sequence number between front-end and rest controller
   const last_session_state = useRef(null);
@@ -175,7 +173,7 @@ function App()
 
       }
 
-      if ( sessionState.sessionState != SessionStateWrapper.STATE_LOGGED_OUT )
+      if ( sessionState.sessionState != 3 )
       {
         const intervalId = setInterval(() => {
                 const requestOptionsResults = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(session_state_request) };
