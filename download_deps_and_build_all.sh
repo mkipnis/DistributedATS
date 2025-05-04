@@ -6,11 +6,13 @@ set -x
 
 # Define directories
 DATS_SOURCE_DIR="$(pwd)"
+DATS_HOME="$HOME/DistributedATS"
 DEPS_BUILD_DIR="$HOME/distributed_ats_deps_build"
 INSTALL_DIR="${1:-$DEPS_BUILD_DIR}"
 LD_LIBRARY_PATH="LD_LIBRARY_PATH"
 
 mkdir -p "$DEPS_BUILD_DIR"
+mkdir -p "$DATS_HOME"
 
 # Mac-specific flags
 CMAKE_FLAGS=""
@@ -46,7 +48,7 @@ download_if_missing() {
 download_if_missing "https://github.com/foonathan/memory/archive/refs/tags/v$FOONATHAN_MEMORY_PKG.tar.gz" "$DEPS_BUILD_DIR/memory-v$FOONATHAN_MEMORY_PKG.tar.gz"
 download_if_missing "https://github.com/eProsima/Fast-CDR/archive/refs/tags/v$FAST_CDR_PKG.tar.gz" "$DEPS_BUILD_DIR/Fast-CDR-v$FAST_CDR_PKG.tar.gz"
 download_if_missing "https://github.com/eProsima/Fast-DDS/archive/refs/tags/v$FAST_DDS_PKG.tar.gz" "$DEPS_BUILD_DIR/Fast-DDS-v$FAST_DDS_PKG.tar.gz"
-download_if_missing "https://github.com/chriskohlhoff/asio/archive/refs/tags/asio-$ASIO_PKG.tar.gz" "$DEPS_BUILD_DIR/asio-$ASIO_PKG.tar.gz"
+#download_if_missing "https://github.com/chriskohlhoff/asio/archive/refs/tags/asio-$ASIO_PKG.tar.gz" "$DEPS_BUILD_DIR/asio-$ASIO_PKG.tar.gz"
 download_if_missing "https://github.com/apache/logging-log4cxx/archive/refs/tags/rel/v$LOG4CXX_PKG.tar.gz" "$DEPS_BUILD_DIR/log4cxx-$LOG4CXX_PKG.tar.gz"
 download_if_missing "https://github.com/quickfix/quickfix/archive/refs/tags/v$QUICKFIX_PKG.tar.gz" "$DEPS_BUILD_DIR/quickfix-v$QUICKFIX_PKG.tar.gz"
 download_if_missing "https://github.com/enewhuis/liquibook/archive/refs/tags/$LIQUIBOOK_PKG.tar.gz" "$DEPS_BUILD_DIR/liquibook-$LIQUIBOOK_PKG.tar.gz"
@@ -66,7 +68,7 @@ build_and_install() {
 
     if [[ -f CMakeLists.txt ]]; then
         mkdir -p build && cd build
-        cmake .. -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX" -DBUILD_SHARED_LIBS=ON
+        cmake .. -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX" -DBUILD_SHARED_LIBS=ON "$configure_cmd"
         cmake --build . --target install
     else
         eval "$configure_cmd"
@@ -78,10 +80,10 @@ build_and_install() {
 [[ ! -f $INSTALL_DIR/include/log4cxx/log4cxx.h ]] && build_and_install "$DEPS_BUILD_DIR/log4cxx-$LOG4CXX_PKG.tar.gz" "$DEPS_BUILD_DIR/logging-log4cxx-rel-v$LOG4CXX_PKG" "-DBUILD_TESTING=false"
 [[ ! -f $INSTALL_DIR/include/foonathan_memory/foonathan/memory/config.hpp ]] && build_and_install "$DEPS_BUILD_DIR/memory-v$FOONATHAN_MEMORY_PKG.tar.gz" "memory-$FOONATHAN_MEMORY_PKG" ""
 [[ ! -f $INSTALL_DIR/include/fastcdr/config.h ]] && build_and_install "$DEPS_BUILD_DIR/Fast-CDR-v$FAST_CDR_PKG.tar.gz" "Fast-CDR-$FAST_CDR_PKG" ""
-[[ ! -f $INSTALL_DIR/include/asio.hpp ]] && build_and_install "$DEPS_BUILD_DIR/asio-$ASIO_PKG.tar.gz" "asio-asio-$ASIO_PKG" "cd asio && ./autogen.sh && ./configure --prefix=$INSTALL_PREFIX --exec-prefix=$INSTALL_PREFIX}"
+#[[ ! -f $INSTALL_DIR/include/asio.hpp ]] && build_and_install "$DEPS_BUILD_DIR/asio-$ASIO_PKG.tar.gz" "asio-asio-$ASIO_PKG" "cd asio && ./autogen.sh && ./configure --prefix=$INSTALL_PREFIX --exec-prefix=$INSTALL_PREFIX}"
 [[ ! -f $INSTALL_DIR/include/fastdds/config.hpp ]] && build_and_install "$DEPS_BUILD_DIR/Fast-DDS-v$FAST_DDS_PKG.tar.gz" "Fast-DDS-$FAST_DDS_PKG" ""
-[[ ! -f $INSTALL_DIR/include/quickfix/config-all.h ]] && build_and_install "$DEPS_BUILD_DIR/quickfix-v$QUICKFIX_PKG.tar.gz" "quickfix-$QUICKFIX_PKG" ""
-[[ ! -f $INSTALL_DIR/liquibook-$LIQUIBOOK_PKG/src/liquibook_export.h ]] && build_and_install "$DEPS_BUILD_DIR/liquibook-$LIQUIBOOK_PKG.tar.gz" "liquibook-$LIQUIBOOK_PKG" ""
+[[ ! -f $INSTALL_DIR/include/quickfix/config-all.h ]] && build_and_install "$DEPS_BUILD_DIR/quickfix-v$QUICKFIX_PKG.tar.gz" "quickfix-$QUICKFIX_PKG" "-DCMAKE_CXX_STANDARD=11 -DCMAKE_CXX_EXTENSIONS=OFF"
+[[ ! -f $INSTALL_DIR/liquibook-$LIQUIBOOK_PKG/src/liquibook_export.h ]] && build_and_install "$DEPS_BUILD_DIR/liquibook-$LIQUIBOOK_PKG.tar.gz" "liquibook-$LIQUIBOOK_PKG" ":" ":"
 
 
 # Generate environment script
@@ -89,9 +91,25 @@ cat <<EOM > "$HOME/DistributedATS/dats_env.sh"
 export DATS_HOME=\$HOME/DistributedATS
 export DEPS_HOME=$INSTALL_DIR
 export $LD_LIBRARY_PATH=\$DEPS_HOME/lib:\$DATS_HOME/lib:\$LD_LIBRARY_PATH
-export $LD_LIBRARY_PATH=\$DATS_HOME/config/log4cxx.xml
+export LOG4CXX_CONFIGURATION=$DATS_HOME/config/log4cxx.xml
+
+#echo Specific Specific
+
+#echo Crypto ATS
 export BASEDIR_ATS=\$DATS_HOME/MiscATS/CryptoCLOB
 export DATS_LOG_HOME=\$BASEDIR_ATS/logs
+mkdir -p \$BASEDIR_ATS/logs
+
+#echo US Treasuries
+#export BASEDIR_ATS=\$DATS_HOME/MiscATS/USTreasuryCLOB
+#export DATS_LOG_HOME=\$BASEDIR_ATS/logs
+#mkdir -p \$BASEDIR_ATS/logs
+
+#echo US Treasuries
+#export BASEDIR_ATS=\$DATS_HOME/MiscATS/MultiMatchingEngineATS
+#export DATS_LOG_HOME=\$BASEDIR_ATS/logs
+#mkdir -p \$BASEDIR_ATS/logs
+
 EOM
 
 cd $DATS_SOURCE_DIR
