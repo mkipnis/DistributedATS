@@ -98,6 +98,7 @@ Users:
 - CRYPTO_TRADER_2 
 - CRYPTO_TRADER_3
 - CRYPTO_TRADER_4
+
 Password: 
 - TEST
 #####
@@ -117,6 +118,7 @@ Users:
 - UST_TRADER_2
 - UST_TRADER_3
 - UST_TRADER_4
+ 
 Password: 
 - TEST
 ######
