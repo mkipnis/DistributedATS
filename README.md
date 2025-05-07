@@ -104,7 +104,7 @@ Password:
 
 ### US Treasuries Central Limit Order Book
 
-- Docker Image: [Docker.UST_CLOB](https://github.com/mkipnis/DistributedATS/blob/-master/docker/Docker.UST_CLOB)
+- Docker Image: [Docker.UST_CLOB](https://github.com/mkipnis/DistributedATS/blob/master/docker/Docker.UST_CLOB)
 - Docker Compose: [docker-compose-ust.yml](https://github.com/mkipnis/DistributedATS/blob/master/docker/docker-compose-ust.yml)
 ```
 sudo docker-compose -f docker-compose-ust.yml up -d
