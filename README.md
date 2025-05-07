@@ -79,7 +79,7 @@ To download and build all necessary dependencies, use the provided script:
 
 To build the base Docker image:
 
-[Docker.Build_Distributed_ATS](https://github.com/mkipnis/DistributedATS/blob/master/Docker.Build_Distributed_ATS)
+[Docker.Build_Distributed_ATS](https://github.com/mkipnis/DistributedATS/blob/master/docker/Docker.Build_Distributed_ATS)
 
 
 ## Basic ATS Examples
