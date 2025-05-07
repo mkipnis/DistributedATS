@@ -2,7 +2,7 @@
    Copyright (C) 2022 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -255,7 +255,7 @@ public class SessionStateController {
 		
 		order.status = FIXConvertUtils.getStatusText(execReport.status);
 
-		order.insertExecutionReport("0", execReport, 1);
+		order.insertExecutionReport("0", execReport, -1);
 
 		fix_session_bean.getOrderMan().insertUpdateOrder(sessionID, order.orderKey, order);
 

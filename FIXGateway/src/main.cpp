@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -28,25 +28,18 @@
 #include <iostream>
 
 #include <LogonAdapter.hpp>
-#include <LogonTypeSupportImpl.h>
 #include <LogoutAdapter.hpp>
-#include <LogoutTypeSupportImpl.h>
 
 #include <NewOrderSingleAdapter.hpp>
-#include <NewOrderSingleTypeSupportImpl.h>
-
 #include <OrderCancelRejectAdapter.hpp>
-#include <OrderCancelRejectTypeSupportImpl.h>
 #include <OrderCancelRequestAdapter.hpp>
-#include <OrderCancelRequestTypeSupportImpl.h>
-
-#include <MarketDataRequestTypeSupportImpl.h>
 #include <OrderMassCancelReportAdapter.hpp>
-#include <OrderMassCancelReportTypeSupportImpl.h>
 #include <OrderMassCancelRequestAdapter.hpp>
-#include <OrderMassCancelRequestTypeSupportImpl.h>
-#include <SecurityListRequestTypeSupportImpl.h>
-#include <SecurityListTypeSupportImpl.h>
+
+#include <boost/asio.hpp>
+#include <boost/asio/signal_set.hpp>
+#include <boost/bind.hpp>
+#include <boost/program_options.hpp>
 
 #include <BasicDomainParticipant.h>
 
@@ -64,7 +57,6 @@
 
 #include <BasicDomainParticipant.h>
 #include <Common.h>
-#include <ace/Get_Opt.h>
 
 #include "ExecutionReportDataReaderListenerImpl.h"
 #include "LogonDataReaderListenerImpl.hpp"
@@ -84,188 +76,146 @@
 
 #include <fstream>
 
-#include "ace/streams.h"
-#include <ace/Message_Queue_T.h>
-
 #include "FileLog.h"
-#include <ace/Log_Msg.h>
-#include <ace/Log_Msg_Callback.h>
-#include <ace/Log_Record.h>
-#include <ace/streams.h>
 
 #include <atomic>
+#include <log4cxx/logger.h>
+#include <log4cxx/fileappender.h>
+#include <log4cxx/mdc.h>
+#include <log4cxx/xml/domconfigurator.h>
+
 
 std::atomic<bool> is_running;
 
-namespace DistributedATS {
 
-class SignalHandler : public ACE_Event_Handler {
-public:
-  virtual int handle_signal(int signum, siginfo_t * = 0, ucontext_t * = 0) {
-    std::cout << "Lets hangle signal : " << signum << std::endl;
-    is_running.store(false);
-    return 0;
-  };
-};
+int main(int argc, char **argv)
+{
+    std::string quickfix_config_file = "";
+    std::string sender_comp_id = "";
+    std::string data_service_name = "";
+    
+    LOG4CXX_INFO(logger, "Starting up");
 
-}; // namespace DistributedATS
+    try {
 
-int main(int argc, char **argv) {
-  DDS::DomainParticipantFactory_var dpf = DDS::DomainParticipantFactory::_nil();
+        boost::program_options::options_description options_desc{"Options"};
+      
+        options_desc.add_options()
+            ("help,h", "Help screen")
+            ("config,c", boost::program_options::value<std::string>()->default_value(""), "QuickFIX config file");
+      
+        boost::program_options::variables_map vm;
+        boost::program_options::store(parse_command_line(argc, argv, options_desc), vm);
+        boost::program_options::notify(vm);
 
-  if (argc < 2) {
-    std::cout << "usage: " << argv[0] << std::endl
-              << "\t\t-c quickfix-config-file" << std::endl;
+        if (vm.count("help"))
+            std::cout << options_desc << '\n';
+        else if (vm.count("config"))
+            quickfix_config_file = vm["config"].as<std::string>();
 
-    return 0;
-  }
+        is_running = true;
+        
+        auto settings = std::make_shared<FIX::SessionSettings>(quickfix_config_file);
+      
+        FIX::SessionID default_session_id("FIX.4.4", "DEFAULT", "DEFAULT");
+        
+        auto session_settings = settings->get(default_session_id);
+          
+        auto dats_home = std::getenv("DATS_HOME");
+        auto dats_log_home = std::getenv("DATS_LOG_HOME");
+      
+        if ( dats_home == NULL || dats_log_home == NULL )
+            throw std::runtime_error("DATS_HOME or/and DATS_LOG_HOME is not set");
 
-  std::string quickfix_config_file = "";
-  std::string sender_comp_id = "";
-  std::string data_service_name = "";
+        auto default_dictionary_tmp = &settings->get(default_session_id);
+        const_cast<FIX::Dictionary *>(default_dictionary_tmp)->setString("DATADICTIONARY", std::string(dats_home) + "/spec/" + default_dictionary_tmp->getString("DATADICTIONARY") );
+        
+        auto default_dictionary = std::make_shared<FIX::Dictionary>(FIX::Dictionary(settings->get(default_session_id)));
+    
+        sender_comp_id = settings->get().getString("SenderCompID");
+        data_service_name = default_dictionary->getString("DataService");
+                                                                                                             
+                                                                                                
+        auto participant_ptr =
+            std::make_shared<distributed_ats_utils::basic_domain_participant>(0, sender_comp_id);
 
-  try {
+        participant_ptr->create_publisher();
+        participant_ptr->create_subscriber();
+      
+      
+        if (quickfix_config_file.empty()) {
+            std::cerr << "Error: Config file name is not specified." << std::endl;
+            return -1;
+        }
 
-    dpf = TheParticipantFactoryWithArgs(argc, argv);
+      
+        LOG4CXX_INFO(logger, "SenderCompID : [" << sender_comp_id << "] | DataService : ["<< data_service_name << "]");
 
-    distributed_ats_utils::BasicDomainParticipantPtr participant_ptr =
-        std::make_shared<distributed_ats_utils::BasicDomainParticipant>(
-            dpf, DISTRIBUTED_ATS_DOMAIN_ID);
+        /* // content filtering for messages directed to instances of gateways
+        // with given sender comp id.  These messages include Logon/Logout,
+        // ExectionReports, MassStatus, etc.
+        std::string target_comp_id_filter =
+            "header.TargetCompID='" + sender_comp_id +
+            "'";
+      
+        LOG4CXX_INFO(logger, "TargetCompID filter : [" << target_comp_id_filter << "]");
+         */
 
-    participant_ptr->createSubscriber();
-    participant_ptr->createPublisher();
+        std::string fix_prefix = "FIXGateway-" + sender_comp_id + "." + data_service_name;
+        
+        FIX::FileStoreFactory store_factory(dats_log_home);
+        DistributedATS::FileLogFactory log_factory(*settings, fix_prefix);
 
-    ACE_Get_Opt cmd_opts(argc, argv, ":c:");
+        auto data_writer_container =
+            std::make_shared<DistributedATS::DataWriterContrainer>(participant_ptr);
+      
+        DistributedATS::DATSApplication application(data_service_name, sender_comp_id, data_writer_container);
+        
+        std::shared_ptr<DistributedATS::SocketAcceptor> acceptor;
+        std::shared_ptr<FIX::SessionFactory> session_factory;
+      
+        try {
+          
+          acceptor = std::make_shared<DistributedATS::SocketAcceptor>( application, store_factory, *settings, log_factory);
+          session_factory = std::make_shared<FIX::SessionFactory>( application, store_factory, &log_factory);
+     
+        } catch ( const std::exception& exp )
+        {
+          LOG4CXX_ERROR(logger, "Exception during the initialization of FIX Gateway : [" << exp.what() << "]");
+        }
+      
+        auto data_reader_container =
+        std::make_shared<DistributedATS::DataReaderContrainer>(participant_ptr, application, sender_comp_id);
+      
+        auto authService = std::make_shared<AuthServiceHelper>( settings, session_factory, default_dictionary, sender_comp_id);
+        application.setAuthService(authService);
 
-    int option;
+        acceptor->start();
 
-    while ((option = cmd_opts()) != EOF) {
-      switch (option) {
-      case 'c':
-        quickfix_config_file = cmd_opts.opt_arg();
-        break;
-      }
-    }
+        boost::asio::io_context io_service;
+        boost::asio::signal_set signals(io_service, SIGINT, SIGTERM);
+      
+        signals.async_wait([&](const boost::system::error_code& ec, int signal_number) {
+          if (!ec) {
+              LOG4CXX_INFO(logger, "Signal number " << signal_number
+                           << "Gracefully stopping the timer and exiting");
+              is_running.store(false);
+          } else {
+              LOG4CXX_ERROR(logger, "Error " << ec.value() << " - " << ec.message()
+                            << " - Signal number - " << signal_number);
+          }
+      });
+      
+      io_service.run();
+      
+      acceptor->stop();
 
-    if (quickfix_config_file.empty()) {
-      std::cerr << "Error: Config file name is not specified." << std::endl;
-      return -1;
-    }
-
-    is_running = true;
-
-    auto settings =
-        std::make_shared<FIX::SessionSettings>(quickfix_config_file);
-
-    FIX::SessionID default_session_id("FIX.4.4", "DEFAULT", "DEFAULT");
-    const FIX::Dictionary *default_dictionary_tmp =
-        &settings->get(default_session_id);
-
-    FIX::Dictionary *default_dictionary = new FIX::Dictionary();
-    default_dictionary = const_cast<FIX::Dictionary *>(default_dictionary_tmp);
-
-    sender_comp_id = settings->get().getString("SenderCompID");
-    data_service_name = default_dictionary->getString("DataService");
-
-    std::string file_log_path = settings->get().getString("FileLogPath");
-    std::string file_store_path = settings->get().getString("FileStorePath");
-
-    std::string dds_log_file_name_prefix =
-        file_log_path + "/" + sender_comp_id + "." + data_service_name;
-
-    //
-    // Lets deal with signals
-    //
-    signal(SIGPIPE, SIG_IGN);
-
-    ACE_Sig_Handler handler;
-    DistributedATS::SignalHandler signalHandler;
-    // add signal handler for the SIGINT signal here
-    ACE_Sig_Handler sig_handler;
-    sig_handler.register_handler(SIGINT, &signalHandler);
-
-    // Separate log files for DDS in and out messages to avoid serialization of
-    // threads
-    std::string fix_prefix = sender_comp_id + "." + data_service_name;
-    std::string dds_output_stream_log_file =
-        dds_log_file_name_prefix + ".dds.out.log";
-
-    std::cout << "DDS out filename : " << dds_output_stream_log_file
-              << std::endl;
-
-    std::ofstream *dds_output_stream =
-        new std::ofstream(dds_output_stream_log_file, ios::app);
-
-    if (dds_output_stream->bad()) {
-      delete dds_output_stream;
-    } else {
-      ACE_LOG_MSG->msg_ostream(dds_output_stream, true);
-    }
-
-    ACE_LOG_MSG->clr_flags(ACE_Log_Msg::STDERR | ACE_Log_Msg::LOGGER);
-    ACE_LOG_MSG->set_flags(ACE_Log_Msg::OSTREAM);
-
-    std::string dds_input_stream_log_file =
-        dds_log_file_name_prefix + ".dds.in.log";
-
-    std::cout << "DDS input filename : " << dds_input_stream_log_file
-              << std::endl;
-
-    std::ofstream *dds_input_stream =
-        new std::ofstream(dds_input_stream_log_file, ios::app);
-
-    auto data_writer_container =
-        std::make_shared<DistributedATS::DataWriterContrainer>(participant_ptr);
-
-    ACE_DEBUG((LM_INFO,
-               ACE_TEXT("(%P|%t) SenderCompID : [%s] | DataService : [%s]"),
-               sender_comp_id.c_str(), data_service_name.c_str()));
-
-    std::string target_comp_id_filter =
-        "m_Header.TargetCompID='" + sender_comp_id +
-        "'"; // content filtering for messages directed to instances of gateways
-             // with given sender comp id.  These messages include Logon/Logout,
-             // ExectionReports, MassStatus, etc.
-    ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%t) TargetCompID filter : [%s]"),
-               target_comp_id_filter.c_str()));
-
-    FIX::FileStoreFactory store_factory(file_store_path);
-    // FIX::NullStoreFactory store_factory;
-    DistributedATS::FileLogFactory log_factory(*settings, fix_prefix);
-
-    DistributedATS::DATSApplication application(
-        data_service_name, sender_comp_id, data_writer_container);
-
-    auto acceptor = std::make_shared<DistributedATS::SocketAcceptor>(
-        application, store_factory, *settings, log_factory, dds_input_stream);
-    auto sessionFactory = std::make_shared<FIX::SessionFactory>(
-        application, store_factory, &log_factory);
-
-    auto data_reader_container =
-        std::make_shared<DistributedATS::DataReaderContrainer>(
-            participant_ptr, application, target_comp_id_filter);
-    auto authService = std::make_shared<AuthServiceHelper>(
-        settings, sessionFactory, default_dictionary, sender_comp_id);
-
-    application.setAuthService(authService);
-
-    acceptor->start();
-
-    while (is_running == true)
-      ACE_OS::sleep(1);
-
-    acceptor->stop();
-
-    delete default_dictionary;
-    delete dds_output_stream;
-    delete dds_input_stream;
-
-    return 0;
+      return 0;
+      
   } catch (std::exception &e) {
+      
+      LOG4CXX_ERROR(logger, "Exception during the initialization of FIX Gateway : [" << e.what() << "]");
 
-    ACE_ERROR ((LM_CRITICAL, ACE_TEXT("(%P|%t|%D) ERROR: Exception during the initialization of FIX Gateway : %s\n"), e.what()));
-
-    std::cout << e.what() << std::endl;
-    return 1;
+      return 1;
   }
 }

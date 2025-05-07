@@ -6,36 +6,16 @@ PRG="$0"
 PROGNAME=MatchingEngine
 CONFIG_FILE_NAME=$2
 
-if [ "$1" != "start" ] && [ "$1" != "stop" ] && [ "$1" != "check" ] ;
-then
-        echo "Unsupported Command - "$1 : "Supported Commands : (start/stop/check)";
-	exit 1;
-fi
+export LOG_FILE_NAME=$2.log
 
-if [ -z "$CONFIG_FILE_NAME" ]
-then
-        echo "Config File Name is not set";
-        exit 1;
-fi
+. $DATS_HOME/dats_env.sh
 
-#PRGDIR=`dirname "$PRG"`
-
-if [ -z "$BASEDIR" ]
-then
-	BASEDIR=`cd ".." > /dev/null; pwd`
-fi
-
-if [ ! -d "$BASEDIR/logs/" ]
-then
-        mkdir $BASEDIR/logs/
-fi
-
-logfile=$BASEDIR/logs/$PROGNAME.$CONFIG_FILE_NAME.startstop.log
+logfile=$BASEDIR_ATS/logs/$PROGNAME.$CONFIG_FILE_NAME.console.log
 
 #ldd $DATS_HOME/bin/$PROGNAME >> $logfile
 
-PROCESS="$PROGNAME -c $BASEDIR/config/$CONFIG_FILE_NAME -DCPSConfigFile $DATS_HOME/Protocols/tcp.ini -ORBLogFile $BASEDIR/logs/$PROGNAME.$CONFIG_FILE_NAME.log"
-echo PROCESS=$PROCESS >> $logfile
+PROCESS="$PROGNAME -c $BASEDIR_ATS/config/$CONFIG_FILE_NAME"
+#echo PROCESS=$PROCESS >> $logfile
 
 idn=$(id -u)
 
@@ -47,7 +27,7 @@ case $1 in
 
 		if [ "$rc" == "0" ]
 		then
-			nohup $DATS_HOME/bin/$PROCESS & >> $logfile 2>&1
+			$DATS_HOME/bin/$PROCESS >> $logfile 2>&1 &
 			sleep 1
 			$0 check $CONFIG_FILE_NAME
        			exit 1;	
@@ -92,15 +72,15 @@ case $1 in
                 PROCESS_CHECK="$PROCESS"
 #        	echo "Checking :" $PROCESS_CHECK
 		PROG_PID=`pgrep -f "$PROCESS_CHECK"`
-		echo $PROG_PID >> $logfile;
+		#echo $PROG_PID >> $logfile;
 		if [ ! -z "$PROG_PID" ]
 		then
         		echo "$PROGNAME [$CONFIG_FILE_NAME] is running - $PROG_PID";
-        		echo "$PROGNAME [$CONFIG_FILE_NAME] is running - $PROG_PID" >> $logfile;
+        	#	echo "$PROGNAME [$CONFIG_FILE_NAME] is running - $PROG_PID" >> $logfile;
         		exit 1;
 		else
         		echo "$PROGNAME [$CONFIG_FILE_NAME] is not running $logfile";
-        		echo "$PROGNAME [$CONFIG_FILE_NAME] is not running" >> $logfile;
+        	#	echo "$PROGNAME [$CONFIG_FILE_NAME] is not running" >> $logfile;
 			exit 0;
 		fi
         ;;

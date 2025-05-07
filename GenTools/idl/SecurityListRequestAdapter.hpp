@@ -1,11 +1,7 @@
-// Don't modify, automatically generated file by QuickFIX2OpenDDS.py
-#ifndef __SecurityListRequest_h__
-#define __SecurityListRequest_h__
-
-#include "SecurityListRequestTypeSupportImpl.h"
+/* Don't modify, automatically generated file by QuickFIX2FastDDS.py*/
+#pragma once
+#include "SecurityListRequest.hpp"
 #include <quickfix/Message.h>
-
- using namespace DistributedATS;
 
 #include "HeaderAdapter.hpp"
 
@@ -17,5 +13,3 @@ class SecurityListRequestAdapter
 		static void DDS2FIX(const DistributedATS_SecurityListRequest::SecurityListRequest& ddsMsg, FIX::Message&)  __attribute__ ((visibility ("default")));
 
 };
-#endif
-

@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -28,9 +28,9 @@
 #ifndef ORDEREXCEPTION_H_
 #define ORDEREXCEPTION_H_
 
-#include <ExecutionReportTypeSupportImpl.h>
-#include <NewOrderSingleTypeSupportImpl.h>
-#include <OrderCancelRejectTypeSupportImpl.h>
+#include <ExecutionReport.hpp>
+#include <NewOrderSingle.hpp>
+#include <OrderCancelReject.hpp>
 
 #include <quickfix/FixValues.h>
 

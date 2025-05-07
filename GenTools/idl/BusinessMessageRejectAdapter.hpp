@@ -1,11 +1,7 @@
-// Don't modify, automatically generated file by QuickFIX2OpenDDS.py
-#ifndef __BusinessMessageReject_h__
-#define __BusinessMessageReject_h__
-
-#include "BusinessMessageRejectTypeSupportImpl.h"
+/* Don't modify, automatically generated file by QuickFIX2FastDDS.py*/
+#pragma once
+#include "BusinessMessageReject.hpp"
 #include <quickfix/Message.h>
-
- using namespace DistributedATS;
 
 #include "HeaderAdapter.hpp"
 
@@ -17,5 +13,3 @@ class BusinessMessageRejectAdapter
 		static void DDS2FIX(const DistributedATS_BusinessMessageReject::BusinessMessageReject& ddsMsg, FIX::Message&)  __attribute__ ((visibility ("default")));
 
 };
-#endif
-

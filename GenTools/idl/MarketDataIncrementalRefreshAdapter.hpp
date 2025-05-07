@@ -1,11 +1,7 @@
-// Don't modify, automatically generated file by QuickFIX2OpenDDS.py
-#ifndef __MarketDataIncrementalRefresh_h__
-#define __MarketDataIncrementalRefresh_h__
-
-#include "MarketDataIncrementalRefreshTypeSupportImpl.h"
+/* Don't modify, automatically generated file by QuickFIX2FastDDS.py*/
+#pragma once
+#include "MarketDataIncrementalRefresh.hpp"
 #include <quickfix/Message.h>
-
- using namespace DistributedATS;
 
 #include "HeaderAdapter.hpp"
 
@@ -17,5 +13,3 @@ class MarketDataIncrementalRefreshAdapter
 		static void DDS2FIX(const DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefresh& ddsMsg, FIX::Message&)  __attribute__ ((visibility ("default")));
 
 };
-#endif
-

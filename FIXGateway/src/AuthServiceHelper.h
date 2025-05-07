@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -25,8 +25,7 @@
    SOFTWARE.
 */
 
-#ifndef __AUTH_SERVICE_HELPER_H__
-#define __AUTH_SERVICE_HELPER_H__
+#pragma once
 
 #include <quickfix/FileStore.h>
 #include <quickfix/Log.h>
@@ -35,29 +34,31 @@
 
 #include "SocketConnection.h"
 
+typedef std::map<const std::string, FIX::SessionID> ActiveUserMap;
+
 class AuthServiceHelper {
   std::shared_ptr<FIX::SessionSettings> _settings;
   std::shared_ptr<FIX::SessionFactory> _sessionFactory;
-  const FIX::Dictionary *_defaultDictionary;
+    std::shared_ptr< FIX::Dictionary > _defaultDictionary;
 
   typedef std::map<const std::string, DistributedATS::SocketConnection *>
       PendingLogonSocketConnection;
   typedef std::map<const FIX::SessionID, FIX::Message> SessionReLoginMap;
 
   PendingLogonSocketConnection m_pendingLogonSocketConnection;
-  SessionReLoginMap m_sessionReloginMap;
+  static ActiveUserMap m_activeUserMap;
 
   FIX::Mutex _pendingSessionMutex;
 
 public:
   AuthServiceHelper(std::shared_ptr<FIX::SessionSettings> settings,
                     std::shared_ptr<FIX::SessionFactory> sessionFactory,
-                    const FIX::Dictionary *defaultDictionary,
+                    std::shared_ptr< FIX::Dictionary > defaultDictionary,
                     std::string senderCompID);
 
-  static const FIX::SessionID
-  SessionIDFromMessage(FIX::Message &message,
-                       const std::string &sessionQualifier = "");
+  static bool
+  ActiveSessionIDFromMessage(const FIX::Message &message,
+                             FIX::SessionID& sessionID);
 
 private:
   FIX::Session *
@@ -81,5 +82,3 @@ public:
 
   void loginSession(FIX::Session *session, std::string &connectionToken);
 };
-
-#endif

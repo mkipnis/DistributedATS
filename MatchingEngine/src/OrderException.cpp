@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -31,8 +31,8 @@ namespace DistributedATS {
 
 OrderException::OrderException(
     const DistributedATS_NewOrderSingle::NewOrderSingle &newOrderSingle, const int reason)
-    : _client_order_id(newOrderSingle.ClOrdID.in()),
-      _counter_partry(newOrderSingle.m_Header.SenderCompID.in()),
+    : _client_order_id(newOrderSingle.ClOrdID()),
+    _counter_partry(newOrderSingle.DATS_SourceUser()),
       _reason(reason) {
   // TODO Auto-generated constructor stub
 }
@@ -49,17 +49,17 @@ OrderException::~OrderException() {
 
 bool OrderException::populateExecutionReportWithRejectCode(
                                                            DistributedATS_ExecutionReport::ExecutionReport &executionReport) {
-  executionReport.OrderID = CORBA::string_dup(_client_order_id.c_str());
-  executionReport.ExecType = FIX::ExecType_REJECTED;
-  executionReport.OrdStatus = FIX::OrdStatus_REJECTED;
-  executionReport.OrdRejReason = _reason;
+  executionReport.OrderID( _client_order_id );
+  executionReport.ExecType( FIX::ExecType_REJECTED );
+  executionReport.OrdStatus( FIX::OrdStatus_REJECTED );
+  executionReport.OrdRejReason( _reason );
 
   return true;
 }
 
 bool OrderException::populateOrderCancelRejectWithReasonCode(
                                                              DistributedATS_OrderCancelReject::OrderCancelReject &cancelReject) {
-  cancelReject.CxlRejResponseTo = _reason;
+  cancelReject.CxlRejResponseTo(_reason);
   return true;
 }
 

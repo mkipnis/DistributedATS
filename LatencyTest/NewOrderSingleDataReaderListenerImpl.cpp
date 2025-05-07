@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -39,45 +39,23 @@ NewOrderSingleDataReaderListenerImpl::~NewOrderSingleDataReaderListenerImpl() {
 } /* namespace MatchingEngine */
 
 
-void NewOrderSingleDataReaderListenerImpl::on_data_available( DDS::DataReader_ptr reader) throw (CORBA::SystemException)
+void NewOrderSingleDataReaderListenerImpl::on_data_available( eprosima::fastdds::dds::DataReader* reader)
 {
-    try
+    
+    DistributedATS_NewOrderSingle::NewOrderSingle new_order_single;
+    eprosima::fastdds::dds::SampleInfo info;
+    
+    if (reader->take_next_sample(&new_order_single, &info) == eprosima::fastdds::dds::RETCODE_OK)
     {
-        DistributedATS_NewOrderSingle::NewOrderSingleDataReader_var new_order_single_dr = DistributedATS_NewOrderSingle::NewOrderSingleDataReader::_narrow(reader);
-
-        if (CORBA::is_nil ( new_order_single_dr.in() ) )
+        if (info.valid_data)
         {
-            std::cerr << "NewOrderSingleDataReaderListenerImpl::on_data_available: _narrow failed." << std::endl;
-            ACE_OS::exit(1);
+            
+            std::string clientOrderId = new_order_single.ClOrdID();
+            
+            m_pLatencyStatsPtr->insertStats(clientOrderId,
+                                            OrderHopLatency::NEW_ORDER_SINGLE_DDS);
+            
         }
-
-        while( true )
-        {
-            DistributedATS_NewOrderSingle::NewOrderSingle new_order_single;
-            DDS::SampleInfo si ;
-            DDS::ReturnCode_t status = new_order_single_dr->take_next_sample( new_order_single, si );
-
-            if (status == DDS::RETCODE_OK)
-            {
-                if ( !si.valid_data )
-                    continue;
-
-               	std::string clientOrderId = new_order_single.ClOrdID.in();
-                
-                m_pLatencyStatsPtr->insertStats(clientOrderId,
-                                                OrderHopLatency::NEW_ORDER_SINGLE_DDS);
-
-            } else if (status == DDS::RETCODE_NO_DATA) {
-                break;
-            } else {
-                std::cerr << "ERROR: read DATS::Logon: Error: " <<  status << std::endl;
-            }
-        }
-
-    } catch (CORBA::Exception& e) {
-        std::cerr << "Exception caught in read:" << std::endl << e << std::endl;
-        ACE_OS::exit(1);
     }
-
-
 }
+

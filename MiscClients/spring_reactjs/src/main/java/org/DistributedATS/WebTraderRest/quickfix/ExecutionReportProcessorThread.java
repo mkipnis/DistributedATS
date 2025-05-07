@@ -2,7 +2,7 @@
    Copyright (C) 2022 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -184,11 +184,13 @@ public class ExecutionReportProcessorThread implements Runnable {
         
         order.orderCondition =  FIXConvertUtils.getTimeInForce(timeInForce.getValue());
         order.orderType = FIXConvertUtils.getOrdType(ordType.getValue());
-      }
+      } 
       
       if (ordStatus.getValue() == OrdStatus.PENDING_NEW ||
     		  ordStatus.getValue() == OrdStatus.CANCELED)
+      {
         order.status =  FIXConvertUtils.getStatusText(ordStatus.getValue());
+      }
 
       //
       // Lets make sure we process the latest execution report.
@@ -248,8 +250,8 @@ public class ExecutionReportProcessorThread implements Runnable {
 			LOGGER.error("Unable to convert order/execreport to JSON");
 		}
 
-      order.insertExecutionReport(executionReportId, orderExecutionReport,
-                                  ++sequenceNumber);
+      order.insertExecutionReport(executionReportId, orderExecutionReport, ++sequenceNumber);
+    
       System.out.println("Execution Report Size : " +
                          order.getExecutionReports().size());
 

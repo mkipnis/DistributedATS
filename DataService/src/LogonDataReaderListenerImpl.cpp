@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -27,61 +27,40 @@
 
 #include <iostream>
 #include "LogonDataReaderListenerImpl.hpp"
-#include <LogonTypeSupportImpl.h>
+#include <fastdds/dds/subscriber/SampleInfo.hpp>
+#include <fastdds/dds/subscriber/DataReader.hpp>
+#include <fastdds/dds/subscriber/DataReaderListener.hpp>
 #include <quickfix/FixValues.h>
 
 #include <LogonLogger.hpp>
 
 #include <sstream>
 
-void LogonDataReaderListenerImpl::on_data_available( DDS::DataReader_ptr reader) throw (CORBA::SystemException)
+#include <log4cxx/logger.h>
+#include <log4cxx/basicconfigurator.h>
+
+static auto logger = log4cxx::Logger::getRootLogger();
+
+using namespace DistributedATS;
+
+void LogonDataReaderListenerImpl::on_data_available( eprosima::fastdds::dds::DataReader* reader )
 {
-    try
+
+    DistributedATS_Logon::Logon logon;
+    eprosima::fastdds::dds::SampleInfo info;
+    
+    if (reader->take_next_sample(&logon, &info) == eprosima::fastdds::dds::RETCODE_OK)
     {
-        DistributedATS_Logon::LogonDataReader_var logon_dr = DistributedATS_Logon::LogonDataReader::_narrow(reader);
-        
-        if (CORBA::is_nil ( logon_dr.in() ) )
+        if (info.valid_data)
         {
-            ACE_ERROR ((LM_ERROR, ACE_TEXT("(%P|%t|%D) LogonDataReaderListenerImpl::on_data_available: _narrow failed")));
-
-            ACE_OS::exit(1);
-        }
-        
-        while( true )
-        {
-            DistributedATS_Logon::Logon logon;
-            DDS::SampleInfo si ;
-            DDS::ReturnCode_t status = logon_dr->take_next_sample( logon, si );
+            std::stringstream ss;
+            LogonLogger::log(ss, logon);
+            LOG4CXX_INFO(logger, "Data Reader Logon : [" <<  ss.str() << "]" << logon.DATS_Destination() );
             
-            if (status == DDS::RETCODE_OK)
-            {
-                if ( !si.valid_data )
-                    continue;
-                
-                std::stringstream ss;
-                LogonLogger::log(ss, logon);
-                ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%t|%D) Logon Recieved : %s\n"), ss.str().c_str()));
-
-                DistributedATS_Logon::Logon* logonPtr = new DistributedATS_Logon::Logon( logon );
-
-                ACE_Message_Block* msg = new ACE_Message_Block((char*)logonPtr, sizeof(logon));
-                _logonQueue->enqueue_tail(msg);
-
-            } else if (status == DDS::RETCODE_NO_DATA) {
-                    break;
-            } else {
-                ACE_ERROR ((LM_ERROR, ACE_TEXT("(%P|%t|%D) ERROR: Read DATS::Logon: Error:  %d.\n"), status));
-            }
+            if (logon.DATS_Destination().compare("DATA_SERVICE") == 0)
+                _logonQueuePtr->push(std::make_shared<DistributedATS_Logon::Logon>(logon));
+            
         }
-        
-    } catch (CORBA::Exception& e) {
-        
-        std::stringstream ss;
-        ss << "Exception caught in read:" << std::endl << e << std::endl;
-        ACE_ERROR ((LM_ERROR, ACE_TEXT("(%P|%t|%D) Logon %s.\n"), ss.str().c_str()));
-
-        ACE_OS::exit(1);
     }
-
-
+    
 }

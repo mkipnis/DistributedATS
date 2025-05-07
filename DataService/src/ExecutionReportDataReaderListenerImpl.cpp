@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -32,80 +32,54 @@
 
 #include <ExecutionReportLogger.hpp>
 
+#include <log4cxx/logger.h>
+#include <log4cxx/basicconfigurator.h>
+
+
 namespace DistributedATS {
 
-    
+
 ExecutionReportDataReaderListenerImpl::~ExecutionReportDataReaderListenerImpl() {
-	// TODO Auto-generated destructor stub
 }
 
 
-void ExecutionReportDataReaderListenerImpl::on_data_available( DDS::DataReader_ptr reader) throw (CORBA::SystemException)
+void ExecutionReportDataReaderListenerImpl::on_data_available( eprosima::fastdds::dds::DataReader* reader )
 {
-    try
+    DistributedATS_ExecutionReport::ExecutionReport executionReport;
+    eprosima::fastdds::dds::SampleInfo info;
+    
+    if (reader->take_next_sample(&executionReport, &info) == eprosima::fastdds::dds::RETCODE_OK)
     {
-        DistributedATS_ExecutionReport::ExecutionReportDataReader_var execution_report_dr = DistributedATS_ExecutionReport::ExecutionReportDataReader::_narrow(reader);
-
-        if (CORBA::is_nil ( execution_report_dr.in() ) )
+        if (info.valid_data)
         {
-            ACE_ERROR ((LM_ERROR, ACE_TEXT("(%P|%t|%D) ERROR: Read ExecutionReportDataReaderListenerImpl::on_data_available")));
-
-            ACE_OS::exit(1);
-        }
-
-        while( true )
-        {
-            DistributedATS_ExecutionReport::ExecutionReport executionReport;
-            DDS::SampleInfo si ;
-            DDS::ReturnCode_t status = execution_report_dr->take_next_sample( executionReport, si );
-
-            if (status == DDS::RETCODE_OK)
+            std::stringstream ss;
+            ExecutionReportLogger::log(ss, executionReport);
+            LOG4CXX_INFO(logger, "Execution Report: [" <<  ss.str() << "]");
+            
+            std::string username = executionReport.DATS_DestinationUser();
+            
+            auto clientOrderMap = _execution_reports->find( username );
+            
+            if ( clientOrderMap == _execution_reports->end() )
             {
-                if ( !si.valid_data )
-                    continue;
-
-                std::stringstream ss;
-                
-                ExecutionReportLogger::log(ss, executionReport);
-                
-                ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%t|%D) Execution Report : %s\n"), ss.str().c_str()));
-                
-                std::string username = executionReport.m_Header.SenderSubID.in();
-                
-                auto clientOrderMap = m_executionReports->find( username );
-                
-                if ( clientOrderMap == m_executionReports->end() )
-                {
-                    clientOrderMap = m_executionReports->emplace( username, std::make_shared<OrderToExecutionReportMap>()).first;
-                 }
-                
-                std::string clientOrderId = executionReport.OrderID.in();
-                
-                std::shared_ptr<DistributedATS_ExecutionReport::ExecutionReport> executionRequestPtr( new DistributedATS_ExecutionReport::ExecutionReport(executionReport) );
-                
-                auto executionReportListPtr = (*clientOrderMap->second).find(clientOrderId);
-                
-                if ( executionReportListPtr == (*clientOrderMap->second).end() )
-                {
-                    executionReportListPtr = (*clientOrderMap->second).emplace(clientOrderId, std::make_shared<ExecutionReportPtrList>()).first;
-                }
-                
-                (*executionReportListPtr->second).emplace_back(executionRequestPtr);
-
-            } else if (status == DDS::RETCODE_NO_DATA) {
-                break;
-            } else {
-                ACE_ERROR ((LM_ERROR, ACE_TEXT("(%P|%t|%D) ERROR: Read DATS::ExecutionReport:  %d.\n"), status));
+                clientOrderMap = _execution_reports->emplace( username, std::make_shared<OrderToExecutionReportMap>()).first;
             }
+            
+            std::string clientOrderId = executionReport.OrderID();
+            
+            std::shared_ptr<DistributedATS_ExecutionReport::ExecutionReport> executionRequestPtr( new DistributedATS_ExecutionReport::ExecutionReport(executionReport) );
+            
+            auto executionReportListPtr = (*clientOrderMap->second).find(clientOrderId);
+            
+            if ( executionReportListPtr == (*clientOrderMap->second).end() )
+            {
+                executionReportListPtr = (*clientOrderMap->second).emplace(clientOrderId, std::make_shared<ExecutionReportPtrList>()).first;
+            }
+            
+            (*executionReportListPtr->second).emplace_back(executionRequestPtr);
+            
         }
-
-    } catch (CORBA::Exception& e)
-    {
-        std::stringstream ss;
-        ss << "Exception caught in read:" << std::endl << e << std::endl;
-        ACE_ERROR ((LM_ERROR, ACE_TEXT("(%P|%t|%D) ExceptionReport %s.\n"), ss.str().c_str()));
-        ACE_OS::exit(1);
     }
+    
 }
-
 }

@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -25,6 +25,7 @@
    SOFTWARE.
 */
 
+#include <boost/lockfree/spsc_queue.hpp>
 #include "Market.h"
 
 #include "OrderException.h"
@@ -38,6 +39,10 @@
 #include <OrderCancelRejectLogger.hpp>
 #include <OrderMassCancelReportLogger.hpp>
 #include <SecurityListRequestLogger.hpp>
+#include <MarketDataIncrementalRefreshLogger.hpp>
+
+
+
 
 namespace DistributedATS {
 
@@ -63,27 +68,27 @@ void Market::populatePriceLevelDepth(
         *marketDataRefresh) {
 
     DistributedATS_MarketDataIncrementalRefresh::NoMDEntries mdEntry;
-  mdEntry.Symbol = CORBA::string_dup(symbol.c_str());
-  mdEntry.SecurityExchange = CORBA::string_dup(market->getMarketName().c_str());
-  mdEntry.MDUpdateAction = '0';
+  mdEntry.Symbol(symbol);
+  mdEntry.SecurityExchange(market->getMarketName());
+  mdEntry.MDUpdateAction('0');
 
   uint16_t md_index = 0;
 
   auto pos = depth.bids();
 
   while (pos != depth.end()) {
-    mdEntry.MDEntrySize = pos->aggregate_qty();
+    mdEntry.MDEntrySize(pos->aggregate_qty());
 
-    if (mdEntry.MDEntrySize == 0)
-      mdEntry.MDEntryPx = 0;
+    if (mdEntry.MDEntrySize() == 0)
+      mdEntry.MDEntryPx(0);
     else
-      mdEntry.MDEntryPx = pos->price();
+      mdEntry.MDEntryPx(pos->price());
 
-    mdEntry.MDEntrySize = pos->aggregate_qty();
-    mdEntry.MDEntryType = md_index < MARKET_DATA_PRICE_DEPTH ? FIX::MDEntryType_BID
-                                                     : FIX::MDEntryType_OFFER;
+    mdEntry.MDEntrySize(pos->aggregate_qty());
+    mdEntry.MDEntryType(md_index < MARKET_DATA_PRICE_DEPTH ? FIX::MDEntryType_BID
+                                                     : FIX::MDEntryType_OFFER);
 
-    marketDataRefresh->c_NoMDEntries[md_index++] = mdEntry;
+      marketDataRefresh->c_NoMDEntries()[md_index++] = mdEntry;
 
     pos++;
   };
@@ -117,78 +122,66 @@ bool Market::submit(const OrderBookPtr &book, const OrderPtr &order) {
   return true;
 }
 
-void Market::publishSecurityListRequest() {
+void Market::publishSecurityListRequest( eprosima::fastdds::dds::DataWriter* dwr )
+{
     DistributedATS_SecurityListRequest::SecurityListRequest securityListRequest;
-  securityListRequest.m_Header.TargetCompID =
-      CORBA::string_dup("REF_DATA_SERVICE");
-  securityListRequest.m_Header.SenderCompID =
-      CORBA::string_dup(getMarketName().c_str());
-  securityListRequest.m_Header.TargetSubID =
-      CORBA::string_dup(_dataServiceName.c_str());
+    
+    securityListRequest.DATS_Destination("DATA_SERVICE");
+    securityListRequest.DATS_DestinationUser(_dataServiceName);
+    securityListRequest.DATS_Source("MATCHINE_ENGINE");
+    securityListRequest.DATS_SourceUser(getMarketName());
 
-  LoggerHelper::log_debug<std::stringstream, SecurityListRequestLogger,
-    DistributedATS_SecurityListRequest::SecurityListRequest>(
-      securityListRequest, "SecurityListRequest");
+    LoggerHelper::log_info<std::stringstream, SecurityListRequestLogger, DistributedATS_SecurityListRequest::SecurityListRequest>(logger,securityListRequest, "SecurityListRequest");
 
-  int ret = dataWriterContainerPtr_->_security_list_request_dw->write(securityListRequest, NULL);
-
-  if (ret != DDS::RETCODE_OK) {
-    ACE_ERROR(
-        (LM_ERROR,
-         ACE_TEXT("(%P|%t) ERROR: SecurityListRequest write returned %d.\n"),
-         ret));
-  }
+    auto ret = dwr->write(&securityListRequest);
+    
+    if (!ret) {
+        LOG4CXX_ERROR(logger, "SecurityListRequest write returned : " << ret);
+    }
 }
 
-void Market::publishMarketDataRequest() {
+void Market::publishMarketDataRequest()
+{
     DistributedATS_MarketDataRequest::MarketDataRequest marketDataRequest;
-  marketDataRequest.m_Header.TargetCompID = CORBA::string_dup("DATA_SERVICE");
-  marketDataRequest.m_Header.SenderCompID =
-      CORBA::string_dup(getMarketName().c_str());
-  marketDataRequest.m_Header.TargetSubID =
-      CORBA::string_dup(_dataServiceName.c_str());
+    
+    marketDataRequest.DATS_Destination("DATA_SERVICE");
+    marketDataRequest.DATS_DestinationUser(_dataServiceName);
+    marketDataRequest.DATS_Source("MATCHING_ENGINE");
+    marketDataRequest.DATS_SourceUser(getMarketName());
 
-  marketDataRequest.c_NoMDEntryTypes.length(1);
-  marketDataRequest.c_NoMDEntryTypes[0].MDEntryType =
-      FIX::MDEntryType_TRADE; // Last trade price
+    marketDataRequest.c_NoMDEntryTypes().resize(1);
+    marketDataRequest.c_NoMDEntryTypes()[0].MDEntryType(FIX::MDEntryType_TRADE); // Last trade price
 
-  marketDataRequest.c_NoRelatedSym.length((int)books_.size());
+    marketDataRequest.c_NoRelatedSym().resize(books_.size());
 
-  int index = 0;
-  for (auto &book : books_) {
-    std::cout << "Need To Publish Market Data Request for Book" << book.first
-              << std::endl;
-    marketDataRequest.c_NoRelatedSym[index].Symbol =
-        CORBA::string_dup(book.first.c_str());
-    marketDataRequest.c_NoRelatedSym[index].SecurityExchange =
-        CORBA::string_dup(getMarketName().c_str());
+    int index = 0;
+    for (auto &book : books_)
+    {
+        marketDataRequest.c_NoRelatedSym()[index].Symbol(book.first);
+        marketDataRequest.c_NoRelatedSym()[index].SecurityExchange(getMarketName());
+        index++;
+    }
 
-    index++;
-  }
+    LoggerHelper::log_info<std::stringstream, MarketDataRequestLogger,DistributedATS_MarketDataRequest::MarketDataRequest>(logger,marketDataRequest, "MarketDataRequest");
 
-  LoggerHelper::log_debug<std::stringstream, MarketDataRequestLogger,
-    DistributedATS_MarketDataRequest::MarketDataRequest>(
-      marketDataRequest, "MarketDataRequest");
-
-  int ret = dataWriterContainerPtr_->_market_date_request_dw->write(marketDataRequest, NULL);
-
-  if (ret != DDS::RETCODE_OK) {
-    ACE_ERROR(
-        (LM_ERROR,
-         ACE_TEXT("(%P|%t) ERROR: MarketDataRequest write returned %d.\n"),
-         ret));
-  }
+    bool ret = dataWriterContainerPtr_->market_data_request_dw->write(&marketDataRequest);
+    
+    if (!ret)
+    {
+        LOG4CXX_ERROR(logger, "MarketDataRequest write returned : " << ret);
+    }
 }
 
 bool Market::cancel_order(const OrderBookPtr &book,
                           const std::string &counter_party,
-                          const std::string &client_order_id) {
+                          const std::string &client_order_id)
+{
   auto contra_party_orders = orders_.find(counter_party);
 
-  if (contra_party_orders == orders_.end()) {
+  if (contra_party_orders == orders_.end())
+  {
     std::cerr << "Order for given counter party not found : " << counter_party
               << std::endl;
-
     return false;
   };
 
@@ -252,10 +245,14 @@ bool Market::mass_cancel(const std::string &counter_party) {
 
     auto book = findBook(order->symbol());
 
-    // book->log(out());
-    book->cancel(order);
-    // book->log(out());
+    if ( order->quantityOnMarket() > 0 )
+    {
+        book->cancel(order);
+    }
+
   }
+
+  orders_.erase(contra_party_orders); 
 
   return true;
 }
@@ -288,68 +285,61 @@ OrderBookPtr Market::findBook(const std::string &symbol) {
   return result;
 }
 
-void Market::publishExecutionReport(
-                                    DistributedATS_ExecutionReport::ExecutionReport &executionReport) {
-  executionReport.ExecID = getNextExecutionReportID().c_str();
+void Market::publishExecutionReport(DistributedATS_ExecutionReport::ExecutionReport &executionReport)
+{
 
-  LoggerHelper::log_debug<std::stringstream, ExecutionReportLogger,
-    DistributedATS_ExecutionReport::ExecutionReport>(
+    executionReport.ExecID(getNextExecutionReportID());
+    LoggerHelper::log_debug<std::stringstream, ExecutionReportLogger, DistributedATS_ExecutionReport::ExecutionReport>(logger,
       executionReport, "ExecutionReport");
 
-  int ret = dataWriterContainerPtr_->_execution_report_dw->write(executionReport, NULL);
-
-  if (ret != DDS::RETCODE_OK) {
-    ACE_ERROR((LM_ERROR,
-               ACE_TEXT("(%P|%t) ERROR: Execution Report write returned %d.\n"),
-               ret));
-  }
+    bool ret = dataWriterContainerPtr_->execution_report_dw->write(&executionReport);
+    
+    if (!ret)
+    {
+        LOG4CXX_ERROR(logger, "Execution Report write returned : " << ret);
+    }
 }
 
-void Market::publishOrderMassCancelReport(
-                                          DistributedATS_OrderMassCancelReport::OrderMassCancelReport &orderMassCancelReport) {
+void Market::publishOrderMassCancelReport(DistributedATS_OrderMassCancelReport::OrderMassCancelReport &orderMassCancelReport)
+{
 
-  LoggerHelper::log_debug<std::stringstream, OrderMassCancelReportLogger,
-    DistributedATS_OrderMassCancelReport::OrderMassCancelReport>(
-      orderMassCancelReport, "OrderMassCancelReport");
+    LoggerHelper::log_debug<std::stringstream, OrderMassCancelReportLogger, DistributedATS_OrderMassCancelReport::OrderMassCancelReport>(logger, orderMassCancelReport, "OrderMassCancelReport");
 
-  int ret = dataWriterContainerPtr_->_order_mass_cancel_report_dw->write(orderMassCancelReport, NULL);
+    bool ret = dataWriterContainerPtr_->order_mass_cancel_report_dw->write(&orderMassCancelReport);
+    
+    if (!ret)
+    {
+        LOG4CXX_ERROR(logger, "Order Mass Cancel Report write returned: " << ret);
+    }
 
-  if (ret != DDS::RETCODE_OK) {
-    ACE_ERROR(
-        (LM_ERROR,
-         ACE_TEXT(
-             "(%P|%t) ERROR: Order Mass Cancel Report write returned %d.\n"),
-         ret));
-  }
 }
 
 void Market::publishOrderCancelReject(
                                       DistributedATS_OrderCancelReject::OrderCancelReject &orderCancelReject) {
 
-  LoggerHelper::log_debug<std::stringstream, OrderCancelRejectLogger,
-    DistributedATS_OrderCancelReject::OrderCancelReject>(
-      orderCancelReject, "OrderCancelReject");
+    LoggerHelper::log_debug<std::stringstream, OrderCancelRejectLogger,
+        DistributedATS_OrderCancelReject::OrderCancelReject>(logger, orderCancelReject, "OrderCancelReject");
 
-  int ret = dataWriterContainerPtr_->_order_cancel_reject_dw->write(orderCancelReject, NULL);
+    bool ret = dataWriterContainerPtr_->order_cancel_reject_dw->write(&orderCancelReject);
+    
+    if (ret)
+    {
+        LOG4CXX_ERROR(logger, "Order Cancel Reject write returned: " << ret);
+    }
 
-  if (ret != DDS::RETCODE_OK) {
-    ACE_ERROR(
-        (LM_ERROR,
-         ACE_TEXT("(%P|%t) ERROR: Order Cancel Reject write returned %d.\n"),
-         ret));
-  }
 }
 
 /////////////////////////////////////
 // Implement OrderListener interface
 
-void Market::on_accept(const OrderPtr &order) {
-  order->onAccepted();
+void Market::on_accept(const OrderPtr &order)
+{
+    order->onAccepted();
 
     DistributedATS_ExecutionReport::ExecutionReport executionReport;
-  order->populateExecutionReport(executionReport, FIX::ExecType_NEW);
+    order->populateExecutionReport(executionReport, FIX::ExecType_NEW);
 
-  publishExecutionReport(executionReport);
+    publishExecutionReport(executionReport);
 }
 
 void Market::on_reject(const OrderPtr &order, const char *reason) {
@@ -382,9 +372,15 @@ void Market::on_fill(const OrderPtr &order, const OrderPtr &matched_order,
   else
     matched_order->populateExecutionReport(executionReportMatched,
                                            FIX::ExecType_PARTIAL_FILL);
+    
+    auto last_px = fill_cost / fill_qty;
 
-  executionReport.LastPx = executionReportMatched.LastPx = fill_cost / fill_qty;
-  executionReport.LastQty = executionReportMatched.LastQty = fill_qty;
+    executionReport.LastPx(last_px);
+    executionReportMatched.LastPx(last_px);
+    
+    
+    executionReport.LastQty(fill_qty);
+    executionReportMatched.LastQty(fill_qty);
 
   publishExecutionReport(executionReport);
   publishExecutionReport(executionReportMatched);
@@ -432,17 +428,21 @@ void Market::on_bbo_change(const DepthOrderBook *book, const BookDepth *depth) {
 
 void Market::on_depth_change(const DepthOrderBook *book,
                              const BookDepth *depth) {
-    DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefresh
-      *marketDataRefresh =
-          new DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefresh();
+    
+    auto md_update = std::make_shared<DistributedATS::MarketDataUpdate>();
+    md_update->symbol = book->symbol();
 
-  marketDataRefresh->m_Header.SenderCompID =
-      CORBA::string_dup("MATCHING_ENGINE");
-  marketDataRefresh->m_Header.MsgType = CORBA::string_dup("X");
+    md_update->priceDepth.DATS_Source("MATCHING_ENGINE");
+    md_update->priceDepth.fix_header().MsgType("X");
 
-  marketDataRefresh->c_NoMDEntries.length(15);
+    md_update->priceDepth.c_NoMDEntries().resize(15);
 
-  populatePriceLevelDepth(book->symbol(), this, *depth, marketDataRefresh);
+    populatePriceLevelDepth(book->symbol(), this, *depth, &md_update->priceDepth);
+    
+    std::stringstream ss;
+    MarketDataIncrementalRefreshLogger::log(ss, md_update->priceDepth);
+    LOG4CXX_INFO(logger, "MarketDataIncrementalRefresh : [" <<  ss.str() << "]");
+    std::cout << "Update : " << ss.str() << std::endl;
 
   int market_data_index = MARKET_DATA_PRICE_DEPTH * 2; // bids and asks
 
@@ -455,48 +455,41 @@ void Market::on_depth_change(const DepthOrderBook *book,
         DistributedATS_MarketDataIncrementalRefresh::NoMDEntries mdEntry;
 
       set_market_data_stats_entry(
-          marketDataRefresh->c_NoMDEntries[market_data_index++],
+                                  md_update->priceDepth.c_NoMDEntries()[market_data_index++],
           getMarketName(), book->symbol(), FIX::MDUpdateAction_NEW,
           FIX::MDEntryType_TRADE, book->market_price(), 0);
 
       set_market_data_stats_entry(
-          marketDataRefresh->c_NoMDEntries[market_data_index++],
+                                  md_update->priceDepth.c_NoMDEntries()[market_data_index++],
           getMarketName(), book->symbol(), FIX::MDUpdateAction_NEW,
           FIX::MDEntryType_TRADE_VOLUME, 0, current_stats->second->volume);
 
       set_market_data_stats_entry(
-          marketDataRefresh->c_NoMDEntries[market_data_index++],
+                                  md_update->priceDepth.c_NoMDEntries()[market_data_index++],
           getMarketName(), book->symbol(), FIX::MDUpdateAction_NEW,
           FIX::MDEntryType_OPENING_PRICE, current_stats->second->open, 0);
 
       set_market_data_stats_entry(
-          marketDataRefresh->c_NoMDEntries[market_data_index++],
+                                  md_update->priceDepth.c_NoMDEntries()[market_data_index++],
           getMarketName(), book->symbol(), FIX::MDUpdateAction_NEW,
           FIX::MDEntryType_TRADING_SESSION_LOW_PRICE,
           current_stats->second->low, 0);
 
       set_market_data_stats_entry(
-          marketDataRefresh->c_NoMDEntries[market_data_index++],
+                                  md_update->priceDepth.c_NoMDEntries()[market_data_index++],
           getMarketName(), book->symbol(), FIX::MDUpdateAction_NEW,
           FIX::MDEntryType_TRADING_SESSION_HIGH_PRICE,
           current_stats->second->high, 0);
 
     } else {
       set_market_data_stats_entry(
-          marketDataRefresh->c_NoMDEntries[market_data_index++],
+                                  md_update->priceDepth.c_NoMDEntries()[market_data_index++],
           getMarketName(), book->symbol(), FIX::MDUpdateAction_NEW,
           FIX::MDEntryType_OPENING_PRICE, current_stats->second->open, 0);
     }
   }
 
-  market_data_update *mdUpdate = new market_data_update();
-  mdUpdate->symbol = book->symbol();
-  mdUpdate->priceDepth = marketDataRefresh;
-
-  ACE_Message_Block *msg =
-      new ACE_Message_Block((char *)mdUpdate, sizeof(mdUpdate));
-
-  _price_depth_publisher_queue_ptr->enqueue_tail(msg);
+    _price_depth_publisher_queue_ptr->push(md_update);
 }
 
 void Market::cancel_all_orders() {
@@ -511,21 +504,20 @@ void Market::cancel_all_orders() {
   }
 };
 
-void Market::set_market_price(const std::string &symbol,
-                              liquibook::book::Price price) {
-  auto book = findBook(symbol);
+void Market::set_market_price(const std::string &symbol, liquibook::book::Price price)
+{
+    auto book = findBook(symbol);
 
-  if (book != NULL) {
-    std::cout << "Setting market price : " << symbol << ":" << price
-              << std::endl;
+    if (book != NULL)
+    {
+        std::stringstream ss;
+        LOG4CXX_INFO(logger, "Setting market price :" <<  symbol << price);
+        update_symbol_stats(book.get(), price, 0);
+        book->set_market_price(price);
 
-    update_symbol_stats(book.get(), price, 0);
-
-    book->set_market_price(price);
-
-  } else {
-    std::cerr << "Book not found" << std::endl;
-  }
+    } else {
+        LOG4CXX_ERROR(logger, "Book not found :" <<  symbol << price);
+    }
 };
 
 void Market::update_symbol_stats(const OrderBook *book,
@@ -554,15 +546,15 @@ void Market::set_market_data_stats_entry(
     const std::string &market, const std::string &symbol, const char md_action,
     const char md_entry_type, const float MDEntryPx, const float MDEntrySize) {
 
-  mdEntry.SecurityExchange = CORBA::string_dup(getMarketName().c_str());
-  mdEntry.Symbol = CORBA::string_dup(symbol.c_str());
-  mdEntry.MDUpdateAction = md_action;
-  mdEntry.MDEntryType = md_entry_type;
+  mdEntry.SecurityExchange (getMarketName());
+  mdEntry.Symbol(symbol);
+  mdEntry.MDUpdateAction(md_action);
+  mdEntry.MDEntryType(md_entry_type);
 
   if (md_entry_type == FIX::MDEntryType_TRADE_VOLUME)
-    mdEntry.MDEntrySize = MDEntrySize;
+    mdEntry.MDEntrySize(MDEntrySize);
   else
-    mdEntry.MDEntryPx = MDEntryPx;
+    mdEntry.MDEntryPx(MDEntryPx);
 }
 
 } // namespace DistributedATS

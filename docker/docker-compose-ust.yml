@@ -1,0 +1,31 @@
+version: '2'
+
+services:
+  # Core Services: Matching Engines, FIX Gateways
+  distributed_ats:
+    container_name: distributed_ats
+    image: ghcr.io/mkipnis/dats_ust_clob:latest
+    command: >
+      bash -c "cd /opt/DistributedATS/ &&
+               . ./dats_env.sh &&
+               cd /opt/DistributedATS/MiscATS/USTreasuryCLOB/scripts && ./start_ust_clob.sh"
+    volumes:
+      - ./data_ats:/opt/DistributedATS/DataService/sql/sqlite
+      - ./logs_ats:/opt/DistributedATS/MiscATS/USTreasuryCLOB/logs
+    ports:
+      - "15001:15001"
+      - "16001:16001"
+      - "17001:17001"
+    restart: unless-stopped
+
+  # WebTrader Front-End
+  distributed_ats_webtrader:
+    container_name: distributed_ats_webtrader
+    image: ghcr.io/mkipnis/distributed_ats_webtrader:latest
+    depends_on:
+      - distributed_ats
+    volumes:
+      - ./webtrader_logs:/usr/local/tomcat/logs
+    ports:
+      - "8080:8080"
+    restart: unless-stopped

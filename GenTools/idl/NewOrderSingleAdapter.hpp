@@ -1,11 +1,7 @@
-// Don't modify, automatically generated file by QuickFIX2OpenDDS.py
-#ifndef __NewOrderSingle_h__
-#define __NewOrderSingle_h__
-
-#include "NewOrderSingleTypeSupportImpl.h"
+/* Don't modify, automatically generated file by QuickFIX2FastDDS.py*/
+#pragma once
+#include "NewOrderSingle.hpp"
 #include <quickfix/Message.h>
-
- using namespace DistributedATS;
 
 #include "HeaderAdapter.hpp"
 
@@ -17,5 +13,3 @@ class NewOrderSingleAdapter
 		static void DDS2FIX(const DistributedATS_NewOrderSingle::NewOrderSingle& ddsMsg, FIX::Message&)  __attribute__ ((visibility ("default")));
 
 };
-#endif
-

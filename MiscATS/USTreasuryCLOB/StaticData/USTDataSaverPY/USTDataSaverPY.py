@@ -2,7 +2,7 @@
    Copyright (C) 2022 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
 
@@ -98,9 +98,15 @@ def main(argv):
         print(insert_statement)
         cursor.execute(insert_statement)
 
-        instrument_ref_data = json.dumps(instrument)
+        instrument_ref_data = {}
+        instrument_ref_data['cusip']=instrument['cusip']
+        instrument_ref_data['issueDate']=instrument['issueDate']
+        instrument_ref_data['maturityDate']=instrument['maturityDate']
+        instrument_ref_data['interestRate'] = instrument['interestRate']
 
-        update_ref_data = "update instrument set properties=json_insert(properties, \"$.ref_data\",'" + str(instrument_ref_data) + "') where instrument_name='" + instrument_name + "'"
+        instrument_ref_data_str = json.dumps(instrument_ref_data)
+
+        update_ref_data = "update instrument set properties=json_insert(properties, \"$.ref_data\",'" + str(instrument_ref_data_str) + "') where instrument_name='" + instrument_name + "'"
         print(update_ref_data)
         cursor.execute(update_ref_data)
 

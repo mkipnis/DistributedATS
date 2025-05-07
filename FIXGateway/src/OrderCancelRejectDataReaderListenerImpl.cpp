@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -28,21 +28,21 @@
 #include "Application.hpp"
 #include <OrderCancelRejectAdapter.hpp>
 #include <OrderCancelRejectLogger.hpp>
+#include <fastdds/dds/subscriber/Subscriber.hpp>
+#include <fastdds/dds/subscriber/DataReader.hpp>
+#include <fastdds/dds/subscriber/DataReaderListener.hpp>
+#include <fastdds/dds/subscriber/qos/DataReaderQos.hpp>
+#include <fastdds/dds/subscriber/SampleInfo.hpp>
 
 namespace DistributedATS {
 
 auto const order_cancel_reject_processor = [] (DistributedATS::DATSApplication &application, DistributedATS_OrderCancelReject::OrderCancelReject& orderCancelReject)
 {
 
-    std::stringstream ss;
-    OrderCancelRejectLogger::log(ss, orderCancelReject);
-    ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%t) OrderCancelReject : %s\n"),
-               ss.str().c_str()));
-
     FIX::Message orderCancelRejectMessage;
 
-    orderCancelReject.m_Header.SendingTime = 0; // this is precision;
-    HeaderAdapter::DDS2FIX(orderCancelReject.m_Header,
+    orderCancelReject.fix_header().SendingTime(0); // this is precision;
+    HeaderAdapter::DDS2FIX(orderCancelReject.fix_header(),
                            orderCancelRejectMessage.getHeader());
     OrderCancelRejectAdapter::DDS2FIX(orderCancelReject,
                                       orderCancelRejectMessage);
@@ -52,48 +52,25 @@ auto const order_cancel_reject_processor = [] (DistributedATS::DATSApplication &
 };
 
 OrderCancelRejectDataReaderListenerImpl::OrderCancelRejectDataReaderListenerImpl(DistributedATS::DATSApplication &application)
-    :_processor(application, order_cancel_reject_processor, 100 )
+    :_processor(application, order_cancel_reject_processor, "OrderCancelRejectDataReaderListenerImpl", 100 )
 {
     
 };
 
 void OrderCancelRejectDataReaderListenerImpl::on_data_available(
-    DDS::DataReader_ptr reader) throw(CORBA::SystemException) {
-  try {
-      DistributedATS_OrderCancelReject::OrderCancelRejectDataReader_var
-        order_cancel_reject_dr =
-      DistributedATS_OrderCancelReject::OrderCancelRejectDataReader::_narrow(reader);
-
-    if (CORBA::is_nil(order_cancel_reject_dr.in())) {
-      std::cerr << "OrderCancelRejectDataReaderListenerImpl::on_data_available:"
-                   " _narrow failed."
-                << std::endl;
-      ACE_OS::exit(1);
-    }
-
-    while (true) {
-        DistributedATS_OrderCancelReject::OrderCancelReject orderCancelReject;
-      DDS::SampleInfo si;
-      DDS::ReturnCode_t status =
-          order_cancel_reject_dr->take_next_sample(orderCancelReject, si);
-
-      if (status == DDS::RETCODE_OK) {
-        if (!si.valid_data)
-          continue;
-
-          _processor.enqueue_dds_message(orderCancelReject);
-
-      } else if (status == DDS::RETCODE_NO_DATA) {
-        break;
-      } else {
-        std::cerr << "ERROR: read DATS::Logon: Error: " << status << std::endl;
-      }
-    }
-
-  } catch (CORBA::Exception &e) {
-    std::cerr << "Exception caught in read:" << std::endl << e << std::endl;
-    ACE_OS::exit(1);
-  }
+        eprosima::fastdds::dds::DataReader* reader)
+{
+    
+    DistributedATS_OrderCancelReject::OrderCancelReject orderCancelReject;
+    eprosima::fastdds::dds::SampleInfo info;
+     if (reader->take_next_sample(&orderCancelReject, &info) == eprosima::fastdds::dds::RETCODE_OK)
+     {
+         if (info.valid_data)
+         {
+             _processor.enqueue_dds_message(orderCancelReject);
+         }
+     }
+  
 }
 
 } /* namespace DistributedATS */

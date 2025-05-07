@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -28,39 +28,42 @@
 #include "AuthServiceHelper.h"
 
 #include <strstream>
-
-#include <ace/Log_Msg.h>
-#include <ace/Log_Msg_Callback.h>
-#include <ace/Log_Record.h>
-#include <ace/streams.h>
-
 #include <quickfix/fix44/Logout.h>
+
+#include <log4cxx/logger.h>
+#include <log4cxx/basicconfigurator.h>
+
+static auto logger = log4cxx::Logger::getRootLogger();
+
+
+ActiveUserMap AuthServiceHelper::m_activeUserMap;
 
 AuthServiceHelper::AuthServiceHelper(
     std::shared_ptr<FIX::SessionSettings> settings,
     std::shared_ptr<FIX::SessionFactory> sessionFactory,
-    const FIX::Dictionary *defaultDictionary, std::string senderCompID)
+    std::shared_ptr<FIX::Dictionary> defaultDictionary, std::string senderCompID)
     : _settings(settings), _sessionFactory(sessionFactory),
       _defaultDictionary(defaultDictionary), _senderCompID(senderCompID) {}
 
 //
 // creates session id from provided message
 //
-const FIX::SessionID
-AuthServiceHelper::SessionIDFromMessage(FIX::Message &message,
-                                        const std::string &sessionQualifier) {
-  FIX::BeginString beginString;
-  FIX::SenderCompID clSenderCompID;
-  FIX::TargetCompID clTargetCompID;
 
-  message.getHeader().getField(beginString);
-  message.getHeader().getField(clSenderCompID);
+bool
+AuthServiceHelper::ActiveSessionIDFromMessage(const FIX::Message &message,
+                                      FIX::SessionID& sessionID) {
+  FIX::SenderCompID clTargetCompID;
+  
   message.getHeader().getField(clTargetCompID);
+  auto activeSessionID = m_activeUserMap.find(clTargetCompID.getValue());
 
-  FIX::SenderCompID senderCompID(clTargetCompID);
-  FIX::TargetCompID targetCompID(clSenderCompID);
-  return FIX::SessionID(beginString, senderCompID, targetCompID,
-                        sessionQualifier);
+  if ( activeSessionID != m_activeUserMap.end() )
+  {
+      sessionID = activeSessionID->second;
+      return true;
+  }
+    
+  return false;
 }
 
 //
@@ -87,10 +90,9 @@ FIX::Session *AuthServiceHelper::createSessionFromAuthMessage(
     if (session == NULL) {
       session = _sessionFactory->create(newFixSessionID, *_defaultDictionary);
 
-      ACE_DEBUG((LM_INFO,
-                 ACE_TEXT("(%P|%t|%D) Creating QuickFIX Session from message "
-                          "from auth service : %s\n"),
-                 session->getSessionID().toString().c_str()));
+        LOG4CXX_INFO(logger, "Creating QuickFIX Session from message "
+                      "from auth service :" << session->getSessionID() );
+     
     }
   } catch (FIX::ConfigError &cfgError) {
     std::cerr << "Config Exception in session create : " << cfgError.what()
@@ -104,12 +106,9 @@ void AuthServiceHelper::insertPendingConnection(
     const std::string &connectionToken,
     DistributedATS::SocketConnection *socketConnection) {
   FIX::Locker lock(_pendingSessionMutex);
-
-  ACE_DEBUG(
-      (LM_INFO,
-       ACE_TEXT(
-           "(%P|%t|%D) Inserting pending connection : %s : Socket : [%d]\n"),
-       connectionToken.c_str(), socketConnection->getSocket()));
+    
+    
+    LOG4CXX_INFO(logger, "Inserting pending connection : [" << connectionToken << "] Socket :[" << socketConnection->getSocket()<<"]");
 
   std::cout << "Connection Token: " << connectionToken << std::endl;
   m_pendingLogonSocketConnection[connectionToken] = socketConnection;
@@ -126,42 +125,42 @@ std::string AuthServiceHelper::getConnectionToken(const FIX::Message &message) {
 }
 
 void AuthServiceHelper::processDDSLogon(FIX::Message &message) {
-  std::string connectionToken = getConnectionToken(message);
 
-  FIX::BeginString beginString;
-  FIX::TargetCompID clTargetCompID;
-  FIX::SenderCompID clLogonSenderCompID;
+    auto connectionToken = getConnectionToken(message);
+    
+    auto beginString = message.getHeader().getField(FIX::FIELD::BeginString);
+    //auto senderCompID = message.getHeader().getField(FIX::FIELD::SenderCompID);
+    auto targetCompID = message.getHeader().getField(FIX::FIELD::TargetCompID);
+    auto targetSubID = message.getHeader().getField(FIX::FIELD::TargetSubID);
+    auto clSessionQualifier = message.getField(FIX::FIELD::RawData);
 
-  message.getHeader().getField(beginString);
-  message.getHeader().getField(clTargetCompID);
-  message.getHeader().getField(clLogonSenderCompID);
+    LOG4CXX_INFO(logger, "Received Session ID for Logon : [" << _senderCompID.c_str() << "] Session :[" << clSessionQualifier<<"]");
+    
+    FIX::Session *session = NULL;
 
-  FIX::SessionID newFixSessionID(beginString, _senderCompID, clTargetCompID,
-                                 "");
+    auto activeSessionID = m_activeUserMap.find(targetSubID);
+  
+    if ( activeSessionID != m_activeUserMap.end() )
+      session =  FIX::Session::lookupSession(activeSessionID->second);
+  
 
-  ACE_DEBUG(
-      (LM_INFO,
-       ACE_TEXT(
-           "(%P|%t|%D) Received Session ID for Logon : %s : Session : [%s]\n"),
-       _senderCompID.c_str(), newFixSessionID.toString().c_str()));
-
-  FIX::Session *session = FIX::Session::lookupSession(newFixSessionID);
 
   if (session != NULL) {
+    // Reconnection to the same gateway
     if (session->isLoggedOn() &&
-        clLogonSenderCompID.getValue().compare(_senderCompID) == 0) {
+        targetCompID.compare(_senderCompID) == 0)
+    {
       FIX44::Logout logoutMessage;
 
       FIX::Text logoutText("New session logged in with your credentials");
       logoutMessage.set(logoutText);
 
-      FIX::Session::sendToTarget(logoutMessage, newFixSessionID);
+      std::cout << "Sending logout: " << activeSessionID->second << std::endl;
+        
+      FIX::Session::sendToTarget(logoutMessage, activeSessionID->second);
+      m_activeUserMap.erase(activeSessionID);
 
-      FIX::Locker lock(_pendingSessionMutex);
-      m_sessionReloginMap[newFixSessionID] = message;
-
-      return;
-    } else {
+    } else { // Connection from another gateway
 
       FIX44::Logout logoutMessage;
 
@@ -169,13 +168,24 @@ void AuthServiceHelper::processDDSLogon(FIX::Message &message) {
           "New session logged in with your credentials from Another Gateway");
       logoutMessage.set(logoutText);
 
-      FIX::Session::sendToTarget(logoutMessage, newFixSessionID);
-    }
-  } else if (clLogonSenderCompID.getValue().compare(_senderCompID) == 0) {
-    session = AuthServiceHelper::createSessionFromAuthMessage(newFixSessionID,
-                                                              message, "");
+      FIX::Session::sendToTarget(logoutMessage, activeSessionID->second);
+      m_activeUserMap.erase(activeSessionID);
 
-    if (session == NULL) {
+      return;
+    }
+  }
+    
+  if (targetCompID.compare(_senderCompID) == 0)
+    {
+        FIX::SessionID newFixSessionID(beginString, _senderCompID, targetSubID,
+                                       clSessionQualifier);
+       session = AuthServiceHelper::createSessionFromAuthMessage(newFixSessionID,
+                                                              message, "");
+        
+    if (session)
+    {
+        m_activeUserMap[targetSubID] = newFixSessionID;
+    } else {
       std::cerr << "Something is wrong unable to create session object!!!!!"
                 << std::endl;
       return;
@@ -190,10 +200,9 @@ void AuthServiceHelper::processDDSLogon(FIX::Message &message) {
 void AuthServiceHelper::loginSession(FIX::Session *session,
                                      std::string &connectionToken) {
   FIX::Locker lock(_pendingSessionMutex);
+    
+    LOG4CXX_INFO(logger, "Login-in Session : [" << session->getSessionID() << "] Token :[" << connectionToken<<"]");
 
-  ACE_DEBUG(
-      (LM_INFO, ACE_TEXT("(%P|%t|%D) Login-in Session : [%s] - Token [%s] \n"),
-       session->getSessionID().toString().c_str(), connectionToken.c_str()));
 
   DistributedATS::SocketConnection *responder =
       m_pendingLogonSocketConnection[connectionToken];
@@ -208,17 +217,15 @@ void AuthServiceHelper::loginSession(FIX::Session *session,
     try {
       session->next(pendingLogin, UtcTimeStamp());
     } catch (Exception &e) {
-      ACE_DEBUG(
-          (LM_ERROR,
-           ACE_TEXT("(%P|%t|%D) Exception in Logon : [%s] - Exception [%s] \n"),
-           session->getSessionID().toString().c_str(), e.what()));
+        
+        LOG4CXX_ERROR(logger, "Exception in Logon : [" << session->getSessionID() << "] Exception :[" << e.what()<<"]");
+
     };
 
   } else {
-    ACE_DEBUG(
-        (LM_INFO,
-         ACE_TEXT("(%P|%t|%D) Responder not found : [%s] - Token [%s] \n"),
-         session->getSessionID().toString().c_str(), connectionToken.c_str()));
+      
+      LOG4CXX_INFO(logger, "Responder not found : [" << session->getSessionID() << "] Token :[" << connectionToken <<"]");
+
   }
 }
 
@@ -255,11 +262,8 @@ void AuthServiceHelper::processDDSLogout(std::string &connectionToken,
   message.getHeader().setField(targetCompID);
   message.getHeader().setField(senderCompID);
   message.getHeader().setField(sendingTime);
-
-  ACE_DEBUG((LM_INFO,
-             ACE_TEXT("(%P|%t|%D) Logout : Original SessionID Token [%s] : "
-                      "Logout Message ID: %s\n"),
-             connectionToken.c_str(), message.toString().c_str()));
+    
+    LOG4CXX_INFO(logger, "Logout : Original SessionID Token [%s] : [" << connectionToken << "] Logout Message :[" << message.toString() <<"]");
 
   responder->send(message.toString());
   responder->disconnect();
@@ -269,11 +273,9 @@ void AuthServiceHelper::processDisconnect(
     const FIX::SessionID &sessionID,
     DistributedATS::SocketConnection *pSocketConnection) {
   FIX::Locker lock(_pendingSessionMutex);
+    
+    LOG4CXX_INFO(logger, "Disconnecting Pending Connection Token: [" << pSocketConnection->getPendingConnectionToken() );
 
-  ACE_DEBUG(
-      (LM_INFO,
-       ACE_TEXT("(%P|%t|%D) Disconnecting Pending Connection Token: %s \n"),
-       pSocketConnection->getPendingConnectionToken().c_str()));
 
   // lets check if its a pending connection
   auto responder_iterator = m_pendingLogonSocketConnection.find(
@@ -284,34 +286,12 @@ void AuthServiceHelper::processDisconnect(
     return;
   }
 
-  ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%t|%D) Disconneting : [%s]\n"),
-             sessionID.toString().c_str()));
+    LOG4CXX_INFO(logger, "Disconnecting : [" <<  sessionID.toString() );
+    
 
-  SessionReLoginMap::iterator pendingLoginIn =
-      m_sessionReloginMap.find(sessionID);
-  if (pendingLoginIn != m_sessionReloginMap.end()) {
-    ACE_DEBUG(
-        (LM_INFO,
-         ACE_TEXT("(%P|%t|%D) There is a session to relogin : [%s] : [%s]\n"),
-         sessionID.toString().c_str(),
-         pendingLoginIn->second.toString().c_str()));
-
-    FIX::Session *session = FIX::Session::lookupSession(sessionID);
-    session->logon();
-
-    std::string connectionToken = getConnectionToken(pendingLoginIn->second);
-
-    ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%t|%D) Connection Token : [%s]\n"),
-               connectionToken.c_str()));
-
-    loginSession(session, connectionToken);
-
-    m_sessionReloginMap.erase(pendingLoginIn);
-
-  } else {
     FIX::Session *session = FIX::Session::lookupSession(sessionID);
     session->setResponder(NULL);
     session->logout("Disconnected");
     _sessionFactory->destroy(session);
-  }
+    
 }

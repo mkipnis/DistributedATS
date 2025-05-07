@@ -1,4 +1,4 @@
-// Don't modify, automatically generated file by QuickFIX2OpenDDS.py
+/* Don't modify, automatically generated file by QuickFIX2FastDDS.py*/
 #include "Header.idl"
 
 module DistributedATS_MarketDataRequest
@@ -17,10 +17,17 @@ module DistributedATS_MarketDataRequest
 	};
 	typedef sequence<NoRelatedSym> NoRelatedSymSeq;
 
-	@topic
+	
 	struct MarketDataRequest
 	{
-	DistributedATS::Header m_Header;
+		string DATS_Source;
+     		string DATS_Destination;
+    		string DATS_SourceUser;
+    		string DATS_DestinationUser;
+
+
+		DistributedATS::Header fix_header;
+
 		string MDReqID;
 		char SubscriptionRequestType;
 		long MarketDepth;

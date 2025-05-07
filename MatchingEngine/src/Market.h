@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -31,12 +31,12 @@
 
 #include "Order.h"
 
-#include <ExecutionReportTypeSupportImpl.h>
-#include <MarketDataIncrementalRefreshTypeSupportImpl.h>
-#include <MarketDataRequestTypeSupportImpl.h>
-#include <OrderCancelRejectTypeSupportImpl.h>
-#include <OrderMassCancelReportTypeSupportImpl.h>
-#include <SecurityListRequestTypeSupportImpl.h>
+#include <ExecutionReport.hpp>
+#include <MarketDataIncrementalRefresh.hpp>
+#include <MarketDataRequest.hpp>
+#include <OrderCancelReject.hpp>
+#include <OrderMassCancelReport.hpp>
+#include <SecurityListRequest.hpp>
 #include <algorithm>
 #include <iostream>
 #include <map>
@@ -44,23 +44,24 @@
 #include <sstream>
 #include <string>
 #include <vector>
-
-#include <ace/Message_Queue_T.h>
+#include <atomic>
 
 #include "OrderBookStats.h"
-
 #include "DataWriterContainer.h"
+
+#include <boost/lockfree/spsc_queue.hpp>
 
 
 namespace DistributedATS {
 
-struct market_data_update {
-  std::string symbol;
-    DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefresh
-      *priceDepth;
+struct MarketDataUpdate {
+    std::string symbol;
+    DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefresh priceDepth;
 };
 
-typedef ACE_Message_Queue<ACE_MT_SYNCH> PriceDepthPublisherQueue;
+using MarketDataUpdatePtr = std::shared_ptr<MarketDataUpdate>;
+
+typedef boost::lockfree::spsc_queue<MarketDataUpdatePtr, boost::lockfree::capacity<1024>> PriceDepthPublisherQueue;
 typedef std::shared_ptr<PriceDepthPublisherQueue> PriceDepthPublisherQueuePtr;
 
 typedef liquibook::book::OrderBook<OrderPtr> OrderBook;
@@ -121,7 +122,7 @@ public:
   OrderBookPtr findBook(const std::string &symbol);
 
   /// @brief published SecurityListRequest to DataService, in order to recieve a list of instruments to setup
-  void publishSecurityListRequest();
+  void publishSecurityListRequest(eprosima::fastdds::dds::DataWriter*);
 
   /// @brief publishes MarketDataRequest to DataService, in order to recieve opening prices for received securies on the SecurityListRequest channel
   void publishMarketDataRequest(); // Market Data Request
@@ -166,48 +167,17 @@ public:
   void on_depth_change(const DepthOrderBook *book, const BookDepth *depth);
 
   OrderBookPtr addBook(const std::string &symbol, bool useDepthBook);
+                   
+  bool is_ready_to_trade() { return (books_.size() > 0); };
 
 public:
-  /* void setExecutionReportDataWriter(
-    DistributedATS_ExecutionReport::ExecutionReportDataWriter_var &execution_report_dw) {
-    _execution_report_dw = execution_report_dw;
-  }
-
-  void setMarketDataIncrementalRefreshDataWriter(
-        DistributedATS_MarketDataIncrementalRefresh::
-          MarketDataIncrementalRefreshDataWriter_var
-              &marketdata_incremental_refresh_dw) {
-    _marketdata_incremental_refresh_dw = marketdata_incremental_refresh_dw;
-  }
-
-  void setOrderCancelRejectDataWriter(
-                                      DistributedATS_OrderCancelReject::OrderCancelRejectDataWriter_var
-          &order_cancel_reject_dw) {
-    _order_cancel_reject_dw = order_cancel_reject_dw;
-  }
-
-  void setOrderMassCancelReportDataWriter(
-        DistributedATS_OrderMassCancelReport::OrderMassCancelReportDataWriter_var
-          &order_mass_cancel_report_dw) {
-    _order_mass_cancel_report_dw = order_mass_cancel_report_dw;
-  }
-
-  void setSecurityListRequestDataWriter(
-    DistributedATS_SecurityListRequest::SecurityListRequestDataWriter_var
-          &security_list_request_dw) {
-    _security_list_request_dw = security_list_request_dw;
-  }
-
-  void setMarketDataRequestDataWriter(
-        DistributedATS_MarketDataRequest::MarketDataRequestDataWriter_var
-          &market_date_request_dw) {
-    _market_date_request_dw = market_date_request_dw;
-  }*/
                    
   DataWriterContainerPtr getDataWriterContainer()
   {
       return dataWriterContainerPtr_;
   }
+                   
+                   
 
   void
   publishExecutionReport(DistributedATS_ExecutionReport::ExecutionReport &executionReport);
@@ -225,11 +195,12 @@ private:
 
   std::string getNextExecutionReportID() {
     char execution_report_id_c[64];
-    sprintf(execution_report_id_c, "%d", ++executionIdSeed_);
+    snprintf(execution_report_id_c, 64, "%d", ++executionIdSeed_);
     std::string execution_report_id = execution_report_id_c;
 
     return execution_report_id;
   };
+                   
 
 private:
   static uint32_t orderIdSeed_;
@@ -244,8 +215,9 @@ private:
 
   std::string _marketName; // Quickfix field 207 - Security Exchange
   std::string _dataServiceName;
+                   
 };
 
-typedef std::shared_ptr<Market> MarketPtr;
+typedef std::shared_ptr<Market> market_ptr;
 
 } // namespace DistributedATS

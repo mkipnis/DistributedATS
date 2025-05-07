@@ -2,7 +2,7 @@
    Copyright (C) 2022 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -25,8 +25,7 @@
    SOFTWARE.
 */
 
-#ifndef FIXMsgComposerThread_h
-#define FIXMsgComposerThread_h
+#pragma once
 
 #include <thread>
 #include "ConcurrentQueue.h"
@@ -39,8 +38,13 @@ class fix_message_composer_thread
 {
 public:
 
-    fix_message_composer_thread(DistributedATS::DATSApplication& application, std::function< void(DistributedATS::DATSApplication&, TT&) >&& processor, unsigned long wait_timeout_us = 1000) : _processor(processor), _wait_timeout_us(wait_timeout_us)
+    fix_message_composer_thread(DistributedATS::DATSApplication& application, std::function< void(DistributedATS::DATSApplication&, TT&) >&& processor, const std::string& name,
+        unsigned long wait_timeout_us = 1000) : _processor(processor), _name(name), _wait_timeout_us(wait_timeout_us)
     {
+        
+        LOG4CXX_INFO(logger, "Starting processor : [" << _name << "]");
+        
+        _done.store(false);
         _fix_publisher_thread = std::thread([&](){
         
             while(!_done.load())
@@ -48,12 +52,16 @@ public:
                 TT dds_message;
                 while(_dds_msg_queue.try_pop(dds_message))
                 {
+                    LOG4CXX_INFO(logger, "Processing: [" << _name << "]");
                     _processor(application, dds_message);
+                    LOG4CXX_INFO(logger, "Processed: [" << _name << "]");
                 }
                 
                 std::this_thread::sleep_for(std::chrono::microseconds(_wait_timeout_us));
             }
-                        
+            
+            LOG4CXX_INFO(logger, "Exiting processes: [" << _name << "]");
+                                    
         });
     };
     
@@ -64,9 +72,13 @@ public:
     
     virtual ~fix_message_composer_thread()
     {
+        LOG4CXX_INFO(logger, "Stopping processor : [" << _name << "]");
+
         _done.store(true);
                 
         _fix_publisher_thread.join();
+        
+        LOG4CXX_INFO(logger, "Stopped processor");
     };
     
 private:
@@ -77,10 +89,10 @@ private:
     
     unsigned long _wait_timeout_us;
     
+    std::string _name;
+    
     std::function< void(DistributedATS::DATSApplication&, TT&)> _processor;
     
 };
 
 }
-
-#endif /* FIXMsgComposerThread_h */

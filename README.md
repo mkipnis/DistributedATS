@@ -1,7 +1,7 @@
 ## Distributed ATS
 
 
-DistributedATS is a [**FIX Protocol-based**](https://www.fixtrading.org) alternative trading system that integrates [QuickFIX](https://github.com/quickfix/quickfix) and [LiquiBook](https://github.com/enewhuis/liquibook) over [OpenDDS](https://github.com/objectcomputing/OpenDDS). This project simplifies the process of communication between multiple FIX gateways and multiple matching engines(CLOB) in real-time. FIX Gateways communicate with clients via FIX and Matching Engines and Middleware(Data Service) components via topic-based DDS IDL Pub/Sub mechanism.
+DistributedATS is a [**FIX Protocol-based**](https://www.fixtrading.org) alternative trading system that integrates [QuickFIX](https://github.com/quickfix/quickfix) and [LiquiBook](https://github.com/enewhuis/liquibook) over [FastDDS](https://github.com/eProsima/Fast-DDS). This project simplifies the process of communication between multiple FIX gateways and multiple matching engines(CLOB) in real-time. FIX Gateways communicate with clients via FIX and Matching Engines and Middleware(Data Service) components via topic-based DDS IDL Pub/Sub mechanism.
 
 ### Components
 
@@ -18,7 +18,7 @@ DistributedATS is a [**FIX Protocol-based**](https://www.fixtrading.org) alterna
 
 |Dependency|Component|
 |----------|---------|
-|[OpenDDS](https://www.opendds.org)|[DDS/Middleware](https://www.dds-foundation.org/what-is-dds-3/)|
+|[FastDDS](https://github.com/eProsima/Fast-DDS)|[DDS/Middleware](https://www.dds-foundation.org/what-is-dds-3/)|
 |[QuickFIX](https://github.com/quickfix/quickfix)|[FIXGateway](https://github.com/mkipnis/DistributedATS/tree/master/FIXGateway)|
 |[LiquiBook](https://github.com/enewhuis/liquibook)|[MatchingEngine](https://github.com/mkipnis/DistributedATS/tree/master/MatchingEngine)|
 |[SQLite3](https://github.com/sqlite/sqlite)|[DataService](https://github.com/mkipnis/DistributedATS/tree/master/DataService)|
@@ -71,7 +71,54 @@ DistributedATS is a [**FIX Protocol-based**](https://www.fixtrading.org) alterna
 ### Autogeneration of IDL from QuickFIX XML
 [GenTools](https://github.com/mkipnis/DistributedATS/tree/master/GenTools) is a utility that generates DDS IDL, FIX to IDL, and IDL to FIX adapters and IDL logger helper classes from QuickFIX's XML data dictionary.
 
-### Building Distributed ATS and it's dependencies
+### Building Distributed ATS and its dependencies
+
+To download and build all necessary dependencies, use the provided script:
+
+[download_deps_and_build_all.sh](https://github.com/mkipnis/DistributedATS/blob/master/download_deps_and_build_all.sh)
+
+To build the base Docker image:
+
+[Docker.Build_Distributed_ATS](https://github.com/mkipnis/DistributedATS/blob/master/docker/Docker.Build_Distributed_ATS)
+
+
+## Basic ATS Examples
+### Crypto Central Limit Order Book
+- Docker Image: [Docker.Crypto_CLOB](https://github.com/mkipnis/DistributedATS/blob/master/docker/Docker.Crypto_CLOB)
+- Docker Compose: [docker-compose-crypto.yml](https://github.com/mkipnis/DistributedATS/blob/master/docker/docker-compose-crypto.yml)
 ```
-download_deps_and_build_all.sh
+sudo docker-compose -f docker-compose-crypto.yml up -d
 ```
+Upon starting the dockerized instance, open in the browser: 
+* http://localhost:8080
+
+#####
+Users: 
+- CRYPTO_TRADER_1 
+- CRYPTO_TRADER_2 
+- CRYPTO_TRADER_3
+- CRYPTO_TRADER_4
+
+Password: 
+- TEST
+#####
+
+### US Treasuries Central Limit Order Book
+
+- Docker Image: [Docker.UST_CLOB](https://github.com/mkipnis/DistributedATS/blob/master/docker/Docker.UST_CLOB)
+- Docker Compose: [docker-compose-ust.yml](https://github.com/mkipnis/DistributedATS/blob/master/docker/docker-compose-ust.yml)
+```
+sudo docker-compose -f docker-compose-ust.yml up -d
+```
+Upon starting the dockerized instance, open in the browser: 
+* http://localhost:8080
+#####
+Users: 
+- UST_TRADER_1
+- UST_TRADER_2
+- UST_TRADER_3
+- UST_TRADER_4
+ 
+Password: 
+- TEST
+######

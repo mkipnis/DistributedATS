@@ -1,4 +1,4 @@
-// Don't modify, automatically generated file by QuickFIX2OpenDDS.py
+/* Don't modify, automatically generated file by QuickFIX2FastDDS.py*/
 
 module DistributedATS
 {

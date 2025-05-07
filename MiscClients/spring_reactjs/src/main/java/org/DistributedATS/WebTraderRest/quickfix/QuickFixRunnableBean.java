@@ -2,7 +2,7 @@
    Copyright (C) 2022 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -141,8 +141,9 @@ public class QuickFixRunnableBean implements InitializingBean, DisposableBean
 	      int max_count = 0;
 
 	      if (orders != null) {
-	        for (Order order : orders) {	        	
-	          if (/*order.status != ExecutionReport.PENDING_NEW &&*/ order.sequenceNumber > maxOrderSequenceNumber) {
+	        for (Order order : orders) 
+	        {	
+	          if ( order.sequenceNumber > maxOrderSequenceNumber ) {
 
 	            ordersOut.put(order.orderKey, order);
 

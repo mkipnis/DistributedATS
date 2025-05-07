@@ -1,11 +1,7 @@
-// Don't modify, automatically generated file by QuickFIX2OpenDDS.py
-#ifndef __MarketDataRequest_h__
-#define __MarketDataRequest_h__
-
-#include "MarketDataRequestTypeSupportImpl.h"
+/* Don't modify, automatically generated file by QuickFIX2FastDDS.py*/
+#pragma once
+#include "MarketDataRequest.hpp"
 #include <quickfix/Message.h>
-
- using namespace DistributedATS;
 
 #include "HeaderAdapter.hpp"
 
@@ -17,5 +13,3 @@ class MarketDataRequestAdapter
 		static void DDS2FIX(const DistributedATS_MarketDataRequest::MarketDataRequest& ddsMsg, FIX::Message&)  __attribute__ ((visibility ("default")));
 
 };
-#endif
-

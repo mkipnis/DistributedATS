@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -30,6 +30,12 @@
 #include <MarketDataSnapshotFullRefreshLogger.hpp>
 #include <quickfix/fix50/MarketDataSnapshotFullRefresh.h>
 
+#include <fastdds/dds/subscriber/Subscriber.hpp>
+#include <fastdds/dds/subscriber/DataReader.hpp>
+#include <fastdds/dds/subscriber/DataReaderListener.hpp>
+#include <fastdds/dds/subscriber/qos/DataReaderQos.hpp>
+#include <fastdds/dds/subscriber/SampleInfo.hpp>
+
 #include "Application.hpp"
 
 namespace DistributedATS {
@@ -37,45 +43,35 @@ namespace DistributedATS {
 auto const market_data_full_snapshot_processor = [] (DistributedATS::DATSApplication &application, DistributedATS_MarketDataSnapshotFullRefresh::MarketDataSnapshotFullRefresh&
                                                marketDataSnapshotFullRefresh)
 {
-
-    std::stringstream ss;
-    MarketDataSnapshotFullRefreshLogger::log(ss,
-                                             marketDataSnapshotFullRefresh);
-    ACE_DEBUG(
-        (LM_INFO,
-         ACE_TEXT("(%P|%t) DATSMarketDataSnapshotFullRefreshLogger : %s\n"),
-         ss.str().c_str()));
-
     FIX::Message marketDataSnapshotFullRefreshMessage;
 
-    marketDataSnapshotFullRefresh.m_Header.SendingTime =
-        0; // this is precision;
-    marketDataSnapshotFullRefresh.m_Header.SenderCompID =
-        marketDataSnapshotFullRefresh.m_Header.TargetSubID;
-
+    marketDataSnapshotFullRefresh.fix_header().SendingTime(0); // this is precision;
+    marketDataSnapshotFullRefresh.fix_header().TargetCompID(marketDataSnapshotFullRefresh.DATS_Destination());
+    marketDataSnapshotFullRefresh.fix_header().SenderCompID(marketDataSnapshotFullRefresh.DATS_DestinationUser());
+    
     HeaderAdapter::DDS2FIX(
-        marketDataSnapshotFullRefresh.m_Header,
+        marketDataSnapshotFullRefresh.fix_header(),
         marketDataSnapshotFullRefreshMessage.getHeader());
 
-    FIX::Symbol symbol(marketDataSnapshotFullRefresh.Symbol.in());
+    FIX::Symbol symbol(marketDataSnapshotFullRefresh.Symbol());
     FIX::SecurityExchange securityExchange(
-        marketDataSnapshotFullRefresh.SecurityExchange.in());
+        marketDataSnapshotFullRefresh.SecurityExchange());
 
     marketDataSnapshotFullRefreshMessage.setField(symbol);
     marketDataSnapshotFullRefreshMessage.setField(securityExchange);
 
     for (int snapshot_refresh = 0;
          snapshot_refresh <
-         marketDataSnapshotFullRefresh.c_NoMDEntries.length();
+         marketDataSnapshotFullRefresh.c_NoMDEntries().size();
          ++snapshot_refresh) {
         DistributedATS_MarketDataSnapshotFullRefresh::NoMDEntries mdEntry =
-          marketDataSnapshotFullRefresh.c_NoMDEntries[snapshot_refresh];
+          marketDataSnapshotFullRefresh.c_NoMDEntries()[snapshot_refresh];
 
       FIX50::MarketDataSnapshotFullRefresh::NoMDEntries fixMDEntry;
 
-      FIX::MDEntryType entryType(mdEntry.MDEntryType);
-      FIX::MDEntryPx entryPx(mdEntry.MDEntryPx);
-      FIX::MDEntrySize entrySize(mdEntry.MDEntrySize);
+      FIX::MDEntryType entryType(mdEntry.MDEntryType());
+      FIX::MDEntryPx entryPx(mdEntry.MDEntryPx());
+      FIX::MDEntrySize entrySize(mdEntry.MDEntrySize());
 
       fixMDEntry.setField(entryType);
       fixMDEntry.setField(entryPx);
@@ -90,52 +86,34 @@ auto const market_data_full_snapshot_processor = [] (DistributedATS::DATSApplica
 
 
 
-MarketDataSnapshotFullRefreshDataReaderListenerImpl::MarketDataSnapshotFullRefreshDataReaderListenerImpl(DistributedATS::DATSApplication &application) : _processor(application, market_data_full_snapshot_processor )
+MarketDataSnapshotFullRefreshDataReaderListenerImpl::MarketDataSnapshotFullRefreshDataReaderListenerImpl(DistributedATS::DATSApplication &application) :
+    _processor(application, market_data_full_snapshot_processor,
+               "MarketDataSnapshotFullRefreshDataReaderListenerImpl" ),
+        _fix_gateway_name(application.fix_gateway_name())
 {
 }
 
 
 void MarketDataSnapshotFullRefreshDataReaderListenerImpl::on_data_available(
-    DDS::DataReader_ptr reader) throw(CORBA::SystemException) {
-  try {
-      DistributedATS_MarketDataSnapshotFullRefresh::
-        MarketDataSnapshotFullRefreshDataReader_var
-            market_data_snapshot_full_refresh_dr =
-      DistributedATS_MarketDataSnapshotFullRefresh::
-                    MarketDataSnapshotFullRefreshDataReader::_narrow(reader);
+       eprosima::fastdds::dds::DataReader* reader)
+{
 
-    if (CORBA::is_nil(market_data_snapshot_full_refresh_dr.in())) {
-      std::cerr << "DATSMarketDataSnapshotFullRefreshDataReaderListenerImpl::"
-                   "on_data_available: _narrow failed."
-                << std::endl;
-      ACE_OS::exit(1);
+    DistributedATS_MarketDataSnapshotFullRefresh::MarketDataSnapshotFullRefresh
+      marketDataSnapshotFullRefresh;
+    eprosima::fastdds::dds::SampleInfo info;
+    
+    if (reader->take_next_sample(&marketDataSnapshotFullRefresh, &info) == eprosima::fastdds::dds::RETCODE_OK)
+    {
+        if (info.valid_data)
+        {
+            std::stringstream ss;
+            MarketDataSnapshotFullRefreshLogger::log(ss, marketDataSnapshotFullRefresh);
+            LOG4CXX_INFO(logger, "marketDataSnapshotFullRefresh : [" <<  ss.str() << "]");
+                
+            _processor.enqueue_dds_message(marketDataSnapshotFullRefresh);
+        }
     }
-
-    while (true) {
-        DistributedATS_MarketDataSnapshotFullRefresh::MarketDataSnapshotFullRefresh
-          marketDataSnapshotFullRefresh;
-      DDS::SampleInfo si;
-      DDS::ReturnCode_t status =
-          market_data_snapshot_full_refresh_dr->take_next_sample(
-              marketDataSnapshotFullRefresh, si);
-
-      if (status == DDS::RETCODE_OK) {
-        if (!si.valid_data)
-          continue;
-
-          _processor.enqueue_dds_message(marketDataSnapshotFullRefresh);
-
-      } else if (status == DDS::RETCODE_NO_DATA) {
-        break;
-      } else {
-        std::cerr << "ERROR: read DATS::Logon: Error: " << status << std::endl;
-      }
-    }
-
-  } catch (CORBA::Exception &e) {
-    std::cerr << "Exception caught in read:" << std::endl << e << std::endl;
-    ACE_OS::exit(1);
-  }
+    
 }
 
 } /* namespace DistributedATS */
