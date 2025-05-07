@@ -81,7 +81,7 @@ build_and_install() {
 [[ ! -f $INSTALL_DIR/include/foonathan_memory/foonathan/memory/config.hpp ]] && build_and_install "$DEPS_BUILD_DIR/memory-v$FOONATHAN_MEMORY_PKG.tar.gz" "memory-$FOONATHAN_MEMORY_PKG" ""
 [[ ! -f $INSTALL_DIR/include/fastcdr/config.h ]] && build_and_install "$DEPS_BUILD_DIR/Fast-CDR-v$FAST_CDR_PKG.tar.gz" "Fast-CDR-$FAST_CDR_PKG" ""
 #[[ ! -f $INSTALL_DIR/include/asio.hpp ]] && build_and_install "$DEPS_BUILD_DIR/asio-$ASIO_PKG.tar.gz" "asio-asio-$ASIO_PKG" "cd asio && ./autogen.sh && ./configure --prefix=$INSTALL_PREFIX --exec-prefix=$INSTALL_PREFIX}"
-[[ ! -f $INSTALL_DIR/include/fastdds/config.hpp ]] && build_and_install "$DEPS_BUILD_DIR/Fast-DDS-v$FAST_DDS_PKG.tar.gz" "Fast-DDS-$FAST_DDS_PKG" ""
+[[ ! -f $INSTALL_DIR/include/fastdds/config.hpp ]] && build_and_install "$DEPS_BUILD_DIR/Fast-DDS-v$FAST_DDS_PKG.tar.gz" "Fast-DDS-$FAST_DDS_PKG" "-DSHM_TRANSPORT_DEFAULT=OFF"
 [[ ! -f $INSTALL_DIR/include/quickfix/config-all.h ]] && build_and_install "$DEPS_BUILD_DIR/quickfix-v$QUICKFIX_PKG.tar.gz" "quickfix-$QUICKFIX_PKG" "-DCMAKE_CXX_STANDARD=11 -DCMAKE_CXX_EXTENSIONS=OFF"
 [[ ! -f $INSTALL_DIR/liquibook-$LIQUIBOOK_PKG/src/liquibook_export.h ]] && build_and_install "$DEPS_BUILD_DIR/liquibook-$LIQUIBOOK_PKG.tar.gz" "liquibook-$LIQUIBOOK_PKG" ":" ":"
 
