@@ -71,53 +71,52 @@ DistributedATS is a [**FIX Protocol-based**](https://www.fixtrading.org) alterna
 ### Autogeneration of IDL from QuickFIX XML
 [GenTools](https://github.com/mkipnis/DistributedATS/tree/master/GenTools) is a utility that generates DDS IDL, FIX to IDL, and IDL to FIX adapters and IDL logger helper classes from QuickFIX's XML data dictionary.
 
-### Building Distributed ATS and it's dependencies
+### Building Distributed ATS and its dependencies
 
 To download and build all necessary dependencies, use the provided script:
 
 [download_deps_and_build_all.sh](https://github.com/mkipnis/DistributedATS/blob/master/download_deps_and_build_all.sh)
 
-The base Docker image used by the platform is defined here:
+To build the base Docker image:
 
 [Docker.Build_Distributed_ATS](https://github.com/mkipnis/DistributedATS/blob/master/Docker.Build_Distributed_ATS)
 
 
 ## Basic ATS Examples
 ### Crypto Central Limit Order Book
-
-Docker Image: [Docker.Crypto_CLOB](https://github.com/mkipnis/DistributedATS/blob/master/docker/Docker.Crypto_CLOB)
-
-Docker Compose: [docker-compose-crypto.yml](https://github.com/mkipnis/DistributedATS/blob/master/docker/docker-compose-crypto.yml)
-
-
+- Docker Image: [Docker.Crypto_CLOB](https://github.com/mkipnis/DistributedATS/blob/master/docker/Docker.Crypto_CLOB)
+- Docker Compose: [docker-compose-crypto.yml](https://github.com/mkipnis/DistributedATS/blob/master/docker/docker-compose-crypto.yml)
 ```
 sudo docker-compose -f docker-compose-crypto.yml up -d
 ```
-
-Upon starting the dockerized instance, open your browser and go to 
-http://localhost:8080
+Upon starting the dockerized instance, open in the browser: 
+* http://localhost:8080
 
 #####
-Users: **CRYPTO_TRADER_1**, **CRYPTO_TRADER_2**, **CRYPTO_TRADER_3**, or **CRYPTO_TRADER_4**
+Users: 
+- CRYPTO_TRADER_1 
+- CRYPTO_TRADER_2 
+- CRYPTO_TRADER_3
+- CRYPTO_TRADER_4
+Password: 
+- TEST
 #####
-Password: **TEST**
-
 
 ### US Treasuries Central Limit Order Book
 
-Docker Image: [Docker.Crypto_CLOB](https://github.com/mkipnis/DistributedATS/blob/master/docker/Docker.Crypto_CLOB)
-
-Docker Compose: [docker-compose-crypto.yml](https://github.com/mkipnis/DistributedATS/blob/master/docker/docker-compose-crypto.yml)
-
-
+- Docker Image: [Docker.UST_CLOB](https://github.com/mkipnis/DistributedATS/blob/-master/docker/Docker.UST_CLOB)
+- Docker Compose: [docker-compose-ust.yml](https://github.com/mkipnis/DistributedATS/blob/master/docker/docker-compose-ust.yml)
 ```
 sudo docker-compose -f docker-compose-ust.yml up -d
 ```
-
-Upon starting the dockerized instance, open your browser and go to 
-http://localhost:8080
-
+Upon starting the dockerized instance, open in the browser: 
+* http://localhost:8080
 #####
-Users: **UST_TRADER_1**, **UST_TRADER_2**, **UST_TRADER_3**, or **UST_TRADER_4**
-Password: **TEST**
-#####
+Users: 
+- UST_TRADER_1
+- UST_TRADER_2
+- UST_TRADER_3
+- UST_TRADER_4
+Password: 
+- TEST
+######
