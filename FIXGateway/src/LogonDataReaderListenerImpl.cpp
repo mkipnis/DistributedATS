@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -28,8 +28,13 @@
 #include "LogonDataReaderListenerImpl.hpp"
 #include <LogonAdapter.hpp>
 #include <LogonLogger.hpp>
-#include <LogonTypeSupportImpl.h>
 #include <quickfix/Message.h>
+#include <fastdds/dds/subscriber/Subscriber.hpp>
+#include <fastdds/dds/subscriber/DataReader.hpp>
+#include <fastdds/dds/subscriber/DataReaderListener.hpp>
+#include <fastdds/dds/subscriber/SampleInfo.hpp>
+
+
 
 namespace DistributedATS {
 
@@ -38,17 +43,17 @@ auto const logon_processor = [] (DistributedATS::DATSApplication &application, D
 {
     std::stringstream ss;
     LogonLogger::log(ss, logon);
-    ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%t|%D) Data Reader Logon : %s\n"),
-               ss.str().c_str()));
-
+    
+    std::cout << "Data Reader Logon : " << ss.str() << std::endl;
+    
+    LOG4CXX_INFO(logger, "Data Reader Logon  : [" <<  ss.str() << "]");
+   
     FIX::Message logonMessage;
-    logon.m_Header.SendingTime = 0; // this is precision;
-    std::string logonSenderCompID = logon.m_Header.TargetSubID.in();
+    logon.fix_header().SendingTime(0); // this is precision;
 
-    logon.m_Header.SenderCompID = logon.m_Header.TargetCompID;
-    logon.m_Header.TargetCompID = logonSenderCompID.c_str();
-    logon.RawData = logon.RawData; // Session Ticker/Identifier
-
+    //logon.fix_header().SenderCompID(logon.DATS_Destination());
+    logon.fix_header().TargetSubID(logon.DATS_DestinationUser());
+ 
     LogonAdapter::DDS2FIX(logon, logonMessage);
     application.processDDSLogon(logonMessage);
 };
@@ -56,44 +61,23 @@ auto const logon_processor = [] (DistributedATS::DATSApplication &application, D
 
 
 LogonDataReaderListenerImpl::LogonDataReaderListenerImpl(DistributedATS::DATSApplication &application)
-    : _processor(application, logon_processor)
+    : _processor(application, logon_processor, "LogonDataReaderListenerImpl")
 {
 };
 
 void LogonDataReaderListenerImpl::on_data_available(
-    DDS::DataReader_ptr reader) throw(CORBA::SystemException) {
-  try {
-      DistributedATS_Logon::LogonDataReader_var logon_dr =
-      DistributedATS_Logon::LogonDataReader::_narrow(reader);
-
-    if (CORBA::is_nil(logon_dr.in())) {
-      std::cerr
-          << "LogonDataReaderListenerImpl::on_data_available: _narrow failed."
-          << std::endl;
-      ACE_OS::exit(1);
+     eprosima::fastdds::dds::DataReader* reader)
+{
+    
+    DistributedATS_Logon::Logon logon;
+    eprosima::fastdds::dds::SampleInfo info;
+    
+    if (reader->take_next_sample(&logon, &info) == eprosima::fastdds::dds::RETCODE_OK)
+    {
+        if (info.valid_data)
+        {
+            _processor.enqueue_dds_message(logon);
+        }
     }
-
-    while (true) {
-        DistributedATS_Logon::Logon logon;
-      DDS::SampleInfo si;
-      DDS::ReturnCode_t status = logon_dr->take_next_sample(logon, si);
-
-      if (status == DDS::RETCODE_OK) {
-        if (!si.valid_data)
-          continue;
-
-          _processor.enqueue_dds_message(logon);
-
-      } else if (status == DDS::RETCODE_NO_DATA) {
-        break;
-      } else {
-        std::cerr << "ERROR: read DATS::Logon: Error: " << status << std::endl;
-      }
-    }
-
-  } catch (CORBA::Exception &e) {
-    std::cerr << "Exception caught in read:" << std::endl << e << std::endl;
-    ACE_OS::exit(1);
-  }
 }
 }; // namespace DistributedATS

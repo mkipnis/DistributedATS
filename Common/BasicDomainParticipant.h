@@ -1,409 +1,288 @@
 /*
-   Copyright (C) 2018 Mike Kipnis
-
-   This file is part of QLDDS, a free-software/open-source library
-   for utilization of QuantLib in the distributed envrionment via DDS.
-
-   Permission is hereby granted, free of charge, to any person obtaining a copy
-   of this software and associated documentation files (the "Software"), to deal
-   in the Software without restriction, including without limitation the rights
-   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-   copies of the Software, and to permit persons to whom the Software is
-   furnished to do so, subject to the following conditions:
-
-   The above copyright notice and this permission notice shall be included in all
-   copies or substantial portions of the Software.
-
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-   SOFTWARE.
+   Copyright (C) 2024 Mike Kipnis - DistributedATS
 */
 
 
-#ifndef __BASIC_DOMAIN_PARTICIPANT_H__
-#define __BASIC_DOMAIN_PARTICIPANT_H__
+#pragma once
 
-#include <dds/DCPS/Service_Participant.h>
-#include <dds/DCPS/Marked_Default_Qos.h>
-#include <dds/DCPS/PublisherImpl.h>
-#include <dds/DCPS/SubscriberImpl.h>
-#include <dds/DCPS/WaitSet.h>
-#include <ace/streams.h>
-#include <SampleObserver.h>
+#include <fastdds/dds/domain/DomainParticipantFactory.hpp>
+#include <fastdds/dds/domain/DomainParticipant.hpp>
+#include <fastdds/dds/topic/TypeSupport.hpp>
+#include <fastdds/dds/subscriber/Subscriber.hpp>
+#include <fastdds/dds/subscriber/DataReader.hpp>
+#include <fastdds/dds/subscriber/DataReaderListener.hpp>
+#include <fastdds/dds/subscriber/qos/DataReaderQos.hpp>
+#include <fastdds/dds/subscriber/SampleInfo.hpp>
+#include <fastdds/dds/publisher/DataWriter.hpp>
+#include <fastdds/dds/publisher/DataWriterListener.hpp>
+#include <fastdds/dds/publisher/PublisherListener.hpp>
+#include <fastdds/dds/publisher/Publisher.hpp>
+
+#include <memory>
+#include <log4cxx/logger.h>
+
+
+static auto logger = log4cxx::Logger::getRootLogger();
 
 namespace distributed_ats_utils 
 {
+    /*
+     basic_domain_participant provides convenience functions to create publishers,
+     subscribers, thread safe default data readers and data writers.
+     This class is essentially a wrapper around FastDDS API.
+    */
+    using domain_participant_ptr = std::shared_ptr<eprosima::fastdds::dds::DomainParticipant>;
+    using publisher_ptr = std::unique_ptr<eprosima::fastdds::dds::Publisher>;
+    using subscriber_ptr = std::unique_ptr<eprosima::fastdds::dds::Subscriber>;
+    using data_writer_ptr = std::unique_ptr<eprosima::fastdds::dds::DataWriter>;
+    using data_reader_ptr = std::unique_ptr<eprosima::fastdds::dds::DataReader>;
+    using content_filtered_topic_ptr = std::unique_ptr<eprosima::fastdds::dds::ContentFilteredTopic>;
+    using data_reader_listener_ptr = std::unique_ptr<eprosima::fastdds::dds::DataReaderListener>;
 
- /* 
-    BasicDomainParticipant provides convenience functions to create publishers, 
-    subscribers, thread safe default data readers and data writers.  
-    This class is essentially a wrapper around DDS API.
-  */
-    
+    template<class TopicType>
+    using topic_tuple = std::tuple<
+        std::unique_ptr<eprosima::fastdds::dds::Topic>,
+        std::unique_ptr<TopicType>,
+        std::unique_ptr<eprosima::fastdds::dds::TypeSupport>
+        >;
 
-class BasicDomainParticipant
-{
-public:
-    // OpenDDS Initialization
-    DDS::DomainParticipant_var _participant;
-    DDS::DomainParticipantFactory_var _dpf;
-    DDS::Publisher_var _publisher;
-    DDS::Subscriber_var _subscriber;
+    template<class TopicType>
+    using topic_tuple_ptr = std::unique_ptr<topic_tuple<TopicType>>;
 
- public:
+    template<class TopicType>
+    using data_reader_tuple = std::tuple<
+        content_filtered_topic_ptr,
+        data_reader_listener_ptr,
+        data_reader_ptr
+        >;
 
-  // Instantiate a domain participant for a provided domain id
-    BasicDomainParticipant( DDS::DomainParticipantFactory_var dpf, const DDS::DomainId_t& domainID ) : _dpf( dpf )
+    template<class TopicType>
+    using data_reader_tuple_ptr = std::unique_ptr<data_reader_tuple<TopicType>>;
+
+
+    class basic_domain_participant
     {
-        _participant = _dpf->create_participant( domainID,
-                                                PARTICIPANT_QOS_DEFAULT,
-                                                DDS::DomainParticipantListener::_nil(),
-                                                ::OpenDDS::DCPS::DEFAULT_STATUS_MASK);
-
-        if (CORBA::is_nil ( _participant.in ()) )
+        class pub_listener : public eprosima::fastdds::dds::DataWriterListener
         {
-            std::stringstream error;
-
-            error << "Unable to create participant. DomainID : [" <<  domainID << "]";
-
-            ACE_ERROR( (LM_ERROR, "(%T|%P|%t) %s.\n", error.str().c_str() ) );
-            throw Exception( error.str() );
-        }
-
-#ifdef OPENDDS_RAPIDJSON
-	OpenDDS::DCPS::Observer_rch observer = OpenDDS::DCPS::make_rch<SampleObserver>();
-        dynamic_cast<OpenDDS::DCPS::EntityImpl*>(_participant.in())->set_observer(observer, SampleObserver::e_SAMPLE_SENT | SampleObserver::e_SAMPLE_RECEIVED | SampleObserver::e_SAMPLE_READ | SampleObserver::e_SAMPLE_TAKEN);
-#endif
-    }
-
-
-  // Deletes domain participant
-  virtual ~BasicDomainParticipant()
-    {
-        _participant->delete_contained_entities();
-        _dpf->delete_participant( _participant );
-    }
- 
-  // Creates a publisher
-    bool createPublisher( const DDS::PublisherQos & qos = PUBLISHER_QOS_DEFAULT )
-    {
-            // (PUBLISHER_QOS_DEFAULT is defined in Marked_Default_Qos.h)
-            _publisher = _participant->create_publisher( qos , DDS::PublisherListener::_nil(),
-                                                        ::OpenDDS::DCPS::DEFAULT_STATUS_MASK);
-            if (CORBA::is_nil (_publisher.in ()))
+            public:
+        
+            pub_listener() : matched_(0), _topic_description("Undefined") {};
+            pub_listener(const eprosima::fastdds::dds::Topic* topic)
+            : matched_(0)
             {
-                ACE_ERROR( (LM_ERROR, "(%T|%P|%t) create_publisher failed." ) );
-                return false;
+                std::stringstream desc_stream;
+                desc_stream << "Type : " << topic->get_type_name() << " - " << "Name : " << topic->get_name() << std::endl;
+                _topic_description = desc_stream.str();
+                
+                LOG4CXX_INFO(logger, "PubListener Description : " << _topic_description);
             }
-            
-            return true;
-        }
-  
-  // Creates a subscriber
-  bool createSubscriber( const DDS::SubscriberQos & qos = SUBSCRIBER_QOS_DEFAULT )
-    {
-        // (SUBSCRIBER_QOS_DEFAULT is defined in Marked_Default_Qos.h)
-        _subscriber = _participant->create_subscriber( qos, DDS::SubscriberListener::_nil(),
-                                                      ::OpenDDS::DCPS::DEFAULT_STATUS_MASK);
-        if (CORBA::is_nil (_subscriber.in ())) {
-            ACE_ERROR( (LM_ERROR, "(%T|%P|%t) create_subscriber failed." ) );
-            return false;
-        }
         
-        return true;
-    }
-
-  //
-  // Registers a topic and a type for a given DataType, see Registering the Data Type and Creating a Topic 
-  // in OpenDDS developers guide.
-  // 
-  // Example, Topic and Type for ratehelpers::qlSwapRateHelper :
-  //
-  // createTopicAndRegisterType
-  //   < ratehelpers::qlSwapRateHelperTypeSupport_var, ratehelpers::qlSwapRateHelperTypeSupportImpl >
-  //    (  "SWAP_RATE_HELPER_TOPIC" );
-  // 
-  template< class SERVANT_var, class IMPLEMENTATION_var >
-  DDS::Topic_ptr createTopicAndRegisterType( const char* topic_name, const char* topic_type = "" )
-    {
-        SERVANT_var servant = new IMPLEMENTATION_var;
-        
-        CORBA::String_var type_name;
-        
-        if ( strcmp( topic_type, "" ) == 0 )
-        {
-            servant->register_type(_participant, "");
-            type_name = servant->get_type_name();
-        } else
-            type_name = CORBA::string_dup( topic_type );
-        
-        if (DDS::RETCODE_OK != servant->register_type( _participant.in (), type_name ) )
-        {
-            std::stringstream error;
-            
-            error << "register_type for [" << type_name << "] failed." << endl;
-            
-            throw Exception( error.str() );
-            
-        }
-        
-        ::DDS::TopicQos topic_qos;
-        _participant->get_default_topic_qos(topic_qos);
-        topic_qos.reliability.kind =  DDS::RELIABLE_RELIABILITY_QOS;
-        
-        DDS::Topic_var topic = _participant->create_topic ( topic_name, type_name,
-                                                           topic_qos, DDS::TopicListener::_nil(), ::OpenDDS::DCPS::DEFAULT_STATUS_MASK);
-        if (CORBA::is_nil (topic.in ()))
-        {
-            std::stringstream error;
-            
-            error << "create_topic for [" << topic_name << "] failed." << endl;
-            
-            throw Exception( error.str() );
-        }
-        
-        return DDS::Topic::_duplicate ( topic.in() );
-    }
-
-  //
-  // Creates DataWriter
-  //
-  template<class DataWriter_var, class DataWriter>
-  DataWriter_var createDataWriter( DDS::Topic_var topic, int matchedPublications = 0, const DDS::DataWriterQos dataWriterQos = DATAWRITER_QOS_DEFAULT )
-    {
-        ::DDS::DataWriterQos dw_qos;
-        _publisher->get_default_datawriter_qos (dw_qos);
-        
-        ::DDS::TopicQos topic_qos;
-        
-        topic->get_qos( topic_qos );
-        _publisher->copy_from_topic_qos (dw_qos, topic_qos);
-        
-        DDS::DataWriter_var base_dw = _publisher->create_datawriter( topic.in (), dw_qos,
-                                                                    DDS::DataWriterListener::_nil(), ::OpenDDS::DCPS::DEFAULT_STATUS_MASK);
-        
-        if (CORBA::is_nil ( base_dw.in ())) {
-            
-            std::stringstream error;
-            
-            error << "create_datawriter for [" << topic->get_name() << "] failed.";
-            
-            throw Exception( error.str() );
-        }
-        
-        DataWriter_var dw = DataWriter::_narrow(base_dw.in());
-        if (CORBA::is_nil (dw.in ())) {
-            
-            std::stringstream error;
-            
-            error << "DataWriter for [" << topic->get_name() << "] could not be narrowed.";
-            
-            throw Exception( error.str() );
-            
-        }
-        
-        // Block until Subscriber is available
-        DDS::StatusCondition_var condition = dw->get_statuscondition();
-        condition->set_enabled_statuses(DDS::PUBLICATION_MATCHED_STATUS);
-        
-        DDS::WaitSet_var ws = new DDS::WaitSet;
-        ws->attach_condition(condition);
-        
-        while (true)
-        {
-            DDS::PublicationMatchedStatus matches;
-            if (dw->get_publication_matched_status(matches) != DDS::RETCODE_OK)
+            ~pub_listener() override
             {
-                std::stringstream warn;
-                
-                warn << "get_publication_matched_status for [" << topic->get_name() << "] failed.";
-                
-                ACE_ERROR( (LM_WARNING, "(%T|%P|%t) %s.", warn.str().c_str() ) );
-                
-                return dw;
             }
-            
-            if ( matches.current_count >= matchedPublications )
-                break;
-            
-            DDS::ConditionSeq conditions;
-            DDS::Duration_t timeout = { 30, 0 };
-            if (ws->wait(conditions, timeout) != DDS::RETCODE_OK) {
-                
-                std::stringstream warn;
-                
-                warn << "wait for [" << topic->get_name() << "] failed.";
-                
-                ACE_ERROR( (LM_WARNING, "(%T|%P|%t) %s.", warn.str().c_str() ) );
-                
-                return dw;
-            }
+        
+            void on_publication_matched(
+                                    eprosima::fastdds::dds::DataWriter*,
+                                    const eprosima::fastdds::dds::PublicationMatchedStatus& info) override
+            {
+                if (info.current_count_change == 1)
+                {
+                    matched_ = info.total_count;
+                    LOG4CXX_INFO(logger, "Publisher matched:" << _topic_description << " Count : " << matched_ );
+                }
+                else if (info.current_count_change == -1)
+                {
+                    matched_ = info.total_count;
+                    LOG4CXX_INFO(logger, "Publisher unmatched:" << _topic_description << " Count : " << matched_ );
+                }
+                else
+                {
+                    LOG4CXX_ERROR(logger, "" << info.current_count_change << " is not a valid value for PublicationMatchedStatus current count change");
+
+                }
         }
         
-        ws->detach_condition(condition);
-        
-        return dw;
-
-    }
-
-  //
-  // Creates a DataReader and supplies it with a reference to a mutex lock.
-  // This mutex is  being locked before making a QuantLibAddin call
-  // and unlocked after.
-  //  
-  template< class DRListener_var >
-  DDS::DataReader_ptr createDataReaderListener( ACE_Mutex& mutex, DDS::Topic_var topic, DDS::DataReaderQos dataReaderQos = DATAREADER_QOS_DEFAULT )
-    {
-        DDS::DataReaderListener_var listener (new DRListener_var( mutex ) );
-        
-        if (CORBA::is_nil ( listener.in ()) ) {
-            cerr << "listener is nil." << endl;
-            ACE_OS::exit(1);
-        }
-        
-        ::DDS::DataReaderQos dr_qos;
-        _subscriber->get_default_datareader_qos (dr_qos);
-        
-        ::DDS::TopicQos topic_qos;
-        
-        topic->get_qos( topic_qos );
-        _subscriber->copy_from_topic_qos (dr_qos, topic_qos);
-        
-        DDS::DataReader_var dr =
-        _subscriber->create_datareader(topic.in (), dr_qos, listener.in (),
-                                       ::OpenDDS::DCPS::DEFAULT_STATUS_MASK);
-        
-        return DDS::DataReader::_duplicate( dr.in() );
-
-    }
-
-    template< class DRListener_var >
-    DDS::DataReader_ptr
-    createDataReaderListener( DDS::Topic_var topic, DDS::DataReaderQos dataReaderQos )
-    {
-        DDS::DataReaderListener_var listener (new DRListener_var );
-        
-        if (CORBA::is_nil ( listener.in ()) ) {
-            cerr << "listener is nil." << endl;
-            ACE_OS::exit(1);
-        }
-        
-        ::DDS::DataReaderQos dr_qos;
-        _subscriber->get_default_datareader_qos (dr_qos);
-        
-        ::DDS::TopicQos topic_qos;
-        
-        topic->get_qos( topic_qos );
-        _subscriber->copy_from_topic_qos (dr_qos, topic_qos);
-        
-        DDS::DataReader_var dr =
-        _subscriber->create_datareader(topic.in (), dr_qos, listener.in (),
-                                       ::OpenDDS::DCPS::DEFAULT_STATUS_MASK);
-        
-        return DDS::DataReader::_duplicate( dr.in() );
+        std::atomic_int matched_;
+        std::string _topic_description;
     };
     
-    DDS::DataReader_ptr createDataReaderListener( DDS::Topic_var topic,DDS::DataReaderListener_var listener,
-                                                 DDS::DataReaderQos dataReaderQos = DATAREADER_QOS_DEFAULT )
-    {
-        //DDS::DataReaderListener_var listener (new DRListener_var );
-        
-        if (CORBA::is_nil ( listener.in ()) ) {
-            cerr << "listener is nil." << endl;
-            ACE_OS::exit(1);
-        }
-        
-        ::DDS::DataReaderQos dr_qos;
-        _subscriber->get_default_datareader_qos (dr_qos);
-        
-        ::DDS::TopicQos topic_qos;
-        
-        topic->get_qos( topic_qos );
-        _subscriber->copy_from_topic_qos (dr_qos, topic_qos);
-        
-        DDS::DataReader_var dr =
-        _subscriber->create_datareader(topic.in (), dr_qos, listener.in (),
-                                       ::OpenDDS::DCPS::DEFAULT_STATUS_MASK);
-        
-        return DDS::DataReader::_duplicate( dr.in() );
-        
-    }
     
-    DDS::DataReader_ptr createDataReaderListener( DDS::TopicDescription_ptr topic,DDS::DataReaderListener_var listener,
-                                                 DDS::DataReaderQos dataReaderQos = DATAREADER_QOS_DEFAULT)
-    {
-        if (CORBA::is_nil ( listener.in ()) ) {
-            cerr << "listener is nil." << endl;
-            ACE_OS::exit(1);
-        }
-        
-        ::DDS::DataReaderQos dr_qos;
-        _subscriber->get_default_datareader_qos (dr_qos);
-        
-        ::DDS::TopicQos topic_qos;
-        
-        //topic->get_qos( topic_qos );
-        //_subscriber->copy_from_topic_qos (dr_qos, topic_qos);
-        
-        DDS::DataReader_var dr =
-        _subscriber->create_datareader(topic, dr_qos, listener.in (),
-                                       ::OpenDDS::DCPS::DEFAULT_STATUS_MASK);
-        
-        return DDS::DataReader::_duplicate( dr.in() );
-        
-        
-    };
-
-  DDS::DomainParticipant_ptr getDomainParticipant()
-  {
-    return DDS::DomainParticipant::_duplicate( _participant.in() );
-  }
-
-  DDS::Publisher_ptr getPublisher()
-  {
-    return DDS::Publisher::_duplicate( _publisher.in() );
-  }
-
-  DDS::Subscriber_ptr getSubscriber()
-  {
-    return DDS::Subscriber::_duplicate( _subscriber.in() );
-  }
-
-  void setPublisher( DDS::Publisher_ptr publisher )
-  {
-    _publisher = publisher;
-  }
-
-  void setSubscriber( DDS::Subscriber_ptr subscriber )
-  {
-    _subscriber = subscriber;
-  }
-
-  class Exception : public std::exception
-  {
     public:
-      explicit Exception ( const std::string& what ) : _what( what ) {};  
+        // Instantiate a domain participant for a provided domain id
+        basic_domain_participant( eprosima::fastdds::dds::DomainId_t domain_id, const std::string& participant_name )
+            : _participant_name(participant_name)
+        {
+            eprosima::fastdds::dds::DomainParticipantQos participantQos;
+            
+            participantQos.name(_participant_name);
+            participantQos.setup_transports(eprosima::fastdds::rtps::BuiltinTransports::LARGE_DATA);
+        
+            _participant = domain_participant_ptr( eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->create_participant(domain_id, participantQos));
+        
+            if (_participant == nullptr)
+            {
+                throw std::runtime_error("Failed to create a participant : " + _participant_name);
+            }
+        }
+    
+    
+        // Deletes domain participant
+        virtual ~basic_domain_participant()
+        {
+            eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->delete_participant(_participant.get());
+        }
+    
+        bool create_publisher()
+        {
+            _publisher = publisher_ptr(_participant->create_publisher(
+                         eprosima::fastdds::dds::PUBLISHER_QOS_DEFAULT, nullptr));
+        
+            return !(_publisher == nullptr);
+        }
+    
+        bool create_subscriber()
+        {
+            _subscriber = subscriber_ptr(_participant->create_subscriber(
+                    eprosima::fastdds::dds::SUBSCRIBER_QOS_DEFAULT, nullptr));
+        
+            return !(_subscriber == nullptr);
+        }
+    
+        template< class TOPIC_SUPPORT_TYPE, class TOPIC_TYPE>
+        topic_tuple_ptr<TOPIC_TYPE> make_topic(const std::string& topic_name )
+        {
+            std::unique_ptr<TOPIC_TYPE> topic_type_ptr(new TOPIC_TYPE());
+            std::unique_ptr<eprosima::fastdds::dds::TypeSupport> type_support_ptr(new eprosima::fastdds::dds::TypeSupport(new TOPIC_SUPPORT_TYPE));
+        
+            type_support_ptr->register_type(_participant.get());
+        
+            std::unique_ptr<eprosima::fastdds::dds::Topic> topic_ptr(_participant->create_topic ( topic_name, type_support_ptr->get_type_name(), eprosima::fastdds::dds::TOPIC_QOS_DEFAULT ));
+        
+            return topic_tuple_ptr<TOPIC_TYPE>( new topic_tuple<TOPIC_TYPE> (std::move(topic_ptr), std::move(topic_type_ptr), std::move(type_support_ptr)) );
+        }
+    
+        template<class TOPIC_TYPE>
+        data_reader_tuple_ptr<TOPIC_TYPE> make_data_reader_tuple(const topic_tuple_ptr<TOPIC_TYPE>& topic_tuple,
+                                                             eprosima::fastdds::dds::DataReaderListener* data_reader_listener,
+                                                             const std::string& filter_name,
+                                                                 const std::string& filter,
+                                                                 const std::vector<std::string>& expression_parameters, bool quote_all_expressions = true )
+        {
+            std::vector<std::string> final_expression_parameters;
 
-      ~Exception() throw() {};
+            if (quote_all_expressions)
+            {
+                final_expression_parameters.reserve(expression_parameters.size());
+                for (const auto& v : expression_parameters)
+                {
+                    final_expression_parameters.push_back("'" + v + "'");
+                }
+            }
+            else
+            {
+                final_expression_parameters = expression_parameters;
+            }
+            
+            auto filter_ptr = make_content_filtered_topic<TOPIC_TYPE>(filter_name, topic_tuple, filter, final_expression_parameters);
+            
+            if ( filter_ptr == nullptr )
+            {
+                throw std::runtime_error("make_content_filtered_topic failed : " + filter_name );
+            }
+            
+            data_reader_listener_ptr drl_ptr(data_reader_listener);
+            auto data_reader = make_datareader(filter_ptr,drl_ptr);
+        
+            return data_reader_tuple_ptr<TOPIC_TYPE>(new data_reader_tuple<TOPIC_TYPE>(std::move(filter_ptr), std::move(drl_ptr), std::move(data_reader)));
+        
+        };
+    
+    
+        template<class TOPIC_TYPE>
+        data_reader_tuple_ptr<TOPIC_TYPE> make_data_reader_tuple(const topic_tuple_ptr<TOPIC_TYPE>& topic_tuple,
+                                                             eprosima::fastdds::dds::DataReaderListener* data_reader_listener)
+        {
+            data_reader_listener_ptr drl_ptr(data_reader_listener);
+            auto data_reader = make_datareader<TOPIC_TYPE>(topic_tuple, drl_ptr);
+        
+            return data_reader_tuple_ptr<TOPIC_TYPE>(new data_reader_tuple<TOPIC_TYPE>(nullptr, std::move(drl_ptr), std::move(data_reader)));
+        
+        };
+    
+    
+        template<class TOPIC_TYPE>
+        data_writer_ptr make_data_writer( const topic_tuple_ptr<TOPIC_TYPE>& topic_tuple )
+        {
+            auto topic = std::get<0>(*topic_tuple).get();
+            return data_writer_ptr(_publisher->create_datawriter(topic,
 
-      const char* what() const throw()  
-      {
-        return _what.c_str();
-      }
+                                                                 eprosima::fastdds::dds::DATAWRITER_QOS_DEFAULT,new pub_listener(topic)));
+        }
+    
+        template<class TOPIC_TYPE>
+        data_writer_ptr make_data_writer( const topic_tuple_ptr<TOPIC_TYPE>& topic_tuple, eprosima::fastdds::dds::DataWriterListener* listener)
+        {
+            auto topic = std::get<0>(*topic_tuple).get();
+        
+            return data_writer_ptr(_publisher->create_datawriter(topic,
+                                                             eprosima::fastdds::dds::DATAWRITER_QOS_DEFAULT,listener));
+        }
+    
+        template<class TOPIC_TYPE>
+        content_filtered_topic_ptr make_content_filtered_topic(
+                                                           const std::string& filter_name,
+                                                           const topic_tuple_ptr<TOPIC_TYPE>& topic_tuple,
+                                                           const std::string& filter_expression,
+                                                           const std::vector<std::string>& expression_parameters)
+        {
+            
+            auto* topic = std::get<0>(*topic_tuple).get();
+            if (topic == nullptr)
+            {
+                throw std::runtime_error("Topic is null in make_content_filtered_topic : " + filter_name );
+            }
+            
+            return content_filtered_topic_ptr(_participant->create_contentfilteredtopic(
+                                                                                    filter_name,
+                                                                                        topic,
+                                                                                        filter_expression,
+                                                                                        expression_parameters));
+        }
+    
+    
+        template<class TOPIC_TYPE>
+        data_reader_ptr
+        make_datareader( const topic_tuple_ptr<TOPIC_TYPE>& topic_tuple, data_reader_listener_ptr& listener )
+        {
+            return data_reader_ptr(_subscriber->create_datareader(
+                                                              std::get<0>(*topic_tuple).get(),
+                                                              eprosima::fastdds::dds::DATAREADER_QOS_DEFAULT, listener.get())
+                               );
+        };
+    
+        data_reader_ptr
+        make_datareader( const content_filtered_topic_ptr& content_filtered_topic,
+                           const data_reader_listener_ptr& listener )
+        {
+            return data_reader_ptr( _subscriber->create_datareader(content_filtered_topic.get(), eprosima::fastdds::dds::DATAREADER_QOS_DEFAULT, listener.get()));
+        };
+    
+    
+        const domain_participant_ptr& get_domain_participant()
+        {
+            return _participant;
+        }
+        
+        const std::string& get_participant_name() { return _participant_name;};
+    
+    private:
+        domain_participant_ptr _participant;
+        publisher_ptr _publisher;
+        subscriber_ptr _subscriber;
+        std::string _participant_name;
+    
+    };
 
-    protected:
-      std::string _what;
-  };
-
-
+    using basic_domain_participant_ptr = std::shared_ptr<basic_domain_participant>;
 };
-
-typedef std::shared_ptr<BasicDomainParticipant> BasicDomainParticipantPtr;
-
-};
-
-#endif 
+ 

@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -26,77 +26,54 @@
 */
 
 #include <ExecutionReportAdapter.hpp>
-
 #include <quickfix/Session.h>
-
 #include "ExecutionReportDataReaderListenerImpl.h"
+#include <ExecutionReportLogger.hpp>
+#include <fastdds/dds/subscriber/Subscriber.hpp>
+#include <fastdds/dds/subscriber/DataReader.hpp>
+#include <fastdds/dds/subscriber/DataReaderListener.hpp>
+
+#include <log4cxx/logger.h>
+#include <log4cxx/basicconfigurator.h>
 
 #include "Application.hpp"
-
-#include <ExecutionReportLogger.hpp>
 
 auto const exec_report_processor = [] (DistributedATS::DATSApplication &application, DistributedATS_ExecutionReport::ExecutionReport& executionReport)
 {
     FIX::Message executionReportMessage;
-    executionReport.m_Header.SendingTime = 0; // this is precision; -- TODO: move to auto gen
-    executionReport.m_Header.BeginString = CORBA::string_dup("FIX.4.4");
-    executionReport.m_Header.SenderCompID = executionReport.m_Header.SenderSubID;
+
+    executionReport.fix_header().BeginString("FIX.4.4");
+    executionReport.fix_header().TargetCompID(executionReport.DATS_Destination());
+    executionReport.fix_header().SenderCompID(executionReport.DATS_DestinationUser());
+    executionReport.fix_header().SendingTime(0);
+    
     ExecutionReportAdapter::DDS2FIX(executionReport, executionReportMessage);
 
-    DATSApplication::publishToClient(executionReportMessage);
+    DistributedATS::DATSApplication::publishToClient(executionReportMessage);
 };
 
 
 namespace DistributedATS {
 
 ExecutionReportDataReaderListenerImpl::ExecutionReportDataReaderListenerImpl(DistributedATS::DATSApplication &application)
-    : _processor(application, exec_report_processor, 100)
+    : _processor(application, exec_report_processor, "ExecutionReportDataReaderListenerImpl", 100)
 {
 }
 
 void ExecutionReportDataReaderListenerImpl::on_data_available(
-    DDS::DataReader_ptr reader) throw(CORBA::SystemException) {
-  try {
-      DistributedATS_ExecutionReport::ExecutionReportDataReader_var execution_report_dr =
-      DistributedATS_ExecutionReport::ExecutionReportDataReader::_narrow(reader);
-
-    if (CORBA::is_nil(execution_report_dr.in())) {
-      std::cerr << "ExecutionReportDataReaderListenerImpl::on_data_available: "
-                   "_narrow failed."
-                << std::endl;
-      ACE_OS::exit(1);
+                    eprosima::fastdds::dds::DataReader* reader)
+{
+    DistributedATS_ExecutionReport::ExecutionReport executionReport;
+    eprosima::fastdds::dds::SampleInfo info;
+    
+    if (reader->take_next_sample(&executionReport, &info) == eprosima::fastdds::dds::RETCODE_OK)
+    {
+        if (info.valid_data)
+        {
+            _processor.enqueue_dds_message(executionReport);
+        }
     }
-
-    while (true) {
-        DistributedATS_ExecutionReport::ExecutionReport executionReport;
-      DDS::SampleInfo si;
-      DDS::ReturnCode_t status =
-          execution_report_dr->take_next_sample(executionReport, si);
-
-      if (status == DDS::RETCODE_OK) {
-        if (!si.valid_data)
-          continue;
-     
-	/*     
-        std::stringstream ss;
-        ExecutionReportLogger::log(ss, executionReport);
-        ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%t|%D) Received Execution Report : %s\n"), ss.str().c_str()));
-	*/
-          
-        _processor.enqueue_dds_message(executionReport);
-
-      } else if (status == DDS::RETCODE_NO_DATA) {
-        break;
-      } else {
-        std::cerr << "ERROR: read DATS::ExecutionReport: Error: " << status
-                  << std::endl;
-      }
-    }
-
-  } catch (CORBA::Exception &e) {
-    std::cerr << "Exception caught in read:" << std::endl << e << std::endl;
-    ACE_OS::exit(1);
-  }
+    
 }
 
 } // namespace DistributedATS

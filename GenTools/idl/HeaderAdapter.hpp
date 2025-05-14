@@ -1,11 +1,7 @@
-// Don't modify, automatically generated file by QuickFIX2OpenDDS.py
-#ifndef __Header_h__
-#define __Header_h__
-
-#include "HeaderTypeSupportImpl.h"
+/* Don't modify, automatically generated file by QuickFIX2FastDDS.py*/
+#pragma once
+#include "Header.hpp"
 #include <quickfix/Message.h>
-
-using namespace DistributedATS;
 
 
 
@@ -16,4 +12,3 @@ class HeaderAdapter
 		static void DDS2FIX(const DistributedATS::Header& ddsMsg, FIX::FieldMap&)  __attribute__ ((visibility ("default")));
 
 };
-#endif

@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -25,56 +25,25 @@
    SOFTWARE.
 */
 
-#ifndef SECURITYLISTDATAREADERLISTENERIMPL_H_
-#define SECURITYLISTDATAREADERLISTENERIMPL_H_
+#pragma once
 
 #include "Market.h"
-#include <SecurityListTypeSupportImpl.h>
 
 namespace DistributedATS {
 
 class SecurityListDataReaderListenerImpl
-    : public virtual OpenDDS::DCPS::LocalObject<DDS::DataReaderListener> {
+    : public eprosima::fastdds::dds::DataReaderListener {
 public:
   SecurityListDataReaderListenerImpl(
       std::shared_ptr<DistributedATS::Market> market);
-  virtual ~SecurityListDataReaderListenerImpl();
+  ~SecurityListDataReaderListenerImpl() override;
 
-  virtual void
-  on_data_available(DDS::DataReader_ptr reader) throw(CORBA::SystemException);
+        void
+  on_data_available(eprosima::fastdds::dds::DataReader* reader) override;
 
-  virtual void
-  on_requested_deadline_missed(DDS::DataReader_ptr reader,
-                               const DDS::RequestedDeadlineMissedStatus
-                                   &status) throw(CORBA::SystemException){};
-
-  virtual void
-  on_requested_incompatible_qos(DDS::DataReader_ptr reader,
-                                const DDS::RequestedIncompatibleQosStatus
-                                    &status) throw(CORBA::SystemException){};
-
-  virtual void
-  on_liveliness_changed(DDS::DataReader_ptr reader,
-                        const DDS::LivelinessChangedStatus
-                            &status) throw(CORBA::SystemException){};
-
-  virtual void
-  on_subscription_matched(DDS::DataReader_ptr reader,
-                          const DDS::SubscriptionMatchedStatus
-                              &status) throw(CORBA::SystemException){};
-
-  virtual void on_sample_rejected(
-      DDS::DataReader_ptr reader,
-      const DDS::SampleRejectedStatus &status) throw(CORBA::SystemException){};
-
-  virtual void on_sample_lost(
-      DDS::DataReader_ptr reader,
-      const DDS::SampleLostStatus &status) throw(CORBA::SystemException){};
 
 private:
-  MarketPtr _marketPtr;
+  market_ptr _marketPtr;
 };
 
 } /* namespace DistributedATS */
-
-#endif /* SECURITYLISTDATAREADERLISTENERIMPL_H_ */

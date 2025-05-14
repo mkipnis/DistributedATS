@@ -1,13 +1,20 @@
-// Don't modify, automatically generated file by QuickFIX2OpenDDS.py
+/* Don't modify, automatically generated file by QuickFIX2FastDDS.py*/
 #include "Header.idl"
 
 module DistributedATS_ExecutionReport
 {
 
-	@topic
+	
 	struct ExecutionReport
 	{
-	DistributedATS::Header m_Header;
+		string DATS_Source;
+     		string DATS_Destination;
+    		string DATS_SourceUser;
+    		string DATS_DestinationUser;
+
+
+		DistributedATS::Header fix_header;
+
 		string OrderID;
 		string OrigClOrdID;
 		string ExecID;

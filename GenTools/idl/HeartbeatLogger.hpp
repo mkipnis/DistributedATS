@@ -1,8 +1,5 @@
-// Don't modify, automatically generated file by QuickFIX2OpenDDS.py
-#ifndef __HeartbeatLogger_h__
-#define __HeartbeatLogger_h__
-
-#include "HeartbeatTypeSupportImpl.h"
+/* Don't modify, automatically generated file by QuickFIX2FastDDS.py*/
+#pragma once
 #include "HeaderLogger.hpp"
 ;
 
@@ -13,14 +10,17 @@ class HeartbeatLogger
 		static void log(std::ostream & out, DistributedATS_Heartbeat::Heartbeat& ddsMsg )  __attribute__ ((visibility ("default")))
 		{
 			;out<< "Message : Heartbeat { " << std::endl;
-			HeaderLogger::log(out, ddsMsg.m_Header);
 
+			;out 
+			 << "ddsMsg.DATS_Source : " << ddsMsg.DATS_Source() << std::endl 
+			 << "ddsMsg.DATS_Destination : " << ddsMsg.DATS_Destination() << std::endl
+			 << "ddsMsg.DATS_SourceUser : " << ddsMsg.DATS_SourceUser() << std::endl
+			 << "ddsMsg.DATS_DestinationUser : " << ddsMsg.DATS_DestinationUser() << std::endl;
+
+			HeaderLogger::log(out, ddsMsg.fix_header());
 
 			;out
 ;			out << "}";
 		out << std::endl;};
 
 };
-
-#endif
-

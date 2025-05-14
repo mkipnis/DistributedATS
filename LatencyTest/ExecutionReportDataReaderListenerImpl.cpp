@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -40,45 +40,22 @@ ExecutionReportDataReaderListenerImpl::~ExecutionReportDataReaderListenerImpl() 
 }
 
 
-void ExecutionReportDataReaderListenerImpl::on_data_available( DDS::DataReader_ptr reader) throw (CORBA::SystemException)
+void ExecutionReportDataReaderListenerImpl::on_data_available( eprosima::fastdds::dds::DataReader* reader )
 {
-    try
+
+    DistributedATS_ExecutionReport::ExecutionReport executionReport;
+    eprosima::fastdds::dds::SampleInfo info;
+    
+    if (reader->take_next_sample(&executionReport, &info) == eprosima::fastdds::dds::RETCODE_OK)
     {
-        DistributedATS_ExecutionReport::ExecutionReportDataReader_var execution_report_dr = DistributedATS_ExecutionReport::ExecutionReportDataReader::_narrow(reader);
 
-        if (CORBA::is_nil ( execution_report_dr.in() ) )
-        {
-            std::cerr << "ExecutionReportDataReaderListenerImpl::on_data_available: _narrow failed." << std::endl;
-            ACE_OS::exit(1);
-        }
-
-        while( true )
-        {
-            DistributedATS_ExecutionReport::ExecutionReport executionReport;
-            DDS::SampleInfo si ;
-            DDS::ReturnCode_t status = execution_report_dr->take_next_sample( executionReport, si );
-
-            if (status == DDS::RETCODE_OK)
-            {
-                if ( !si.valid_data )
-                    continue;
                 
                 std::cout << "DDS Received Execution Report" << std::endl;
 
-                std::string clientOrderId =  executionReport.OrderID.in();
+                std::string clientOrderId =  executionReport.OrderID();
                 
                 m_pLatencyStatsPtr->insertStats(clientOrderId, OrderHopLatency::EXECUTION_REPORT_DDS);
 
-            } else if (status == DDS::RETCODE_NO_DATA) {
-                break;
-            } else {
-                std::cerr << "ERROR: read DATS::Logon: Error: " <<  status << std::endl;
-            }
-        }
-
-    } catch (CORBA::Exception& e) {
-        std::cerr << "Exception caught in read:" << std::endl << e << std::endl;
-        ACE_OS::exit(1);
     }
 }
 

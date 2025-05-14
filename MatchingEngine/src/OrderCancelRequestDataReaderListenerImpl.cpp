@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -28,10 +28,10 @@
 #include "OrderCancelRequestDataReaderListenerImpl.h"
 
 #include "OrderException.h"
-#include <OrderCancelRejectTypeSupportImpl.h>
 
 #include <LoggerHelper.h>
 #include <OrderCancelRequestLogger.hpp>
+
 
 namespace MatchingEngine {
 
@@ -48,75 +48,49 @@ OrderCancelRequestDataReaderListenerImpl::
 }
 
 void OrderCancelRequestDataReaderListenerImpl::on_data_available(
-    DDS::DataReader_ptr reader) throw(CORBA::SystemException) {
-  try {
-      DistributedATS_OrderCancelRequest::OrderCancelRequestDataReader_var
-        order_cancel_request_dr =
-      DistributedATS_OrderCancelRequest::OrderCancelRequestDataReader::_narrow(
-                reader);
+      eprosima::fastdds::dds::DataReader* reader) {
+    
+    
+    DistributedATS_OrderCancelRequest::OrderCancelRequest
+    order_cancel_request;
+    eprosima::fastdds::dds::SampleInfo info;
+    
+    if (reader->take_next_sample(&order_cancel_request, &info) == eprosima::fastdds::dds::RETCODE_OK)
+    {
+         if (info.valid_data)
+         {
+             LoggerHelper::log_debug<std::stringstream, OrderCancelRequestLogger,
+               DistributedATS_OrderCancelRequest::OrderCancelRequest>(logger,
+                 order_cancel_request, "OrderCancelRequest");
 
-    if (CORBA::is_nil(order_cancel_request_dr.in())) {
-      std::cerr << "OrderCancelRequestDataReaderListenerImpl::on_data_"
-                   "available: _narrow failed."
-                << std::endl;
-      ACE_OS::exit(1);
-    }
+             std::string symbol = order_cancel_request.Symbol();
 
-    while (true) {
-        DistributedATS_OrderCancelRequest::OrderCancelRequest order_cancel_request;
-      DDS::SampleInfo si;
-      DDS::ReturnCode_t status =
-          order_cancel_request_dr->take_next_sample(order_cancel_request, si);
+             try {
+               auto book = _market->findBook(symbol);
 
-      if (status == DDS::RETCODE_OK) {
-        if (!si.valid_data)
-          continue;
+               if (!book) {
+                 std::cerr << "Order book not found to cancel order : " << symbol
+                           << std::endl;
+               }
 
-        LoggerHelper::log_debug<std::stringstream, OrderCancelRequestLogger,
-          DistributedATS_OrderCancelRequest::OrderCancelRequest>(
-            order_cancel_request, "OrderCancelRequest");
+               std::string client_order_id = order_cancel_request.OrigClOrdID();
+               std::string contra_party =
+                   order_cancel_request.DATS_SourceUser();
 
-        std::string symbol = order_cancel_request.Symbol.in();
+               _market->cancel_order(book, contra_party, client_order_id);
 
-        try {
-          auto book = _market->findBook(symbol);
+             } catch (DistributedATS::OrderException &orderException) {
+                 DistributedATS_OrderCancelReject::OrderCancelReject orderCancelReject;
+               orderCancelReject.DATS_Source("MATCHING_ENGINE");
+               orderCancelReject.DATS_Destination(order_cancel_request.DATS_Source());
+               orderCancelReject.fix_header().MsgType("9");
+               orderCancelReject.Text("Cancel Rejected REJECT");
+               orderCancelReject.ClOrdID(order_cancel_request.ClOrdID());
 
-          if (!book) {
-            std::cerr << "Order book not found to cancel order : " << symbol
-                      << std::endl;
-            break;
-          }
-
-          std::string client_order_id = order_cancel_request.OrigClOrdID.in();
-          std::string contra_party =
-              order_cancel_request.m_Header.SenderSubID.in();
-
-          _market->cancel_order(book, contra_party, client_order_id);
-
-        } catch (DistributedATS::OrderException &orderException) {
-            DistributedATS_OrderCancelReject::OrderCancelReject orderCancelReject;
-          orderCancelReject.m_Header.SenderCompID =
-              CORBA::string_dup("MATCHING_ENGINE");
-          orderCancelReject.m_Header.TargetCompID =
-              CORBA::string_dup(order_cancel_request.m_Header.SenderCompID);
-          orderCancelReject.m_Header.MsgType = CORBA::string_dup("9");
-          orderCancelReject.Text = "Cancel Rejected REJECT";
-          orderCancelReject.ClOrdID = order_cancel_request.ClOrdID;
-
-          _market->publishOrderCancelReject(orderCancelReject);
-        }
-
-      } else if (status == DDS::RETCODE_NO_DATA) {
-        break;
-      } else {
-        std::cerr << "ERROR: read DATS::Logon: Error: " << status << std::endl;
-      }
-    }
-
-  } catch (CORBA::Exception &e) {
-    std::cerr << "Exception caught in read:" << std::endl << e << std::endl;
-    ACE_OS::exit(1);
-  }
+               _market->publishOrderCancelReject(orderCancelReject);
+             }
+         }
+     }
 }
 
 } /* namespace MatchingEngine */

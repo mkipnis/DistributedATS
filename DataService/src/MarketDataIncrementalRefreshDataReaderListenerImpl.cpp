@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -30,95 +30,72 @@
 #include <quickfix/fix50/MarketDataIncrementalRefresh.h>
 #include <MarketDataIncrementalRefreshLogger.hpp>
 
+#include <fastdds/dds/subscriber/SampleInfo.hpp>
+#include <fastdds/dds/subscriber/DataReader.hpp>
+#include <fastdds/dds/subscriber/DataReaderListener.hpp>
+#include <sstream>
+
+#include <log4cxx/logger.h>
+#include <log4cxx/basicconfigurator.h>
+
+
 namespace DistributedATS {
 
-MarketDataIncrementalRefreshDataReaderListenerImpl::~MarketDataIncrementalRefreshDataReaderListenerImpl() {
-	// TODO Auto-generated destructor stub
-}
 
-
-void MarketDataIncrementalRefreshDataReaderListenerImpl::on_data_available( DDS::DataReader_ptr reader) throw (CORBA::SystemException)
+void MarketDataIncrementalRefreshDataReaderListenerImpl::on_data_available(eprosima::fastdds::dds::DataReader* reader) 
 {
-    try
+    DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefresh marketDataRefresh;
+    eprosima::fastdds::dds::SampleInfo info;
+    
+    if (reader->take_next_sample(&marketDataRefresh, &info) == eprosima::fastdds::dds::RETCODE_OK)
     {
-        DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefreshDataReader_var
-			market_data_incremental_refresh_dr = DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefreshDataReader::_narrow(reader);
-
-        if (CORBA::is_nil ( market_data_incremental_refresh_dr.in() ) )
+        if (info.valid_data)
         {
-            ACE_ERROR ((LM_ERROR, ACE_TEXT("(%P|%t|%D) MarketDataIncrementalRefreshDataReaderListenerImpl::on_data_available: _narrow failed.\n")));
+            std::stringstream ss;
+            MarketDataIncrementalRefreshLogger::log(ss, marketDataRefresh);
+            LOG4CXX_INFO(logger, "MarketDataIncrementalRefresh : [" <<  ss.str() << "]");
 
-            ACE_OS::exit(1);
-        }
-
-        while( true )
-        {
-            DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefresh marketDataRefresh;
-            DDS::SampleInfo si ;
-            DDS::ReturnCode_t status = market_data_incremental_refresh_dr->take_next_sample( marketDataRefresh, si );
-
-            if (status == DDS::RETCODE_OK)
-            {
-                if ( !si.valid_data )
-                    continue;
+            insertIncrementalMarketDataRefresh(marketDataRefresh);
                 
-                std::stringstream ss;
-                MarketDataIncrementalRefreshLogger::log(ss, marketDataRefresh);
-                ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%t|%D)  MarketDataIncrementalRefresh : %s\n"), ss.str().c_str()));
-
-                insertIncrementalMarketDataRefresh(marketDataRefresh);
-                
-            } else if (status == DDS::RETCODE_NO_DATA) {
-                break;
-            } else {
-                ACE_ERROR ((LM_ERROR, ACE_TEXT("(%P|%t|%D) Read DATS::MarketDataIncrementalRefresh: %d.\n"), status));
-            }
         }
-
-    } catch (CORBA::Exception& e) {
-        
-        std::stringstream ss;
-        ss << "Exception caught in read:" << std::endl << e << std::endl;
-        ACE_ERROR ((LM_ERROR, ACE_TEXT("(%P|%t|%D) MarketDataIncrementalRefresh %s.\n"), ss.str().c_str()));
-
-        ACE_OS::exit(1);
     }
+
 }
     
     
     
-    void MarketDataIncrementalRefreshDataReaderListenerImpl::insertIncrementalMarketDataRefresh( const DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefresh& incrementalRefresh )
+void MarketDataIncrementalRefreshDataReaderListenerImpl::insertIncrementalMarketDataRefresh( const DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefresh& incrementalRefresh )
+{
+    
+    std::map<Instrument, std::list<DistributedATS_MarketDataIncrementalRefresh::NoMDEntries>> current_market_data_snapshot;
+        
+    for ( int incremental_update_index = 0; incremental_update_index<incrementalRefresh.c_NoMDEntries().size(); ++incremental_update_index )
     {
-        std::map<Instrument, std::list<DistributedATS_MarketDataIncrementalRefresh::NoMDEntries>> current_market_data_snapshot;
-        
-        for ( int incremental_update_index = 0; incremental_update_index<incrementalRefresh.c_NoMDEntries.length(); ++incremental_update_index )
+        auto mdEntry = incrementalRefresh.c_NoMDEntries()[incremental_update_index];
+            
+        auto securityExchange = mdEntry.SecurityExchange();
+        auto symbol = mdEntry.Symbol();
+            
+        Instrument instrument( securityExchange, symbol );
+            
+        auto mdEntryList = current_market_data_snapshot.find( instrument );
+            
+        if ( mdEntryList == current_market_data_snapshot.end() )
         {
-            DistributedATS_MarketDataIncrementalRefresh::NoMDEntries mdEntry = incrementalRefresh.c_NoMDEntries[incremental_update_index];
-            
-            std::string securityExchange = mdEntry.SecurityExchange.in();
-            std::string symbol = mdEntry.Symbol.in();
-            
-            Instrument instrument( securityExchange, symbol );
-            
-            auto mdEntryList = current_market_data_snapshot.find( instrument );
-            
-            if ( mdEntryList == current_market_data_snapshot.end() )
-            {
-                std::list<DistributedATS_MarketDataIncrementalRefresh::NoMDEntries> entryList;
-                entryList.push_back( mdEntry );
-                current_market_data_snapshot.emplace( instrument, entryList );
-                
-            } else {
-                mdEntryList->second.push_back(mdEntry);
-            }
+            std::list<DistributedATS_MarketDataIncrementalRefresh::NoMDEntries> entryList;
+            entryList.push_back( mdEntry );
+            current_market_data_snapshot.emplace( instrument, entryList );
+        } else {
+            mdEntryList->second.push_back(mdEntry);
         }
-        
-        for ( auto& mdEntry : current_market_data_snapshot )
-        {
-            (*_incrementalRefreshMapPtr)[mdEntry.first] = mdEntry.second;
-        }
-        
     }
+    
+        
+    for ( auto& mdEntry : current_market_data_snapshot )
+    {
+        (*_incrementalRefreshMapPtr)[mdEntry.first] = mdEntry.second;
+    }
+}
 
 
 } /* namespace FIXGateway */

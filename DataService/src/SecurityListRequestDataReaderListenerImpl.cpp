@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -28,63 +28,42 @@
 #include <iostream>
 #include <sstream>
 #include "SecurityListRequestDataReaderListenerImpl.hpp"
-#include <SecurityListRequestTypeSupportImpl.h>
-#include <SecurityListTypeSupportImpl.h>
 #include <SecurityListRequestLogger.hpp>
 #include <quickfix/FixValues.h>
+#include <SecurityListRequestLogger.hpp>
 
+#include <fastdds/dds/subscriber/SampleInfo.hpp>
+#include <LoggerHelper.h>
+#include <fastdds/dds/subscriber/Subscriber.hpp>
+#include <fastdds/dds/subscriber/DataReader.hpp>
+#include <fastdds/dds/subscriber/DataReaderListener.hpp>
+#include <fastdds/dds/subscriber/qos/DataReaderQos.hpp>
+#include <fastdds/dds/subscriber/SampleInfo.hpp>
 
-void SecurityListRequestDataReaderListenerImpl::on_data_available( DDS::DataReader_ptr reader) throw (CORBA::SystemException)
+using namespace DistributedATS;
+
+static auto logger = log4cxx::Logger::getRootLogger();
+
+void SecurityListRequestDataReaderListenerImpl::on_data_available( eprosima::fastdds::dds::DataReader* reader )
 {
-    try
+
+    DistributedATS_SecurityListRequest::SecurityListRequest security_list_request;
+    eprosima::fastdds::dds::SampleInfo info;
+    
+    if (reader->take_next_sample(&security_list_request, &info) == eprosima::fastdds::dds::RETCODE_OK)
     {
-        DistributedATS_SecurityListRequest::SecurityListRequestDataReader_var security_list_dr =
-            DistributedATS_SecurityListRequest::SecurityListRequestDataReader::_narrow(reader);
-        
-        if (CORBA::is_nil ( security_list_dr.in() ) )
-        {
-            ACE_ERROR ((LM_ERROR, ACE_TEXT("(%P|%t|%D) SecurityListDataRequestReaderListenerImpl::on_data_available: _narrow failed.\n")));
-            ACE_OS::exit(1);
-        }
-        
-        while( true )
-        {
-            DistributedATS_SecurityListRequest::SecurityListRequest security_list_request;
-            DDS::SampleInfo si ;
-            DDS::ReturnCode_t status = security_list_dr->take_next_sample( security_list_request, si );
-            
-            if (status == DDS::RETCODE_OK)
-            {
-                if ( !si.valid_data )
-                    continue;
+         if (info.valid_data)
+         {
+             
+             LoggerHelper::log_info<
+             std::stringstream, SecurityListRequestLogger,
+             DistributedATS_SecurityListRequest::SecurityListRequest>
+                (logger, security_list_request, "SecurityListRequest");
+             
 
-                std::stringstream ss;
-                SecurityListRequestLogger::log(ss, security_list_request);
-                ACE_DEBUG((LM_INFO, ACE_TEXT("(%P|%t|%D) SecurityListRequest : %s\n"), ss.str().c_str()));
-                
-                DistributedATS_SecurityListRequest::SecurityListRequest* securityListRequest =
-                    new DistributedATS_SecurityListRequest::SecurityListRequest( security_list_request );
+             _securityListRequestQueuePtr->push(std::make_shared<DistributedATS_SecurityListRequest::SecurityListRequest>(security_list_request));
 
-                ACE_Message_Block* msg = new ACE_Message_Block((char*)securityListRequest, sizeof( DistributedATS_SecurityListRequest::SecurityListRequest ));
-                _securityListRequestQueue->enqueue_tail(msg);
-
-            } else if (status == DDS::RETCODE_NO_DATA) {
-                    break;
-            } else {
-
-                ACE_ERROR ((LM_ERROR, ACE_TEXT("(%P|%t|%D) Read SecurityListRequest: %d\n"), status));
             }
-        }
-        
-    } catch (CORBA::Exception& e) {
-        
-
-        std::stringstream ss;
-        ss << "Exception caught in read:" << std::endl << e << std::endl;
-        ACE_ERROR ((LM_ERROR, ACE_TEXT("(%P|%t|%D) SecurityListRequest: %s.\n"), ss.str().c_str()));
-
-        ACE_OS::exit(1);
     }
-
-
+ 
 }

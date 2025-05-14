@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -25,18 +25,9 @@
    SOFTWARE.
 */
 
-#ifndef REFDATASERVICE_H_
-#define REFDATASERVICE_H_
+#pragma once
 
-#define HAVE_MYSQL
-
-#include <SecurityListRequestTypeSupportImpl.h>
-#include <SecurityListTypeSupportImpl.h>
-
-#include <ace/Guard_T.h>
-#include <ace/RW_Mutex.h>
 #include <memory>
-
 #include <vector>
 
 #include <quickfix/Exceptions.h>
@@ -45,12 +36,14 @@
 
 #include <iostream>
 
-#include <ace/Singleton.h>
-
 #include <list>
 #include <map>
+#include <thread>
 
 #include <BasicDomainParticipant.h>
+#include <SecurityList.hpp>
+#include <SecurityListRequest.hpp>
+#include "SecurityListRequestDataReaderListenerImpl.hpp"
 
 
 namespace DistributedATS {
@@ -80,7 +73,6 @@ struct Instrument
 	std::string symbol;
 	std::string marketName; // FIX SecurityExchange
     std::string properties;
-    //std::shared_ptr<std::string> ref_data;
 
 	friend bool operator<( const Instrument& i1, const Instrument& i2 )
 	{
@@ -101,27 +93,22 @@ typedef std::shared_ptr<InstrumentList> InstrumentListPtr;
 typedef std::map<std::string, InstrumentListPtr> UserInstrumentList;
 typedef std::shared_ptr<UserInstrumentList> UserInstrumentListPtr;
 
-class RefDataService  : public ACE_Task <ACE_MT_SYNCH>
+class RefDataService
 {
-
 public:
 
-    RefDataService( std::shared_ptr<distributed_ats_utils::BasicDomainParticipant> basicDomainParticipantPtr,
-                   const FIX::DatabaseConnectionID& dbConnectionID,
-					ACE_Thread_Manager *thr_mgr);
+    RefDataService( std::shared_ptr<distributed_ats_utils::basic_domain_participant> basicDomainParticipantPtr, const FIX::DatabaseConnectionID& dbConnectionID);
     
     virtual ~RefDataService();
 
-
     void initialize();
 
-    virtual int svc (void);
+    int service (void);
     
-    void createSecurityListRequestListener( const std::string& data_service_filter_expression );
+    void createSecurityListRequestListener();
     void createSecurityListDataWriter();
-
     
-    bool processRefDataRequest( DistributedATS_SecurityListRequest::SecurityListRequest* );
+    bool processRefDataRequest( const SecurityListRequestPtr& );
 
 	const void populateUserInstrumentList( std::string& username, InstrumentListPtr& instrumentListPtrOut ) const
 	{
@@ -132,12 +119,13 @@ public:
 
 protected:
     void populateUserGroupInstrumentMap();
-    //void populateInstrumentIdToRefDataMap();
     
 private:
 
     std::shared_ptr<DistributedATS::SQLiteConnection> m_sqliteConnection;
-    std::shared_ptr<distributed_ats_utils::BasicDomainParticipant> m_basicDomainParticipantPtr;
+    std::shared_ptr<distributed_ats_utils::basic_domain_participant> _basic_domain_participant_ptr;
+    
+    SecurityListRequestQueuePtr _security_list_queue_ptr;
     
     // instrument_id to ref_data
     std::map<std::string,std::shared_ptr<std::string>> m_instrumentIdToRefDataMap;
@@ -146,9 +134,15 @@ private:
     
     InstrumentMapPtr m_pInstrumentMapPtr;
     
-    DistributedATS_SecurityList::SecurityListDataWriter_var m_security_list_dw;
+    distributed_ats_utils::topic_tuple_ptr<DistributedATS_SecurityList::SecurityList> _security_list_topic_tuple;
+    distributed_ats_utils::data_writer_ptr _security_list_dw;
+    
+    distributed_ats_utils::topic_tuple_ptr<DistributedATS_SecurityListRequest::SecurityListRequest> _security_list_request_topic_tuple;
+    distributed_ats_utils::data_reader_tuple_ptr<DistributedATS_SecurityListRequest::SecurityListRequest>  _security_list_request_data_reader_tuple;
+        
+    std::thread _service_thread;
+    
+    std::atomic<bool> _is_running;
 };
 
 } /* namespace DistributedATS */
-
-#endif /* AUTHSERVICESINGLETON_H_ */

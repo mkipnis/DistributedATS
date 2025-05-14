@@ -1,28 +1,13 @@
 ## Building Distributed ATS
 
-All DistributedATS dependences need to be built and MySQL needs to be installed prior to building the project.
-
-[See: Dependences](README.md#Dependences)
-
-The following environmental variables along with DDS variables must be set prior to building the project: DATS_HOME(DistributedATS home), QUICKFIX_HOME, MYSQL_HOME, LIQUIDBOOK_HOME as well as LD_LIBRARY_PATH. 
-
-Example of an environmental variable file where all dependences were built under $HOME and MySQL was installed in its default location:
-```
-. $HOME/OpenDDS-3.22/setenv.sh # OpenDDS and it's dependences
-
-export DATS_HOME=$HOME/DistributedATS # DistributedATS home
-
-export QUICKFIX_HOME=$HOME/quickfix
-export MYSQL_HOME=/usr/local/mysql
-export LIQUIDBOOK_HOME=$HOME/liquibook-master
-export DYLD_LIBRARY_PATH=$HOME/quickfix/src/C++/.libs:$DYLD_LIBRARY_PATH
-```
-
-DistributedATS utilizes Make Project Creator as a build tool (Make Project Creator)[http://downloads.ociweb.com/MPC/docs/html/MakeProjectCreator.html]
+All DistributedATS dependences need to be built prior to building the project.
 
 Upon successfully building and installing all the dependences, the following set of commands can be used to build the project:
 ```
-$ACE_ROOT/bin/mwc.pl -type gnuace
-make realclean
-make
+mkdir build
+cd build
+
+cmake .. -Dfastcdr_DIR=$INSTALL_DIR/lib/cmake/fastcdr/ -Dfastrtps_DIR=$INSTALL_DIR/share/fastrtps/cmake/ -Dfoonathan_memory_DIR=$INSTALL_DIR/lib/foonathan_memory/cmake/ -Dlog4cxx_DIR=$INSTALL_DIR/lib/cmake/log4cxx -DCMAKE_INSTALL_PREFIX=$HOME/DistributedATS -DBoost_INCLUDE_DIR=$INSTALL_DIR/include -DLIQUIBOOK_HOME=$INSTALL_DIR/liquibook-$LIQUIBOOK_PKG/src -DQUICKFIX_INSTALL_PREFIX=$INSTALL_DIR
+
+cmake --build . --target install --config Debug
 ```

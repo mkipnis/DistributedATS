@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -25,82 +25,74 @@
    SOFTWARE.
 */
 
-#ifndef __AUTHSERVICE_H__
-#define __AUTHSERVICE_H__
+#pragma once
 
-#define HAVE_MYSQL
-
-
-#include <ace/Guard_T.h>
-#include <ace/RW_Mutex.h>
 #include <memory>
-
 #include <vector>
+#include <thread>
 
-//#include <quickfix/Exceptions.h>
-//#include <quickfix/DatabaseConnectionID.h>
-//#include <quickfix/MySQLConnection.h>
 #include <quickfix/DatabaseConnectionID.h>
 #include "SQLiteConnection.hpp"
-
-
 #include <iostream>
-
-#include <ace/Task.h>
-#include <ace/Task_T.h>
-
 #include <BasicDomainParticipant.h>
-
-#include <LogonTypeSupportImpl.h>
-#include <LogoutTypeSupportImpl.h>
+#include <Logon.hpp>
+#include <Logout.hpp>
+#include "LogonDataReaderListenerImpl.hpp"
 
 
 
 namespace DistributedATS {
 
-class AuthService : public ACE_Task <ACE_MT_SYNCH>
+class AuthService
 {
 public:
 
     
     AuthService(
-    			std::shared_ptr<distributed_ats_utils::BasicDomainParticipant> basicDomainParticipantPtr,
-                const FIX::DatabaseConnectionID& dbConnectionID,
-				ACE_Thread_Manager *thr_mgr
+                std::shared_ptr<distributed_ats_utils::basic_domain_participant> basic_domain_participant_ptr,
+                const FIX::DatabaseConnectionID& dbConnectionID
 				);
 
     virtual ~AuthService();
     
-    void createLogonTopic( const std::string& data_service_filter_expression );
-    void createLogoutTopic( const std::string& data_service_filter_expression );
+    void createLogonTopic();
+    void createLogoutTopic();
     
-    virtual int svc (void);
+    int service (void);
     
 private:
-
-    /*
-    bool authenticate( std::shared_ptr<FIX::MySQLConnection> mySqlConnect, DistributedATS_Logon::Logon* logonPtr );
-
-    bool authenticate( std::shared_ptr<FIX::MySQLConnection> mySqlConnect, const char* username_in, const char* password_in, std::string& textOut );*/
     
-    bool authenticate( std::shared_ptr<DistributedATS::SQLiteConnection> sqliteConnect, DistributedATS_Logon::Logon* logonPtr );
+    bool authenticate(
+                      std::shared_ptr<DistributedATS::SQLiteConnection>& sqliteConnect,
+                      std::shared_ptr<DistributedATS_Logon::Logon>& logonPtr );
 
-    bool authenticate( std::shared_ptr<DistributedATS::SQLiteConnection> sqliteConnect, const char* username_in, const char* password_in, std::string& textOut );
+    bool authenticate( std::shared_ptr<DistributedATS::SQLiteConnection>& sqliteConnect,
+                      const std::string& username_in,
+                      const std::string& password_in,
+                      std::string& textOut );
 
     FIX::DatabaseConnectionID m_dbConnectionID;
 
-    std::shared_ptr<distributed_ats_utils::BasicDomainParticipant> m_basicDomainParticipantPtr;
+    distributed_ats_utils::basic_domain_participant_ptr _basic_domain_participant_ptr;
+    
+    distributed_ats_utils::topic_tuple_ptr<DistributedATS_Logon::Logon> _logon_topic_tuple;
+    distributed_ats_utils::topic_tuple_ptr<DistributedATS_Logout::Logout> _logout_topic_tuple;
+    
+    distributed_ats_utils::data_reader_tuple_ptr<DistributedATS_Logon::Logon> _logon_data_reader_tuple;
+    distributed_ats_utils::data_reader_tuple_ptr<DistributedATS_Logout::Logout> _logout_data_reader_tuple;
         
 	std::map<std::string, std::string> m_credentials;
     
-    DDS::ContentFilteredTopic_var m_cft_logon;
-    DDS::ContentFilteredTopic_var m_cft_logout;
+    distributed_ats_utils::data_writer_ptr m_logon_dw;
+    distributed_ats_utils::data_writer_ptr m_logout_dw;
     
-    DistributedATS_Logon::LogonDataWriter_var m_logon_dw;
-    DistributedATS_Logout::LogoutDataWriter_var m_logout_dw;
+    LogonPtrQueuePtr _logon_request_queue;
+    
+    std::thread _service_thread;
+    
+    std::atomic<bool> _is_running;
+
     
 };
 
 } /* namespace DistributedATS */
-
-#endif /* AUTHSERVICE_H_ */

@@ -2,7 +2,7 @@
    Copyright (C) 2021 Mike Kipnis
 
    This file is part of DistributedATS, a free-software/open-source project
-   that integrates QuickFIX and LiquiBook over OpenDDS. This project simplifies
+   that integrates QuickFIX and LiquiBook over DDS. This project simplifies
    the process of having multiple FIX gateways communicating with multiple
    matching engines in realtime.
    
@@ -25,35 +25,50 @@
    SOFTWARE.
 */
 
-#include <MarketDataSnapshotFullRefreshTypeSupportImpl.h>
-
 #include "MarketDataService.h"
+#include <BasicDomainParticipant.h>
 #include <iostream>
-
-#include "MarketDataIncrementalRefreshDataReaderListenerImpl.h"
-#include "MarketDataRequestDataReaderListenerImpl.h"
-
 #include <quickfix/FixValues.h>
+#include <MarketDataRequestPubSubTypes.hpp>
+#include <MarketDataIncrementalRefreshPubSubTypes.hpp>
+#include <MarketDataSnapshotFullRefreshPubSubTypes.hpp>
+#include "MarketDataIncrementalRefreshDataReaderListenerImpl.h"
+
+#include <log4cxx/logger.h>
+#include <log4cxx/basicconfigurator.h>
+
+#include <thread>
+#include <chrono>
+
+#include <MarketDataSnapshotFullRefreshLogger.hpp>
+
+#include <LoggerHelper.h>
 
 
 namespace DistributedATS {
 
-MarketDataService::MarketDataService( std::shared_ptr<distributed_ats_utils::BasicDomainParticipant> basicDomainParticipantPtr,
-        const FIX::DatabaseConnectionID& dbConnectionID,
-		ACE_Thread_Manager *thr_mgr) :
-		ACE_Task <ACE_MT_SYNCH> (thr_mgr), m_basicDomainParticipantPtr( basicDomainParticipantPtr )
+MarketDataService::MarketDataService( std::shared_ptr<distributed_ats_utils::basic_domain_participant> basic_domain_participant,
+        const FIX::DatabaseConnectionID& dbConnectionID) :
+    _basic_domain_participant_ptr( basic_domain_participant )
 {
     
     _incrementalRefreshMapPtr = std::make_shared<IncrementalRefreshMap>();
     
     m_sqliteConnection.reset( new DistributedATS::SQLiteConnection(dbConnectionID) );
+    
+    _markat_data_request_queue_ptr = std::make_shared<MarketDataRequestQueue>();
 
+    std::atomic_init(&_is_running, true);
+
+    _service_thread = std::thread(&MarketDataService::service, this);
+    
     initialize();
 
 }
 
 MarketDataService::~MarketDataService() {
-	// TODO Auto-generated destructor stub
+    std::atomic_init(&_is_running, false);
+    _service_thread.join();
 }
 
 void MarketDataService::initialize()
@@ -70,113 +85,107 @@ void MarketDataService::initialize()
                                " m.market_name=imm.market_name and " \
                                " hp.business_date=(select max(business_date) from hist_price where instrument_name=i.instrument_name)");
     
-    ACE_DEBUG ((LM_INFO, ACE_TEXT("(%P|%t|%D) Populating hist stats\n")));
-
+    LOG4CXX_INFO(logger, "Populating hist stats");
+    
     m_sqliteConnection->execute(query);
     
     for ( int instrument_index =0; instrument_index<query.rows(); instrument_index++)
     {
         std::string symbol = query.getValue(instrument_index,0);
         std::string market = query.getValue(instrument_index,1);
-        int last_trade_price = ACE_OS::atoi(query.getValue(instrument_index,2).c_str());
-
-        std::cout << "Last traded Price : " << symbol << "|" << market << "|" << last_trade_price << std::endl;
-
-        /*Instrument instrument(instrument_group, symbol);
-        std::list<DATSMarketDataIncrementalRefresh::NoMDEntries> initial_list;*/
+        int last_trade_price = std::atoi(query.getValue(instrument_index,2).c_str());
 
         DistributedATS_MarketDataIncrementalRefresh::NoMDEntries last_price_entry;
-        last_price_entry.MDUpdateAction = FIX::MDUpdateAction_NEW;
-        last_price_entry.MDEntryType = FIX::MDEntryType_OPENING_PRICE;
-        last_price_entry.MDEntryPx = last_trade_price;
+        last_price_entry.MDUpdateAction(FIX::MDUpdateAction_NEW);
+        last_price_entry.MDEntryType(FIX::MDEntryType_OPENING_PRICE);
+        last_price_entry.MDEntryPx(last_trade_price);
+        last_price_entry.TimeInForce(1);
 
         _incrementalRefreshMapPtr->emplace(Instrument( market, symbol),
         		std::list<DistributedATS_MarketDataIncrementalRefresh::NoMDEntries> { last_price_entry } );
 
-
     }
-
 
 }
 
-void MarketDataService::createMarketDataRequestListener(  const std::string& data_service_filter_expression/*,
-                                                            const char* market_data_request_topic_name*/ )
+void MarketDataService::createMarketDataRequestListener()
 {
-    DDS::Topic_var market_data_request_topic =  m_basicDomainParticipantPtr->createTopicAndRegisterType
-        < DistributedATS_MarketDataRequest::MarketDataRequestTypeSupport_var,
-    DistributedATS_MarketDataRequest::MarketDataRequestTypeSupportImpl >
+    
+    DistributedATS_MarketDataRequest::MarketDataRequest marketDataRequest;
+    
+    _market_data_request_topic_tuple = _basic_domain_participant_ptr->make_topic
+        <
+    DistributedATS_MarketDataRequest::MarketDataRequestPubSubType,
+    DistributedATS_MarketDataRequest::MarketDataRequest>
         ( MARKET_DATA_REQUEST_TOPIC_NAME );
     
-    std::cout << "Market Data Request Filter :" << data_service_filter_expression.c_str() << std::endl;
-
-    DDS::ContentFilteredTopic_ptr cft_market_data_request =
-    m_basicDomainParticipantPtr->getDomainParticipant()->create_contentfilteredtopic( "MARKET_DATA_REQUEST_FILTER",
-                                                                                     market_data_request_topic,
-                                                                        data_service_filter_expression.c_str(),
-                                                                        DDS::StringSeq());
-    DDS::DataReaderListener_var marketDataRequestDataListener(
-            new DistributedATS::MarketDataRequestDataReaderListenerImpl( msg_queue() )
-    );
-
-    m_basicDomainParticipantPtr->createDataReaderListener( cft_market_data_request, marketDataRequestDataListener );
+    std::string filter_data_service = "DATS_DestinationUser = %0";
+    
+    _market_data_request_data_reader_tuple = _basic_domain_participant_ptr->make_data_reader_tuple(_market_data_request_topic_tuple,
+                new DistributedATS::MarketDataRequestDataReaderListenerImpl ( _markat_data_request_queue_ptr ),
+                "FILTERED_MARKET_DATA_REQUEST", filter_data_service, { _basic_domain_participant_ptr->get_participant_name() });
+    
+    
+    //_market_data_request_data_reader_tuple =  _basic_domain_participant_ptr->make_data_reader_tuple(_market_data_request_topic_tuple, new DistributedATS::MarketDataRequestDataReaderListenerImpl ( data_service_name, _markat_data_request_queue_ptr ) );
     
 }
 
 void MarketDataService::createMarketDataIncrementalRefreshListener()
 {
-    DDS::Topic_var market_data_incremental_refresh_topic =  m_basicDomainParticipantPtr->createTopicAndRegisterType
-        < DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefreshTypeSupport_var,
-    DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefreshTypeSupportImpl >
+    _market_data_incremental_refresh_topic_tuple =  _basic_domain_participant_ptr->make_topic
+        < DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefreshPubSubType,
+        DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefresh>
         ( MARKET_DATA_INCREMENTAL_REFRESH_TOPIC_NAME );
     
-    DDS::DataReaderListener_var marketDataIncrementalRefreshtDataListener(new DistributedATS::MarketDataIncrementalRefreshDataReaderListenerImpl(_incrementalRefreshMapPtr));
+    _market_data_incremental_refresh_data_reader_tuple =  _basic_domain_participant_ptr->make_data_reader_tuple(_market_data_incremental_refresh_topic_tuple,
+            new DistributedATS::MarketDataIncrementalRefreshDataReaderListenerImpl(_incrementalRefreshMapPtr));
     
-    m_basicDomainParticipantPtr->createDataReaderListener( market_data_incremental_refresh_topic, marketDataIncrementalRefreshtDataListener );
 }
     
 void MarketDataService::createMarketDataFullRefreshDataWriter()
 {
-    DDS::Topic_var market_data_snapshot_full_refresh_topic =  m_basicDomainParticipantPtr->createTopicAndRegisterType
-        < DistributedATS_MarketDataSnapshotFullRefresh::MarketDataSnapshotFullRefreshTypeSupport_var,
-    DistributedATS_MarketDataSnapshotFullRefresh::MarketDataSnapshotFullRefreshTypeSupportImpl >
+    _market_data_snapshot_full_refresh_topic_tuple = _basic_domain_participant_ptr->make_topic
+        < DistributedATS_MarketDataSnapshotFullRefresh::MarketDataSnapshotFullRefreshPubSubType,
+    DistributedATS_MarketDataSnapshotFullRefresh::MarketDataSnapshotFullRefresh>
         ( MARKET_DATA_SNAPSHOT_FULL_REFRESH_TOPIC_NAME );
     
+
+    
    _market_data_shapshot_full_refresh_dw =
-        m_basicDomainParticipantPtr->createDataWriter< DistributedATS_MarketDataSnapshotFullRefresh::MarketDataSnapshotFullRefreshDataWriter_var,
-    DistributedATS_MarketDataSnapshotFullRefresh::MarketDataSnapshotFullRefreshDataWriter >
-        ( market_data_snapshot_full_refresh_topic );
+    _basic_domain_participant_ptr->make_data_writer( _market_data_snapshot_full_refresh_topic_tuple );
     
 }
     
-bool MarketDataService::processMarketDataRequest( DistributedATS_MarketDataRequest::MarketDataRequest* marketDataRequestPtr )
+bool MarketDataService::processMarketDataRequest( const MarketDataRequestPtr& marketDataRequestPtr )
 {
-    std::cout << ">>>> Received MarketDataRequest : " << marketDataRequestPtr->m_Header.SenderCompID << ":" 
-		<< marketDataRequestPtr->m_Header.TargetCompID 
-		<< ":" << marketDataRequestPtr->m_Header.SenderSubID << std::endl;
+    std::cout << ">>>> Received MarketDataRequest : " << marketDataRequestPtr->DATS_Source() << ":"
+        << marketDataRequestPtr->DATS_Destination()
+        << ":" << marketDataRequestPtr->DATS_SourceUser() << std::endl;
     
-    for ( int symbol_index = 0; symbol_index<marketDataRequestPtr->c_NoRelatedSym.length(); ++symbol_index )
+    for ( int symbol_index = 0; symbol_index<marketDataRequestPtr->c_NoRelatedSym().size(); ++symbol_index )
     {
-        std::cout << "Symbol to send full snapshot : " << marketDataRequestPtr->c_NoRelatedSym[symbol_index].Symbol.in() << std::endl;
+        std::cout << "Symbol to send full snapshot : " << marketDataRequestPtr->c_NoRelatedSym()[symbol_index].Symbol() << std::endl;
         
         DistributedATS_MarketDataSnapshotFullRefresh::MarketDataSnapshotFullRefresh marketDataSnapshotFullRefresh;
         
-        marketDataSnapshotFullRefresh.m_Header.BeginString = marketDataRequestPtr->m_Header.BeginString;
-        marketDataSnapshotFullRefresh.m_Header.TargetCompID = marketDataRequestPtr->m_Header.SenderCompID;
-        marketDataSnapshotFullRefresh.m_Header.SenderCompID = marketDataRequestPtr->m_Header.TargetCompID;
-        marketDataSnapshotFullRefresh.m_Header.TargetSubID = marketDataRequestPtr->m_Header.SenderSubID;
-        marketDataSnapshotFullRefresh.m_Header.MsgType = CORBA::string_dup("W");
-        
+        marketDataSnapshotFullRefresh.fix_header().BeginString(marketDataRequestPtr->fix_header().BeginString());
+        marketDataSnapshotFullRefresh.fix_header().MsgType("W");
+
+        marketDataSnapshotFullRefresh.DATS_Source(marketDataRequestPtr->DATS_Destination());
+        marketDataSnapshotFullRefresh.DATS_Destination(marketDataRequestPtr->DATS_Source());
+        marketDataSnapshotFullRefresh.DATS_DestinationUser(marketDataRequestPtr->DATS_SourceUser());
+
         if ( populateMarketDataSnapshotFullRefresh( DistributedATS::Instrument( 
-			marketDataRequestPtr->c_NoRelatedSym[symbol_index].SecurityExchange.in(),
-			marketDataRequestPtr->c_NoRelatedSym[symbol_index].Symbol.in() ), marketDataSnapshotFullRefresh ) )
+			marketDataRequestPtr->c_NoRelatedSym()[symbol_index].SecurityExchange(),
+			marketDataRequestPtr->c_NoRelatedSym()[symbol_index].Symbol() ), marketDataSnapshotFullRefresh ) )
         {
-            std::cout << "Publishing Full Market Data Snapshot : " << marketDataSnapshotFullRefresh.Symbol << std::endl;
-            int ret = _market_data_shapshot_full_refresh_dw->write(marketDataSnapshotFullRefresh, NULL);
+            std::cout << "Publishing Full Market Data Snapshot : " << marketDataSnapshotFullRefresh.Symbol() << std::endl;
+            int ret = _market_data_shapshot_full_refresh_dw->write(&marketDataSnapshotFullRefresh);
             
-            if (ret != DDS::RETCODE_OK)
-            {
-                ACE_ERROR ((LM_ERROR, ACE_TEXT("(%P|%t) ERROR: Market Data Snapshot Data Write returned %d.\n"), ret));
+            if (!ret) {
+                LOG4CXX_ERROR(logger, "Market Data Snapshot Data Write returned : " << ret );
             }
+
         }
         
         
@@ -185,50 +194,56 @@ bool MarketDataService::processMarketDataRequest( DistributedATS_MarketDataReque
     return true;
 }
 
-int MarketDataService::svc (void)
+int MarketDataService::service (void)
 {
-	while(1)
-	{
-		ACE_Message_Block* messageBlock = 0;
+    
+    while(_is_running)
+    {
+
+        std::shared_ptr<DistributedATS_MarketDataRequest::MarketDataRequest> market_data_request;
         
-		ACE_Time_Value interval (0, 250000);
-        
-		if ( this->getq (messageBlock, &interval) > -1 )
-		{
-            DistributedATS_MarketDataRequest::MarketDataRequest* marketDataRequestPtr = (DistributedATS_MarketDataRequest::MarketDataRequest*)messageBlock->rd_ptr();
-			processMarketDataRequest(marketDataRequestPtr);
-			messageBlock->release();
-		} else {
-			ACE_OS::sleep(interval);
-		}
-	}
+        if ( _markat_data_request_queue_ptr->pop( market_data_request ) )
+        {
+            processMarketDataRequest(market_data_request);
+        } else {
+            std::this_thread::sleep_for(std::chrono::duration<long double, std::milli>(1000));
+        }
+    };
 }
 
 bool MarketDataService::populateMarketDataSnapshotFullRefresh( const Instrument& instrument,
                                                               DistributedATS_MarketDataSnapshotFullRefresh::MarketDataSnapshotFullRefresh& marketDataSnapshotFullRefresh ) const
 {
-	marketDataSnapshotFullRefresh.Symbol = CORBA::string_dup( instrument.symbol.c_str() );
-	marketDataSnapshotFullRefresh.SecurityExchange = CORBA::string_dup( instrument.marketName.c_str() );
+	marketDataSnapshotFullRefresh.Symbol( instrument.symbol );
+	marketDataSnapshotFullRefresh.SecurityExchange( instrument.marketName );
 
 	auto mdEntryList = _incrementalRefreshMapPtr->find( instrument );
 
 	if ( mdEntryList == _incrementalRefreshMapPtr->end() )
 		return false;
 
-	marketDataSnapshotFullRefresh.c_NoMDEntries.length( (int)mdEntryList->second.size());
+	marketDataSnapshotFullRefresh.c_NoMDEntries().resize( mdEntryList->second.size());
 
 	auto md_entry_index = 0;
 	for ( const auto& mdEntry : mdEntryList->second )
 	{
-		marketDataSnapshotFullRefresh.c_NoMDEntries[md_entry_index].MDEntryType = mdEntry.MDEntryType;
-		marketDataSnapshotFullRefresh.c_NoMDEntries[md_entry_index].MDEntryPx = mdEntry.MDEntryPx;
-		marketDataSnapshotFullRefresh.c_NoMDEntries[md_entry_index].MDEntrySize = mdEntry.MDEntrySize;
+        marketDataSnapshotFullRefresh.c_NoMDEntries()[md_entry_index].MDEntryType(mdEntry.MDEntryType());
+		marketDataSnapshotFullRefresh.c_NoMDEntries()[md_entry_index].MDEntryPx(mdEntry.MDEntryPx());
+		marketDataSnapshotFullRefresh.c_NoMDEntries()[md_entry_index].MDEntrySize(mdEntry.MDEntrySize());
+        marketDataSnapshotFullRefresh.c_NoMDEntries()[md_entry_index].TimeInForce(0);
 
 		md_entry_index++;
 	}
+    
+    
+    LoggerHelper::log_debug<
+    std::stringstream, MarketDataSnapshotFullRefreshLogger,
+    DistributedATS_MarketDataSnapshotFullRefresh::MarketDataSnapshotFullRefresh>
+    (logger, marketDataSnapshotFullRefresh, "MarketDataSnapshotFullRefresh");
 
 	return true;
 }
+
 
 
 } /* namespace DistributedATS */
