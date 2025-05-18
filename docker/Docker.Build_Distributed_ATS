@@ -6,3 +6,6 @@ RUN pip install psutil --break-system-packages
 
 ADD build_dependences.sh /
 RUN /build_dependences.sh
+
+ADD build_distributed_ats.sh /
+RUN /build_distributed_ats.sh
