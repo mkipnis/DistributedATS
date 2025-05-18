@@ -85,11 +85,11 @@ public:
     void backup();
     
     void onIncoming(const std::string &value) {
-        m_messages << FIX::UtcTimeStampConvertor::convert(FIX::UtcTimeStamp(), 9)
+        m_messages << FIX::UtcTimeStampConvertor::convert(FIX::UtcTimeStamp::now(), 9)
         << " : " << value << std::endl;
     }
     void onOutgoing(const std::string &value) {
-        m_messages << FIX::UtcTimeStampConvertor::convert(FIX::UtcTimeStamp(), 9)
+        m_messages << FIX::UtcTimeStampConvertor::convert(FIX::UtcTimeStamp::now(), 9)
         << " : " << value << std::endl;
     }
     void onEvent(const std::string &value) {

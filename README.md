@@ -73,7 +73,9 @@ DistributedATS is a [**FIX Protocol-based**](https://www.fixtrading.org) alterna
 
 ### Building Distributed ATS and it's dependencies
 ```
-download_deps_and_build_all.sh
+./build.sh                # Uses default install directory
+./build.sh /custom/path   # Installs to custom path
+source /path/to/DistributedATS/dats_env.sh  # To set env vars
 ```
 
 ### Docker

@@ -1,36 +1,44 @@
 cmake_minimum_required(VERSION 3.12.4)
 
-if(NOT CMAKE_VERSION VERSION_LESS 3.0)
-    cmake_policy(SET CMP0048 NEW)
-endif()
+message(STATUS "Current source dir: ${CMAKE_CURRENT_SOURCE_DIR}")
+message(DDS_INCLUDE_DIR="${DDS_INCLUDE_DIR}")
+message(DDS_LIBRARY_DIR="${DDS_LIBRARY_DIR}")
 
-project(DataService)
+message(QUICKFIX_INCLUDE_DIR="${QUICKFIX_INCLUDE_DIR}")
+message(QUICKFIX_LIBRARY_DIR="${QUICKFIX_LIBRARY_DIR}")
 
-# Find requirements
-if(NOT fastcdr_FOUND)
-    find_package(fastcdr REQUIRED)
-endif()
+include_directories(${DDS_INCLUDE_DIR})
+link_directories(${DDS_LIBRARY_DIR})
 
-if(NOT fastdds_FOUND)
-    find_package(fastdds 3 REQUIRED)
-endif()
+include_directories(${QUICKFIX_INCLUDE_DIR})
+link_directories(${QUICKFIX_LIBRARY_DIR})
 
-find_package(log4cxx REQUIRED)
+include_directories(${LOG4CXX_INCLUDE_DIR})
+link_directories(${LOG4CXX_LIBRARY_DIR})
 
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+include_directories(${Boost_INCLUDE_DIR})
+link_directories(${Boost_LIBRARY_DIRS})
 
-link_directories(${CMAKE_INSTALL_PREFIX}/lib)
+file(GLOB DISTRIBUTED_ATS_DATASERVICE_SRC *.cpp)
 
-file(GLOB DISTRIBUTED_ATS_DATASERVICE_SRC *)
 add_executable(DataService ${DISTRIBUTED_ATS_DATASERVICE_SRC})
-link_directories(DistributedATSLib quickfix log4cxx)
-target_link_libraries(DataService DistributedATSLib quickfix log4cxx boost_program_options sqlite3)
+
+find_package(Boost REQUIRED COMPONENTS program_options)
+include_directories(${Boost_INCLUDE_DIRS})
+
+target_link_libraries(DataService
+    PRIVATE
+    DistributedATSLib
+    quickfix
+    log4cxx
+    Boost::program_options
+    fastcdr
+    fastdds
+)
 
 set(CMAKE_XCODE_ATTRIBUTE_OTHER_CODE_SIGN_FLAGS "-o linker-signed")
 
-install(TARGETS DataService
+install(TARGETS DataService 
         PUBLIC_HEADER
           DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/dats
 )

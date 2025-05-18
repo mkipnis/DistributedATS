@@ -142,29 +142,29 @@ public:
   // Implementation of LiquiBook interfaces
   //
   // OrderListener interface
-  virtual void on_accept(const OrderPtr &order);
-  virtual void on_reject(const OrderPtr &order, const char *reason);
+  virtual void on_accept(const OrderPtr &order) override;
+  virtual void on_reject(const OrderPtr &order, const char *reason) override;
   virtual void on_fill(const OrderPtr &order, const OrderPtr &matched_order,
                        liquibook::book::Quantity fill_qty,
-                       liquibook::book::Cost fill_cost);
-  virtual void on_cancel(const OrderPtr &order);
-  virtual void on_cancel_reject(const OrderPtr &order, const char *reason);
-  virtual void on_replace(const OrderPtr &order, const int32_t &size_delta,
-                          liquibook::book::Price new_price);
-  virtual void on_replace_reject(const OrderPtr &order, const char *reason);
+                       liquibook::book::Cost fill_cost) override;
+  virtual void on_cancel(const OrderPtr &order) override;
+  virtual void on_cancel_reject(const OrderPtr &order, const char *reason) override;
+  virtual void on_replace(const OrderPtr &order, const int64_t &size_delta,
+                          liquibook::book::Price new_price) override;
+  virtual void on_replace_reject(const OrderPtr &order, const char *reason) override;
 
   // TradeListener interface
   virtual void on_trade(const OrderBook *book, liquibook::book::Quantity qty,
-                        liquibook::book::Cost cost);
+                        liquibook::book::Cost cost) override;
 
   // OrderBookListener interface
-  virtual void on_order_book_change(const OrderBook *book);
+  virtual void on_order_book_change(const OrderBook *book) override;
 
   // BboListener interface
-  void on_bbo_change(const DepthOrderBook *book, const BookDepth *depth);
+  void on_bbo_change(const DepthOrderBook *book, const BookDepth *depth) override;
 
   // Implement DepthListener interface
-  void on_depth_change(const DepthOrderBook *book, const BookDepth *depth);
+  void on_depth_change(const DepthOrderBook *book, const BookDepth *depth) override;
 
   OrderBookPtr addBook(const std::string &symbol, bool useDepthBook);
                    

@@ -1,29 +1,38 @@
 cmake_minimum_required(VERSION 3.12.4)
 
-if(NOT CMAKE_VERSION VERSION_LESS 3.0)
-    cmake_policy(SET CMP0048 NEW)
-endif()
-
 project(LatencyTest)
 
-# Find requirements
-if(NOT fastcdr_FOUND)
-    find_package(fastcdr REQUIRED)
-endif()
+message(STATUS "Current source dir: ${CMAKE_CURRENT_SOURCE_DIR}")
+message(DDS_INCLUDE_DIR="${DDS_INCLUDE_DIR}")
+message(DDS_LIBRARY_DIR="${DDS_LIBRARY_DIR}")
 
-if(NOT fastdds_FOUND)
-    find_package(fastdds 3 REQUIRED)
-endif()
+message(QUICKFIX_INCLUDE_DIR="${QUICKFIX_INCLUDE_DIR}")
+message(QUICKFIX_LIBRARY_DIR="${QUICKFIX_LIBRARY_DIR}")
 
-find_package(log4cxx REQUIRED)
+include_directories(${DDS_INCLUDE_DIR})
+link_directories(${DDS_LIBRARY_DIR})
 
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+include_directories(${QUICKFIX_INCLUDE_DIR})
+link_directories(${QUICKFIX_LIBRARY_DIR})
 
-link_directories(${CMAKE_INSTALL_PREFIX}/lib)
+include_directories(${LOG4CXX_INCLUDE_DIR})
+link_directories(${LOG4CXX_LIBRARY_DIR})
 
-file(GLOB DISTRIBUTED_ATS_LATENCY_TEST_SRC *)
+include_directories(${Boost_INCLUDE_DIR})
+link_directories(${Boost_LIBRARY_DIRS})
+
+file(GLOB DISTRIBUTED_ATS_LATENCY_TEST_SRC *.cpp)
 add_executable(LatencyTest ${DISTRIBUTED_ATS_LATENCY_TEST_SRC})
-link_directories(DistributedATSLib quickfix log4cxx)
-target_link_libraries(LatencyTest DistributedATSLib quickfix log4cxx boost_program_options)
+
+find_package(Boost REQUIRED COMPONENTS program_options)
+include_directories(${Boost_INCLUDE_DIRS})
+
+target_link_libraries(LatencyTest
+    PRIVATE
+    DistributedATSLib
+    quickfix
+    log4cxx
+    Boost::program_options
+    fastcdr
+    fastdds
+)

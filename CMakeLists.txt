@@ -1,43 +1,39 @@
-cmake_minimum_required(VERSION 3.12.4)
-
-if(NOT CMAKE_VERSION VERSION_LESS 3.0)
-    cmake_policy(SET CMP0048 NEW)
-endif()
+cmake_minimum_required(VERSION 3.29)
 
 project(DistributedATS)
-#set(CMAKE_SUPPRESS_REGENERATION true)
 
-# Find requirements
-if(NOT fastcdr_FOUND)
-    find_package(fastcdr REQUIRED)
-endif()
-
-if(NOT fastdds_FOUND)
-    find_package(fastdds 3 REQUIRED)
-endif()
+set(CMAKE_PREFIX_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-FIND_PACKAGE( Boost 1.40 COMPONENTS program_options REQUIRED )
-INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIR} )
-link_directories(${Boost_LIBRARY_DIRS})
+find_package( Boost )
+find_package( DDS REQUIRED )
+find_package( log4cxx REQUIRED )
+find_package( quickfix REQUIRED )
+find_package( liquibook REQUIRED )
 
-link_directories(${QUICKFIX_INSTALL_PREFIX}/lib)
+set(DDS_INCLUDE_DIR "${DDS_INSTALL_PREFIX}/include")
+set(DDS_LIBRARY_DIR "${DDS_INSTALL_PREFIX}/lib")
+set(QUICKFIX_INCLUDE_DIR "${QUICKFIX_INSTALL_PREFIX}/include")
+set(QUICKFIX_LIBRARY_DIR "${QUICKFIX_INSTALL_PREFIX}/lib")
+set(LOG4CXX_INCLUDE_DIR "${LOG4CXX_INSTALL_PREFIX}/include")
+set(LOG4CXX_LIBRARY_DIR "${LOG4CXX_INSTALL_PREFIX}/lib")
 
-include_directories(Common)
-add_subdirectory(GenTools/idl)
+set(LIQUIBOOK_INCLUDE_DIR "${LIQUIBOOK_INSTALL_PREFIX}/include")
 
-include_directories(GenTools/idl)
-add_subdirectory(FIXGateway/src)
-add_subdirectory(DataService/src)
-add_subdirectory(MatchingEngine/src)
-add_subdirectory(LatencyTest)
+include_directories( Common )
+add_subdirectory( GenTools/idl )
 
-set(CMAKE_XCODE_ATTRIBUTE_OTHER_CODE_SIGN_FLAGS "-o linker-signed")
+include_directories( GenTools/idl )
+add_subdirectory( FIXGateway/src )
+add_subdirectory( DataService/src )
+add_subdirectory( MatchingEngine/src )
+add_subdirectory( LatencyTest )
 
 install(DIRECTORY MiscATS DESTINATION ${CMAKE_INSTALL_PREFIX})
+
 install(CODE "
     file(GLOB_RECURSE SCRIPT_FILES
         \"\${CMAKE_INSTALL_PREFIX}/MiscATS/*.sh\")
@@ -45,6 +41,7 @@ install(CODE "
         execute_process(COMMAND chmod +x \${script})
     endforeach()
 ")
+
 install(FILES 	FIXGateway/scripts/fixgateway.sh 
 		DataService/scripts/dataservice.sh 
 		MatchingEngine/scripts/matchingengine.sh 
@@ -53,5 +50,5 @@ install(FILES 	FIXGateway/scripts/fixgateway.sh
                 GROUP_READ GROUP_EXECUTE
                 WORLD_READ WORLD_EXECUTE)
 
-install(FILES 	config/log4cxx.xml DESTINATION config)
-install(FILES 	FIXGateway/spec/FIX44.xml DESTINATION spec)
+install( FILES 	config/log4cxx.xml DESTINATION config )
+install( FILES 	FIXGateway/spec/FIX44.xml DESTINATION spec )

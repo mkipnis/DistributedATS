@@ -1,12 +1,8 @@
-FROM ubuntu:latest
+FROM ubuntu:latest as dependency_builder
 
 RUN apt-get update
 RUN apt install -y vim cmake curl build-essential libapr1-dev libaprutil1-dev git libboost-all-dev sqlite3 libsqlite3-dev libtool libasio-dev libtinyxml2-dev zip python3-pip
 RUN pip install psutil --break-system-packages
 
-ADD build_distributed_ats.sh /
-RUN /build_distributed_ats.sh
-
-EXPOSE 15001
-EXPOSE 16001
-EXPOSE 17001
+ADD build_dependences.sh /
+RUN /build_dependences.sh

@@ -242,6 +242,6 @@ void SocketConnection::readMessages(SocketMonitor &s) {
 
 void SocketConnection::onTimeout() {
   if (m_pSession)
-    m_pSession->next();
+    m_pSession->next(UtcTimeStamp());
 }
 } // namespace DistributedATS
