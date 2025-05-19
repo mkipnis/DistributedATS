@@ -3,7 +3,7 @@ set(QUICKFIX_LIBRARY_DIR "${QUICKFIX_ROOT_DIR}/lib")
 
 include(ExternalProject)
 
-if(NOT EXISTS "${QUICKFIX_INCLUDE_DIR}/config-all.h")
+if(NOT EXISTS "${QUICKFIX_INCLUDE_DIR}/quickfix/config-all.h")
     message(STATUS "Quickfix not found, building from source...")
 
     set(QUICKFIX_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/quickfix)
