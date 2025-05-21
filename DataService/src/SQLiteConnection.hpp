@@ -132,7 +132,7 @@ public:
 private:
   void connect()
   {
-      int rc = sqlite3_open(m_pDatabase.getDatabase().c_str(), &m_pConnection);
+      int rc = sqlite3_open_v2(m_pDatabase.getDatabase().c_str(), &m_pConnection, SQLITE_OPEN_READONLY, nullptr);
       
       if (rc != SQLITE_OK)
       {
