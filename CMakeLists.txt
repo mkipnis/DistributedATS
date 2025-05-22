@@ -32,7 +32,9 @@ add_subdirectory( DataService/src )
 add_subdirectory( MatchingEngine/src )
 add_subdirectory( LatencyTest )
 
-install(DIRECTORY MiscATS DESTINATION ${CMAKE_INSTALL_PREFIX})
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/MiscATS/
+        DESTINATION MiscATS
+        FILES_MATCHING PATTERN "*.db" PATTERN "*.sh")
 
 install(CODE "
     file(GLOB_RECURSE SCRIPT_FILES
