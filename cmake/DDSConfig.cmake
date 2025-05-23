@@ -10,6 +10,17 @@ if(NOT EXISTS "${DDS_INCLUDE_DIRS}/fastdds/config.hpp")
 
     include(ExternalProject)
 
+    ExternalProject_Add(ASIO
+	GIT_REPOSITORY https://github.com/chriskohlhoff/asio.git
+    	GIT_TAG asio-1-28-0
+    	UPDATE_DISCONNECTED TRUE
+    	SOURCE_SUBDIR asio
+	INSTALL_DIR ${DDS_INSTALL_PREFIX}
+    	CONFIGURE_COMMAND cd <SOURCE_DIR>/<SOURCE_SUBDIR> && ./autogen.sh && ./configure --prefix=${DDS_INSTALL_PREFIX} --exec-prefix=${DDS_INSTALL_PREFIX} --without-boost
+    	BUILD_COMMAND cd <SOURCE_DIR>/<SOURCE_SUBDIR> && make
+    	INSTALL_COMMAND cd <SOURCE_DIR>/<SOURCE_SUBDIR> && make install
+    )
+
     ExternalProject_Add(FoonathanMemory
         GIT_REPOSITORY https://github.com/foonathan/memory.git
         GIT_TAG main 
@@ -25,6 +36,7 @@ if(NOT EXISTS "${DDS_INCLUDE_DIRS}/fastdds/config.hpp")
         GIT_REPOSITORY https://github.com/eProsima/Fast-CDR.git
         GIT_TAG master
         UPDATE_DISCONNECTED TRUE
+	DEPENDS FoonathanMemory ASIO
 	INSTALL_DIR ${DDS_INSTALL_PREFIX}
         CMAKE_ARGS
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
@@ -32,22 +44,11 @@ if(NOT EXISTS "${DDS_INCLUDE_DIRS}/fastdds/config.hpp")
             -DBUILD_SHARED_LIBS=ON
     )
 
-    ExternalProject_Add(ASIO
-	GIT_REPOSITORY https://github.com/chriskohlhoff/asio.git
-    	GIT_TAG asio-1-28-0
-    	UPDATE_DISCONNECTED TRUE
-    	SOURCE_SUBDIR asio
-	INSTALL_DIR ${DDS_INSTALL_PREFIX}
-    	CONFIGURE_COMMAND cd <SOURCE_DIR>/<SOURCE_SUBDIR> && ./autogen.sh && ./configure --prefix=${DDS_INSTALL_PREFIX} --exec-prefix=${DDS_INSTALL_PREFIX} --without-boost
-    	BUILD_COMMAND cd <SOURCE_DIR>/<SOURCE_SUBDIR> && make
-    	INSTALL_COMMAND cd <SOURCE_DIR>/<SOURCE_SUBDIR> && make install
-    )
-
     ExternalProject_Add(FastDDS
         GIT_REPOSITORY https://github.com/eProsima/Fast-DDS.git
         GIT_TAG master
         UPDATE_DISCONNECTED TRUE
-	#DEPENDS FastCDR FoonathanMemory ASIO
+	DEPENDS FastCDR
 	INSTALL_DIR ${DDS_INSTALL_PREFIX}
         CMAKE_ARGS
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}

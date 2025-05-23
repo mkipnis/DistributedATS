@@ -1,17 +1,25 @@
 version: '2'
 
 services:
-  # Core Services: Matching Engines, FIX Gateways
+  fast_dds_discovery:
+    container_name: discovery_service
+    image: ghcr.io/mkipnis/distributed_ats:latest
+    command: >
+      bash -c "LD_LIBRARY_PATH=/usr/local/lib:\$LD_LIBRARY_PATH /usr/local/bin/fastdds discovery -q 51000"
+    ports:
+      - "51000:51000"
+    restart: unless-stopped
+
   distributed_ats:
     container_name: distributed_ats
     image: ghcr.io/mkipnis/dats_crypto_clob:latest
+    depends_on:
+      - discovery_service
     command: >
-      bash -c "cd /opt/DistributedATS/ &&
-               . ./dats_env.sh &&
-               cd /opt/DistributedATS/MiscATS/CryptoCLOB/scripts && ./start_crypto_clob.sh"
+      bash -c "cd /usr/local && source ./dats_env.sh && cd $$BASEDIR_ATS/scripts && ./start_ats.sh"
     volumes:
-      - ./data_ats:/opt/DistributedATS/DataService/sql/sqlite
-      - ./logs_ats:/opt/DistributedATS/MiscATS/CryptoCLOB/logs
+      - ./data_ats:/usr/local/MiscATS/CryptoCLOB/data
+      - ./logs_ats:/usr/local/MiscATS/CryptoCLOB/logs
     ports:
       - "15001:15001"
       - "16001:16001"
@@ -19,13 +27,13 @@ services:
     restart: unless-stopped
 
   # WebTrader Front-End
-  distributed_ats_webtrader:
-    container_name: distributed_ats_webtrader
-    image: ghcr.io/mkipnis/distributed_ats_webtrader:latest
-    depends_on:
-      - distributed_ats
-    volumes:
-      - ./webtrader_logs:/usr/local/tomcat/logs
-    ports:
-      - "8080:8080"
-    restart: unless-stopped
+ # distributed_ats_webtrader:
+ #   container_name: distributed_ats_webtrader
+ #   image: ghcr.io/mkipnis/distributed_ats_webtrader:latest
+ #   depends_on:
+ #     - distributed_ats
+ #   volumes:
+ #     - ./webtrader_logs:/usr/local/tomcat/logs
+ #   ports:
+ #     - "8080:8080"
+ #   restart: unless-stopped

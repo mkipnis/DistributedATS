@@ -34,7 +34,7 @@ add_subdirectory( LatencyTest )
 
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/MiscATS/
         DESTINATION MiscATS
-        FILES_MATCHING PATTERN "*.db" PATTERN "*.sh")
+        FILES_MATCHING PATTERN "*.db" PATTERN "*.sh" PATTERN "*.ini" PATTERN "*.cfg")
 
 install(CODE "
     file(GLOB_RECURSE SCRIPT_FILES

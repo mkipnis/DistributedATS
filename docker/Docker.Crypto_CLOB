@@ -4,9 +4,5 @@ EXPOSE 15001
 EXPOSE 16001
 EXPOSE 17001
 
-WORKDIR /opt/DistributedATS
-
-COPY crypto_clob_env.sh dats_env.sh
-COPY start_crypto_clob.sh /opt/DistributedATS/MiscATS/CryptoCLOB/scripts/
-
-RUN chmod +x dats_env.sh
+COPY crypto_clob_env.sh /usr/local/dats_env.sh
+RUN chmod +x /usr/local/dats_env.sh
