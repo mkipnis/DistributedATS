@@ -62,15 +62,13 @@ private:
   typedef std::set<FIX::SessionID> Sessions;
   typedef std::map<int, Sessions> PortToSessions;
   typedef std::map<int, SocketConnection *> SocketConnections;
-  // typedef std::map <SessionID, SocketConnection*>
-  // PendingLogonSocketConnection;
 
-  void onConfigure(const FIX::SessionSettings &) throw(FIX::ConfigError);
-  void onInitialize(const FIX::SessionSettings &) throw(FIX::RuntimeError);
+  void onConfigure(const FIX::SessionSettings &) EXCEPT(ConfigError);
+  void onInitialize(const FIX::SessionSettings &) EXCEPT(RuntimeError);
 
-  void onStart();
-  bool onPoll(double timeout);
-  void onStop();
+  void onStart() override;
+  bool onPoll() override;
+  void onStop() override;
 
   void onConnect(FIX::SocketServer &, int, int);
   void onWrite(FIX::SocketServer &, int);

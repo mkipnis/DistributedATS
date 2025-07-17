@@ -1,12 +1,18 @@
-FROM ubuntu:latest
+FROM ubuntu:latest as dats_dependency_builder
 
 RUN apt-get update
 RUN apt install -y vim cmake curl build-essential libapr1-dev libaprutil1-dev git libboost-all-dev sqlite3 libsqlite3-dev libtool libasio-dev libtinyxml2-dev zip python3-pip
 RUN pip install psutil --break-system-packages
 
+ADD build_dependences.sh /
+RUN /build_dependences.sh
+
 ADD build_distributed_ats.sh /
 RUN /build_distributed_ats.sh
 
-EXPOSE 15001
-EXPOSE 16001
-EXPOSE 17001
+FROM ubuntu:latest
+RUN apt-get update && apt-get install --no-install-recommends -y \
+    libboost-all-dev vim python3-pip libapr1-dev libaprutil1-dev libtinyxml2-dev \
+ && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+COPY --from=dats_dependency_builder /usr/local /usr/local

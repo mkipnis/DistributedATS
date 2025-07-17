@@ -129,7 +129,7 @@ void SocketAcceptor::onStart() {
   m_pServer = 0;
 }
 
-bool SocketAcceptor::onPoll(double timeout) {
+bool SocketAcceptor::onPoll() {
   if (!m_pServer)
     return false;
 
@@ -150,7 +150,7 @@ bool SocketAcceptor::onPoll(double timeout) {
   }
 
   std::cout << "Polling" << std::endl;
-  m_pServer->block(*this, true, timeout);
+  m_pServer->block(*this, true);
   return true;
 }
 

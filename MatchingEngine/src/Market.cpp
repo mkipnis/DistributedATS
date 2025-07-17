@@ -389,7 +389,7 @@ void Market::on_fill(const OrderPtr &order, const OrderPtr &matched_order,
 void Market::on_cancel(const OrderPtr &order) {
   order->onCancelled();
     DistributedATS_ExecutionReport::ExecutionReport executionReport;
-  order->populateExecutionReport(executionReport, FIX::ExecType_CANCELLED);
+  order->populateExecutionReport(executionReport, FIX::ExecType_CANCELED);
   publishExecutionReport(executionReport);
 
   // out() << "\tCanceled: " << *order<< std::endl;
@@ -400,13 +400,13 @@ void Market::on_cancel_reject(const OrderPtr &order, const char *reason) {
   // out() << "\tCancel Reject: " <<*order<< " : " << reason << std::endl;
 }
 
-void Market::on_replace(const OrderPtr &order, const int32_t &size_delta,
+void Market::on_replace(const OrderPtr &order, const int64_t &size_delta,
                         liquibook::book::Price new_price) {
   // out() << "\tCancel Reject: " <<*order<< " : " << size_delta << " : "  <<
   // new_price << std::endl;
     order->onReplaced(size_delta, new_price);
     DistributedATS_ExecutionReport::ExecutionReport executionReport;
-    order->populateExecutionReport(executionReport, FIX::ExecType_REPLACE);
+    order->populateExecutionReport(executionReport, FIX::ExecType_REPLACED);
     publishExecutionReport(executionReport);
 }
 
