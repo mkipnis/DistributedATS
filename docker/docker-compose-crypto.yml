@@ -1,8 +1,8 @@
-version: '2'
+version: '3'
 
 services:
   fast_dds_discovery:
-    container_name: discovery_service
+    container_name: fast_dds_discovery 
     image: ghcr.io/mkipnis/distributed_ats:latest
     command: >
       bash -c "LD_LIBRARY_PATH=/usr/local/lib /usr/local/bin/fastdds discovery -q 51000"
@@ -14,9 +14,9 @@ services:
     container_name: distributed_ats
     image: ghcr.io/mkipnis/dats_crypto_clob:latest
     depends_on:
-      - discovery_service
+      - fast_dds_discovery
     command: >
-      bash -c "cd /usr/local && source ./dats_env.sh && cd $$BASEDIR_ATS/scripts && ./start_ats.sh"
+      bash -c "cd /usr/local && source ./dats_env.sh && cd MiscATS && BASEDIR_ATS=`pwd`/CryptoCLOB python3 start_ats.py --ats CryptoCLOB/crypto_ats.json"
     volumes:
       - ./logs_ats:/usr/local/MiscATS/CryptoCLOB/logs
     ports:
@@ -25,7 +25,6 @@ services:
       - "17001:17001"
     restart: unless-stopped
 
-  # WebTrader Front-End
   distributed_ats_webtrader:
     container_name: distributed_ats_webtrader
     image: ghcr.io/mkipnis/distributed_ats_webtrader:latest
