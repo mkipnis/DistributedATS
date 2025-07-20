@@ -6,7 +6,7 @@ set -ex  # Print each command and exit on error
 OS="$(uname)"
 if [[ "$OS" == "Darwin" ]]; then
   LIB_PATH_VAR="DYLD_LIBRARY_PATH"
-  CMAKE_FLAGS="-G Xcode"
+#  CMAKE_FLAGS="-G Xcode"
 else
   LIB_PATH_VAR="LD_LIBRARY_PATH"
 fi
@@ -52,20 +52,6 @@ export LOG4CXX_HOME="$LOG4CXX_HOME"
 
 export $LIB_PATH_VAR="\$DATS_HOME/lib:\$DDS_HOME/lib:\$QUICKFIX_HOME/lib:\$LOG4CXX_HOME/lib:\$$LIB_PATH_VAR"
 export LOG4CXX_CONFIGURATION="\$DATS_HOME/config/log4cxx.xml"
-
-# Select one ATS config
-export BASEDIR_ATS="\$DATS_HOME/MiscATS/CryptoCLOB"
-export DATS_LOG_HOME="\$BASEDIR_ATS/logs"
-mkdir -p "\$DATS_LOG_HOME"
-
-# Uncomment one of these to switch ATS
-# export BASEDIR_ATS="\$DATS_HOME/MiscATS/USTreasuryCLOB"
-# export DATS_LOG_HOME="\$BASEDIR_ATS/logs"
-# mkdir -p "\$DATS_LOG_HOME"
-
-# export BASEDIR_ATS="\$DATS_HOME/MiscATS/MultiMatchingEngineATS"
-# export DATS_LOG_HOME="\$BASEDIR_ATS/logs"
-# mkdir -p "\$DATS_LOG_HOME"
 
 EOM
 

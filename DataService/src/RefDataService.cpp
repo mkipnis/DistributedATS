@@ -94,7 +94,8 @@ void RefDataService::populateUserGroupInstrumentMap()
                                " m.market_name=im_map.market_name and " \
                                " im_map.market_name=ugm_map.market_name");
 
-    LOG4CXX_INFO(logger, "Populating security list");
+    LOG4CXX_INFO(logger, "Populating security list : ");
+    LOG4CXX_INFO(logger, "Query : " + sqliteQuery.getQuery());
         
     m_sqliteConnection->execute(sqliteQuery);
         

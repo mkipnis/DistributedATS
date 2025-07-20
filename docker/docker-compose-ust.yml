@@ -14,15 +14,14 @@ services:
     container_name: distributed_ats
     image: ghcr.io/mkipnis/dats_ust_clob:latest 
     depends_on:
-      - discovery_service
+      - fast_dds_discovery 
     command: >
-      bash -c "cd /usr/local && source ./dats_env.sh && cd $$BASEDIR_ATS/scripts && ./start_ats.sh"
+      bash -c "cd /usr/local && source ./dats_env.sh && cd MiscATS && BASEDIR_ATS=`pwd`/USTreasuryCLOB python3 start_ats.py --ats USTreasuryCLOB/ust_ats.json"
     volumes:
-      - ./logs_ats:/usr/local/MiscATS/CryptoCLOB/logs
+      - ./logs_ats:/usr/local/MiscATS/USTreasuryCLOB/logs
     ports:
       - "15001:15001"
       - "16001:16001"
-      - "17001:17001"
     restart: unless-stopped
 
   # WebTrader Front-End

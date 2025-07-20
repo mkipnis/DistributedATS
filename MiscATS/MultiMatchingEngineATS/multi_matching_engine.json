@@ -1,0 +1,9 @@
+[
+  ["data_service_manager.py", "data_service_a.ini"],
+  ["data_service_manager.py", "data_service_b.ini"],
+  ["matching_engine_manager.py", "matching_engine_MARKET_Y.ini"],
+  ["matching_engine_manager.py", "matching_engine_MARKET_Z.ini"],
+  ["fix_gateway_manager.py", "fix_gwy_1.cfg"],
+  ["fix_gateway_manager.py", "fix_gwy_2.cfg"],
+  ["fix_gateway_manager.py", "fix_gwy_3.cfg"]
+]
