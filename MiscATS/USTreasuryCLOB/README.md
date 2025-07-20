@@ -1,6 +1,6 @@
-## Multiple Matching Engines
+## Matching Engine
 
-USTreasuryCLOB ATS consists of a single Matching Engine, three FIX Gateways, and two Data Services.
+USTreasuryCLOB ATS consists of a single Matching Engine, two FIX Gateways, and two Data Services.
 The matching engine consumes and processes orders from the instrument group MARKET_UST that covers 300+ instruments
 
 ![N|Solid](https://raw.githubusercontent.com/mkipnis/DistributedATS/master/docs/Diagrams/USTreasuryCLOB.png?raw=true)
