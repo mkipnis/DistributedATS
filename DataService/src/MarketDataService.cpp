@@ -209,6 +209,8 @@ int MarketDataService::service (void)
             std::this_thread::sleep_for(std::chrono::duration<long double, std::milli>(1000));
         }
     };
+    
+    return 0;
 }
 
 bool MarketDataService::populateMarketDataSnapshotFullRefresh( const Instrument& instrument,

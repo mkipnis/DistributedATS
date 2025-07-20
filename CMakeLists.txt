@@ -34,19 +34,11 @@ add_subdirectory( LatencyTest )
 
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/MiscATS/
         DESTINATION MiscATS
-        FILES_MATCHING PATTERN "*.db" PATTERN "*.sh" PATTERN "*.ini" PATTERN "*.cfg")
+        FILES_MATCHING PATTERN "*.db" PATTERN "*.py" PATTERN "*.ini" PATTERN "*.cfg" PATTERN "*.json")
 
-install(CODE "
-    file(GLOB_RECURSE SCRIPT_FILES
-        \"\${CMAKE_INSTALL_PREFIX}/MiscATS/*.sh\")
-    foreach(script \${SCRIPT_FILES})
-        execute_process(COMMAND chmod +x \${script})
-    endforeach()
-")
-
-install(FILES 	FIXGateway/scripts/fixgateway.sh 
-		DataService/scripts/dataservice.sh 
-		MatchingEngine/scripts/matchingengine.sh 
+install(FILES 	FIXGateway/scripts/fix_gateway_manager.py 
+		DataService/scripts/data_service_manager.py
+		MatchingEngine/scripts/matching_engine_manager.py
 		DESTINATION scripts
    		PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
                 GROUP_READ GROUP_EXECUTE

@@ -168,7 +168,8 @@ public:
 
   OrderBookPtr addBook(const std::string &symbol, bool useDepthBook);
                    
-  bool is_ready_to_trade() { return (books_.size() > 0); };
+  bool get_ready_to_trade() { return _ready_to_trade.load(); };
+  void set_ready_to_trade( bool ready_to_trade ) { _ready_to_trade.store(ready_to_trade); };
 
 public:
                    
@@ -215,6 +216,8 @@ private:
 
   std::string _marketName; // Quickfix field 207 - Security Exchange
   std::string _dataServiceName;
+                   
+  std::atomic<bool> _ready_to_trade;
                    
 };
 

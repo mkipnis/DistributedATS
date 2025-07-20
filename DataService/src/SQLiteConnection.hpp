@@ -42,8 +42,6 @@ class SQLiteQuery
 public:
     SQLiteQuery( const std::string& query ) : m_stmt(0), m_query( query )
   {
-      
-      std::cout << query << std::endl;
   }
 
   ~SQLiteQuery()
@@ -94,6 +92,11 @@ public:
   std::string getValue( int row, int column )
   {
       return m_rows[row][column];
+  }
+    
+  std::string getQuery()
+  {
+      return m_query;
   }
 
 private:

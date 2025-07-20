@@ -1,6 +1,7 @@
 #!/bin/sh
 
-$SQLITE_HOME/bin/sqlite3 $DATS_HOME/DataService/sql/sqlite/distributed_ats.db <<EOF
+#$SQLITE_HOME/bin/sqlite3 $DATS_HOME/DataService/sql/sqlite/distributed_ats.db <<EOF
+$SQLITE_HOME/bin/sqlite3 distributed_ats.db <<EOF
 
 PRAGMA foreign_keys = ON;
 
@@ -21,9 +22,9 @@ update user_code set properties=json_set(properties, '$.password','TEST') where 
 replace into user_code ( user_name, user_group, properties ) values ('CRYPTO_TRADER_4', 'CRYPTO_TRADER_GROUP_C', '{"name":"CRYPTO TRADER 4","type":"TRADER"}');
 update user_code set properties=json_set(properties, '$.password','TEST') where user_name='CRYPTO_TRADER_4';
 
-replace into market ( market_name, properties ) values ('BTC_MARKET', "{}");
-replace into market ( market_name, properties ) values ('ETH_MARKET', "{}");
-replace into market ( market_name, properties ) values ('OTHER_COIN_MARKET', "{}");
+replace into market ( market_name, properties ) values ('BTC_MARKET', '{}');
+replace into market ( market_name, properties ) values ('ETH_MARKET', '{}');
+replace into market ( market_name, properties ) values ('OTHER_COIN_MARKET', '{}');
 
 
 replace into user_group_market_map ( user_group, market_name ) values ('CRYPTO_TRADER_GROUP_A','BTC_MARKET');
@@ -63,13 +64,13 @@ replace into instrument_market_map ( instrument_name, market_name ) values ('BTC
 replace into instrument_market_map ( instrument_name, market_name ) values ('BTC-CNY','BTC_MARKET');
 replace into instrument_market_map ( instrument_name, market_name ) values ('BTC-JPY','BTC_MARKET');
 
-replace into hist_price ( instrument_name, business_date, properties ) values ("BTC-USD", 20210401, '{"open":10100,"low":10000,"high":20000,"last":15000, "volume":10000}');
-replace into hist_price ( instrument_name, business_date, properties ) values ("BTC-EUR", 20210401, '{"open":20100,"low":20000,"high":30000,"last":25000, "volume":20000}');
-replace into hist_price ( instrument_name, business_date, properties ) values ("BTC-GBP", 20210401, '{"open":30100,"low":30000,"high":40000,"last":35000, "volume":30000}');
-replace into hist_price ( instrument_name, business_date, properties ) values ("BTC-AUD", 20210401, '{"open":40100,"low":40000,"high":50000,"last":45000, "volume":40000}');
-replace into hist_price ( instrument_name, business_date, properties ) values ("BTC-CAD", 20210401, '{"open":40100,"low":40000,"high":50000,"last":45000, "volume":50000}');
-replace into hist_price ( instrument_name, business_date, properties ) values ("BTC-CNY", 20210401, '{"open":40100,"low":40000,"high":50000,"last":45000, "volume":60000}');
-replace into hist_price ( instrument_name, business_date, properties ) values ("BTC-JPY", 20210401, '{"open":40100,"low":40000,"high":50000,"last":45000, "volume":70000}');
+replace into hist_price ( instrument_name, business_date, properties ) values ('BTC-USD', 20210401, '{"open":10100,"low":10000,"high":20000,"last":15000, "volume":10000}');
+replace into hist_price ( instrument_name, business_date, properties ) values ('BTC-EUR', 20210401, '{"open":20100,"low":20000,"high":30000,"last":25000, "volume":20000}');
+replace into hist_price ( instrument_name, business_date, properties ) values ('BTC-GBP', 20210401, '{"open":30100,"low":30000,"high":40000,"last":35000, "volume":30000}');
+replace into hist_price ( instrument_name, business_date, properties ) values ('BTC-AUD', 20210401, '{"open":40100,"low":40000,"high":50000,"last":45000, "volume":40000}');
+replace into hist_price ( instrument_name, business_date, properties ) values ('BTC-CAD', 20210401, '{"open":40100,"low":40000,"high":50000,"last":45000, "volume":50000}');
+replace into hist_price ( instrument_name, business_date, properties ) values ('BTC-CNY', 20210401, '{"open":40100,"low":40000,"high":50000,"last":45000, "volume":60000}');
+replace into hist_price ( instrument_name, business_date, properties ) values ('BTC-JPY', 20210401, '{"open":40100,"low":40000,"high":50000,"last":45000, "volume":70000}');
 
 
 replace into instrument ( instrument_name, properties ) values ('ETH-USD', '{"type":"Crypto"}');
@@ -88,13 +89,13 @@ replace into instrument_market_map ( instrument_name, market_name ) values ('ETH
 replace into instrument_market_map ( instrument_name, market_name ) values ('ETH-CNY','ETH_MARKET');
 replace into instrument_market_map ( instrument_name, market_name ) values ('ETH-JPY','ETH_MARKET');
 
-replace into hist_price ( instrument_name, business_date, properties ) values ("ETH-USD", 20210401, '{"open":1010,"low":1000,"high":2000,"last":1500, "volume":100000}');
-replace into hist_price ( instrument_name, business_date, properties ) values ("ETH-EUR", 20210401, '{"open":2010,"low":2000,"high":3000,"last":2500, "volume":200000}');
-replace into hist_price ( instrument_name, business_date, properties ) values ("ETH-GBP", 20210401, '{"open":3010,"low":3000,"high":4000,"last":3500, "volume":300000}');
-replace into hist_price ( instrument_name, business_date, properties ) values ("ETH-AUD", 20210401, '{"open":4010,"low":4000,"high":5000,"last":4500, "volume":400000}');
-replace into hist_price ( instrument_name, business_date, properties ) values ("ETH-CAD", 20210401, '{"open":4010,"low":4000,"high":5000,"last":4500, "volume":500000}');
-replace into hist_price ( instrument_name, business_date, properties ) values ("ETH-CNY", 20210401, '{"open":4010,"low":4000,"high":5000,"last":4500, "volume":600000}');
-replace into hist_price ( instrument_name, business_date, properties ) values ("ETH-JPY", 20210401, '{"open":4010,"low":4000,"high":5000,"last":4500, "volume":700000}');
+replace into hist_price ( instrument_name, business_date, properties ) values ('ETH-USD', 20210401, '{"open":1010,"low":1000,"high":2000,"last":1500, "volume":100000}');
+replace into hist_price ( instrument_name, business_date, properties ) values ('ETH-EUR', 20210401, '{"open":2010,"low":2000,"high":3000,"last":2500, "volume":200000}');
+replace into hist_price ( instrument_name, business_date, properties ) values ('ETH-GBP', 20210401, '{"open":3010,"low":3000,"high":4000,"last":3500, "volume":300000}');
+replace into hist_price ( instrument_name, business_date, properties ) values ('ETH-AUD', 20210401, '{"open":4010,"low":4000,"high":5000,"last":4500, "volume":400000}');
+replace into hist_price ( instrument_name, business_date, properties ) values ('ETH-CAD', 20210401, '{"open":4010,"low":4000,"high":5000,"last":4500, "volume":500000}');
+replace into hist_price ( instrument_name, business_date, properties ) values ('ETH-CNY', 20210401, '{"open":4010,"low":4000,"high":5000,"last":4500, "volume":600000}');
+replace into hist_price ( instrument_name, business_date, properties ) values ('ETH-JPY', 20210401, '{"open":4010,"low":4000,"high":5000,"last":4500, "volume":700000}');
 
 
 replace into instrument ( instrument_name, properties ) values ('ADA-USD', '{"type":"Crypto"}');

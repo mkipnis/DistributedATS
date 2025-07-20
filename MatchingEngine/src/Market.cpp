@@ -54,7 +54,7 @@ Market::Market(DataWriterContainerPtr dataWriterContainerPtr,
                PriceDepthPublisherQueuePtr&
                price_depth_publisher_queue_ptr)
     : dataWriterContainerPtr_(dataWriterContainerPtr), _marketName(marketName), _dataServiceName(dataServiceName),
-    _price_depth_publisher_queue_ptr( price_depth_publisher_queue_ptr )
+_price_depth_publisher_queue_ptr( price_depth_publisher_queue_ptr ), _ready_to_trade(false)
 {
   stats_ptr_ = std::make_shared<OrderBookStatsMap>();
 }

@@ -51,7 +51,7 @@ void SecurityListDataReaderListenerImpl::on_data_available(
     DistributedATS_SecurityList::SecurityList security_list;
     eprosima::fastdds::dds::SampleInfo info;
     
-    if (_marketPtr->is_ready_to_trade())
+    if (_marketPtr->get_ready_to_trade() == true)
         return;
     
     if (reader->take_next_sample(&security_list, &info) == eprosima::fastdds::dds::RETCODE_OK)
@@ -59,12 +59,16 @@ void SecurityListDataReaderListenerImpl::on_data_available(
         std::stringstream ss;
         SecurityListLogger::log(ss, security_list);
         LOG4CXX_INFO(logger, "SecurityList : [" <<  ss.str() << "]");
+        
+        std::cout << "Security:" << ss.str() << std::endl;
             
         for (uint32_t sec_index = 0; sec_index < security_list.c_NoRelatedSym().size(); sec_index++)
         {
             std::string instrument = security_list.c_NoRelatedSym()[sec_index].Symbol();
             _marketPtr->addBook(instrument, true);
         }
+        
+        _marketPtr->set_ready_to_trade(true);
             
         // request to recieve opening price
         _marketPtr->publishMarketDataRequest();
