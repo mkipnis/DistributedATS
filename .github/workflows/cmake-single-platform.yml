@@ -17,7 +17,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Install Boost
+    - name: Install dependencies
       run: sudo apt-get update && sudo apt-get install -y libboost-all-dev libapr1-dev libaprutil1-dev libtinyxml2-dev libsqlite3-dev libasio-dev
 
     - name: Configure CMake
