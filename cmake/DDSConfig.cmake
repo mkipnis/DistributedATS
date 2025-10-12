@@ -10,15 +10,15 @@ if(NOT EXISTS "${DDS_INCLUDE_DIRS}/fastdds/config.hpp")
 
     include(ExternalProject)
 
+
     ExternalProject_Add(ASIO
-	GIT_REPOSITORY https://github.com/chriskohlhoff/asio.git
-    	GIT_TAG asio-1-28-0
-    	UPDATE_DISCONNECTED TRUE
-    	SOURCE_SUBDIR asio
-	INSTALL_DIR ${DDS_INSTALL_PREFIX}
-    	CONFIGURE_COMMAND cd <SOURCE_DIR>/<SOURCE_SUBDIR> && ./autogen.sh && ./configure --prefix=${DDS_INSTALL_PREFIX} --exec-prefix=${DDS_INSTALL_PREFIX} --without-boost
-    	BUILD_COMMAND cd <SOURCE_DIR>/<SOURCE_SUBDIR> && make
-    	INSTALL_COMMAND cd <SOURCE_DIR>/<SOURCE_SUBDIR> && make install
+  	GIT_REPOSITORY https://github.com/chriskohlhoff/asio.git
+  	GIT_TAG asio-1-28-0
+  	UPDATE_DISCONNECTED TRUE
+  	SOURCE_SUBDIR asio
+  	CONFIGURE_COMMAND ""
+  	BUILD_COMMAND ""
+  	INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_directory <SOURCE_DIR>/asio/include ${DDS_INSTALL_PREFIX}/include
     )
 
     ExternalProject_Add(FoonathanMemory

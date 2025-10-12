@@ -25,8 +25,7 @@ The matching engine consumes and processes orders from the instrument group MARK
 ### Starting ATS
 
 ```
-    cd $DATS_HOME/MiscATS/USTreasuryCLOB/scipts
-    ./start_ats
+    BASEDIR_ATS=`pwd`/USTreasuryCLOB python3 start_ats.py --ats USTreasuryCLOB/ust_ats.json
 ```
 
 ## Test client

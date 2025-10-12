@@ -442,9 +442,8 @@ void Market::on_depth_change(const DepthOrderBook *book,
     std::stringstream ss;
     MarketDataIncrementalRefreshLogger::log(ss, md_update->priceDepth);
     LOG4CXX_INFO(logger, "MarketDataIncrementalRefresh : [" <<  ss.str() << "]");
-    std::cout << "Update : " << ss.str() << std::endl;
 
-  int market_data_index = MARKET_DATA_PRICE_DEPTH * 2; // bids and asks
+    int market_data_index = MARKET_DATA_PRICE_DEPTH * 2; // bids and asks
 
   auto current_stats = stats_ptr_->find(book->symbol());
 

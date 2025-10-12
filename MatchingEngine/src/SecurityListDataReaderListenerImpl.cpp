@@ -59,9 +59,7 @@ void SecurityListDataReaderListenerImpl::on_data_available(
         std::stringstream ss;
         SecurityListLogger::log(ss, security_list);
         LOG4CXX_INFO(logger, "SecurityList : [" <<  ss.str() << "]");
-        
-        std::cout << "Security:" << ss.str() << std::endl;
-            
+                    
         for (uint32_t sec_index = 0; sec_index < security_list.c_NoRelatedSym().size(); sec_index++)
         {
             std::string instrument = security_list.c_NoRelatedSym()[sec_index].Symbol();

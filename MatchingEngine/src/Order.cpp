@@ -105,7 +105,7 @@ void Order::onRejected(const char *reason) {}
 void Order::onFilled(liquibook::book::Quantity fill_qty,
                      liquibook::book::Cost fill_cost) {
   quantityOnMarket_ -= fill_qty;
-  fillCost_ += fill_cost;
+  fillCost_ += (fill_cost * fill_qty);
   quantityFilled_ += fill_qty;
 
   std::stringstream msg;
@@ -242,10 +242,6 @@ void Order::populateExecutionReport(
   } else {
       executionReport.TimeInForce(FIX::TimeInForce_DAY);
   }
-
-
-  // std::cout << "Transact Time : " << ACE_OS::gettimeofday().msec() << ":" <<
-  // executionReport.TransactTime << std::endl;
 
   if (quantityFilled() > 0)
     executionReport.AvgPx(std::nearbyint(fillCost() / quantityFilled())); // round to the nearest tick

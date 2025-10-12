@@ -23,8 +23,7 @@ The first matching engine consumes and processes orders from the instrument grou
 ### Starting ATS
 
 ```
-    cd $DATS_HOME/MiscATS/CryptoCLOB/scipts
-    ./start_ats
+BASEDIR_ATS=`pwd`/CryptoCLOB python3 start_ats.py --ats CryptoCLOB/crypto_ats.json
 ```
 
 ## Test client
