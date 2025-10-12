@@ -12,10 +12,11 @@ DistributedATS is a [**FIX Protocol-based**](https://www.fixtrading.org) alterna
 * [**Data Service**](https://github.com/mkipnis/DistributedATS/tree/master/DataService/src) authenticates users, provides reference data, services mass order status requests, and market data snapshots. Data Service services all non-critical to order flow DDS messages including *Logon*, *Logout*, *MassOrderStatusRequest*, *MarketDataSnapshot*.  Data Service can service one or more FIX Gateways and Matching Engines.
 
 ![N|Solid](https://raw.githubusercontent.com/mkipnis/DistributedATS/master/docs/Diagrams/CryptoCLOB.png?raw=true)
-[See: CryptoCLOB](https://github.com/mkipnis/DistributedATS/tree/master/MiscATS/CryptoCLOB)
 
-### Examples
-#### Crypto CLOB/ATS – three matching engines, each handling a subset of instruments.
+
+
+## Examples
+### Crypto CLOB/ATS – three matching engines, each handling a subset of instruments.
 * Users: CRYPTO_TRADER_1, CRYPTO_TRADER_2, CRYPTO_TRADER_3, CRYPTO_TRADER_4 : Password: TEST
 * http://localhost:8080/
 ```
@@ -53,7 +54,8 @@ services:
       - "8080:8080"
 ```
 
-#### US Treasuries CLOB/ATS – one matching engine that handles hundreds of instruments.
+
+### US Treasuries CLOB/ATS – one matching engine that handles hundreds of instruments.
 * Users: UST_TRADER_1, UST_TRADER_2, UST_TRADER_3, UST_TRADER_4 : Password: TEST
 * http://localhost:8080/
 ```
