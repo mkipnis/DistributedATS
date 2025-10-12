@@ -73,30 +73,21 @@ int PriceDepthPublisherService::service()
     //
     // Iterate through the queue and get the latest update
     //
-
-    /*std::cout << "Queue Size : "
-              << _price_depth_publisher_queue_ptr->size()
-              << std::endl;*/
+    std::shared_ptr<DistributedATS::MarketDataUpdate> market_data_update;
       
-      std::shared_ptr<DistributedATS::MarketDataUpdate> market_data_update;
-      
-      std::map<std::string,
-        DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefresh>
-          latestMarketDataUpdates;
+    std::map<std::string,
+      DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefresh>
+        latestMarketDataUpdates;
        
-      
-          while (_price_depth_publisher_queue_ptr->pop(market_data_update))
-          {
-              latestMarketDataUpdates[market_data_update->symbol] = market_data_update->priceDepth;
+    while (_price_depth_publisher_queue_ptr->pop(market_data_update))
+    {
+        latestMarketDataUpdates[market_data_update->symbol] = market_data_update->priceDepth;
               
-              std::stringstream ss;
-              MarketDataIncrementalRefreshLogger::log(ss, latestMarketDataUpdates[market_data_update->symbol]);
-              LOG4CXX_INFO(logger, "MarketDataIncrementalRefresh : [" <<  ss.str() << "]");
-              std::cout << "Update : " << ss.str() << std::endl;
-              
-          }
+        std::stringstream ss;
+        MarketDataIncrementalRefreshLogger::log(ss, latestMarketDataUpdates[market_data_update->symbol]);
+        LOG4CXX_INFO(logger, "MarketDataIncrementalRefresh : [" <<  ss.str() << "]");
+    }
       
-
     DistributedATS_MarketDataIncrementalRefresh::MarketDataIncrementalRefresh
         chunkedIncrementalMarketDataRefresh;
 
@@ -132,8 +123,6 @@ int PriceDepthPublisherService::service()
             chunkedIncrementalMarketDataRefresh,
             "MarketDataIncrementalRefresh");
 
-        std::cout << "Publishing chunk of " << chunkedIncrementalMarketDataRefresh.c_NoMDEntries().size() << " updates" << std::endl;
-
         std::stringstream ss;
         MarketDataIncrementalRefreshLogger::log(
             ss, chunkedIncrementalMarketDataRefresh);
@@ -144,7 +133,6 @@ int PriceDepthPublisherService::service()
           if (ret != eprosima::fastdds::dds::RETCODE_OK) {
               LOG4CXX_ERROR(logger, "MarketDataIncrementalRefresh :" << ret);
           }
-
       }
     }
 

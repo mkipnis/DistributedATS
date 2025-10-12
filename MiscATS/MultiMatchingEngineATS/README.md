@@ -24,8 +24,7 @@ The first matching engine consumes and processes orders from the instrument grou
 ### Starting ATS
 
 ```
-    cd $DATS_HOME/MiscATS/MultiMatchingEngineATS/scipts
-    ./start_ats
+BASEDIR_ATS=`pwd`/MultiMatchingEngineATS python3 start_ats.py --ats MultiMatchingEngineATS/multi_matching_engine.json
 ```
 
 ## Test client

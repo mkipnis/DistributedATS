@@ -27,7 +27,6 @@ public:
         if (info.current_count_change > 0)
         {
             matched_ = info.total_count;
-            //std::cout << "[Listener] Publisher Matched: " << matched_ << std::endl;
 
             // Start thread only once
             bool expected = false;
@@ -36,7 +35,6 @@ public:
                 std::thread([this, dwr]() {
                     while (!_market_ptr->get_ready_to_trade())
                     {
-                        //std::cout << "[Listener] Publishing Security Lise Exchange " << matched_ << std::endl;
                         _market_ptr->publishSecurityListRequest(dwr);
                         std::this_thread::sleep_for(std::chrono::seconds(1));
                     }
@@ -46,11 +44,6 @@ public:
         else if (info.current_count_change == -1)
         {
             matched_ = info.total_count;
-            std::cout << "[Listener] Publisher UnMatched: " << matched_ << std::endl;
-        }
-        else
-        {
-            std::cout << "[Listener] Invalid current_count_change: " << info.current_count_change << std::endl;
         }
     }
 
