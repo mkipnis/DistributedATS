@@ -70,6 +70,7 @@ services:
       bash -c "LD_LIBRARY_PATH=/usr/local/lib /usr/local/bin/fastdds discovery -q 51000"
     ports:
       - "51000:51000"
+    restart: unless-stopped
 
   distributed_ats:
     container_name: distributed_ats
@@ -77,16 +78,14 @@ services:
     depends_on:
       - fast_dds_discovery
     command: >
-      bash -c "cd /usr/local &&
-               source ./dats_env.sh &&
-               cd MiscATS &&
-               BASEDIR_ATS=`pwd`/USTreasuryCLOB
-               python3 start_ats.py --ats USTreasuryCLOB/ust_ats.json"
+      bash -c "cd /usr/local && source ./dats_env.sh &&
+               cd MiscATS && BASEDIR_ATS=`pwd`/USTreasuryCLOB python3 start_ats.py --ats USTreasuryCLOB/ust_ats.json"
     volumes:
       - ./logs_ats:/usr/local/MiscATS/USTreasuryCLOB/logs
-    ports: # FIX Gateways
+    ports:
       - "15001:15001"
       - "16001:16001"
+    restart: unless-stopped
 
   # WebTrader Front-End
   distributed_ats_webtrader:
@@ -98,6 +97,7 @@ services:
       - ./webtrader_logs:/usr/local/tomcat/logs
     ports:
       - "8080:8080"
+    restart: unless-stopped
 ```
 
 ### Dependencies
