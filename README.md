@@ -12,7 +12,86 @@ DistributedATS is a [**FIX Protocol-based**](https://www.fixtrading.org) alterna
 * [**Data Service**](https://github.com/mkipnis/DistributedATS/tree/master/DataService/src) authenticates users, provides reference data, services mass order status requests, and market data snapshots. Data Service services all non-critical to order flow DDS messages including *Logon*, *Logout*, *MassOrderStatusRequest*, *MarketDataSnapshot*.  Data Service can service one or more FIX Gateways and Matching Engines.
 
 ![N|Solid](https://raw.githubusercontent.com/mkipnis/DistributedATS/master/docs/Diagrams/CryptoCLOB.png?raw=true)
-[See: CryptoCLOB](https://github.com/mkipnis/DistributedATS/tree/master/MiscATS/CryptoCLOB)
+
+
+
+## Examples
+### Crypto CLOB/ATS – three matching engines, each handling a subset of instruments.
+* Users: CRYPTO_TRADER_1, CRYPTO_TRADER_2, CRYPTO_TRADER_3, CRYPTO_TRADER_4 : Password: TEST
+* http://localhost:8080/
+```
+services:
+  fast_dds_discovery:
+    container_name: fast_dds_discovery
+    image: ghcr.io/mkipnis/distributed_ats:latest
+    command: >
+      bash -c "LD_LIBRARY_PATH=/usr/local/lib /usr/local/bin/fastdds discovery -q 51000"
+    ports:
+      - "51000:51000"
+
+  distributed_ats:
+    container_name: distributed_ats
+    image: ghcr.io/mkipnis/dats_crypto_clob:latest
+    depends_on:
+      - fast_dds_discovery
+    command: >
+      bash -c "cd /usr/local && source ./dats_env.sh && cd MiscATS && BASEDIR_ATS=`pwd`/CryptoCLOB python3 start_ats.py --ats CryptoCLOB/crypto_ats.json"
+    volumes:
+      - ./logs_ats:/usr/local/MiscATS/CryptoCLOB/logs
+    ports: # FIX Gateways
+      - "15001:15001"
+      - "16001:16001"
+      - "17001:17001"
+
+  distributed_ats_webtrader:
+    container_name: distributed_ats_webtrader
+    image: ghcr.io/mkipnis/distributed_ats_webtrader:latest
+    depends_on:
+      - distributed_ats
+    volumes:
+      - ./webtrader_logs:/usr/local/tomcat/logs
+    ports:
+      - "8080:8080"
+```
+
+
+### US Treasuries CLOB/ATS – one matching engine that handles hundreds of instruments.
+* Users: UST_TRADER_1, UST_TRADER_2, UST_TRADER_3, UST_TRADER_4 : Password: TEST
+* http://localhost:8080/
+```
+services:
+  fast_dds_discovery:
+    container_name: discovery_service
+    image: ghcr.io/mkipnis/distributed_ats:latest
+    command: >
+      bash -c "LD_LIBRARY_PATH=/usr/local/lib /usr/local/bin/fastdds discovery -q 51000"
+    ports:
+      - "51000:51000"
+
+  distributed_ats:
+    container_name: distributed_ats
+    image: ghcr.io/mkipnis/dats_ust_clob:latest
+    depends_on:
+      - fast_dds_discovery
+    command: >
+      bash -c "cd /usr/local && source ./dats_env.sh && cd MiscATS && BASEDIR_ATS=`pwd`/USTreasuryCLOB python3 start_ats.py --ats USTreasuryCLOB/ust_ats.json"
+    volumes:
+      - ./logs_ats:/usr/local/MiscATS/USTreasuryCLOB/logs
+    ports: # FIX Gateways
+      - "15001:15001"
+      - "16001:16001"
+
+  # WebTrader Front-End
+  distributed_ats_webtrader:
+    container_name: distributed_ats_webtrader
+    image: ghcr.io/mkipnis/distributed_ats_webtrader:latest
+    depends_on:
+      - distributed_ats
+    volumes:
+      - ./webtrader_logs:/usr/local/tomcat/logs
+    ports:
+      - "8080:8080"
+```
 
 ### Dependencies
 
@@ -71,54 +150,3 @@ DistributedATS is a [**FIX Protocol-based**](https://www.fixtrading.org) alterna
 ### Autogeneration of IDL from QuickFIX XML
 [GenTools](https://github.com/mkipnis/DistributedATS/tree/master/GenTools) is a utility that generates DDS IDL, FIX to IDL, and IDL to FIX adapters and IDL logger helper classes from QuickFIX's XML data dictionary.
 
-### Building Distributed ATS and its dependencies
-
-To download and build all necessary dependencies, use the provided script:
-
-[download_deps_and_build_all.sh](https://github.com/mkipnis/DistributedATS/blob/master/download_deps_and_build_all.sh)
-
-To build the base Docker image:
-
-[Docker.Build_Distributed_ATS](https://github.com/mkipnis/DistributedATS/blob/master/docker/Docker.Build_Distributed_ATS)
-
-
-## Basic ATS Examples
-### Crypto Central Limit Order Book
-- Docker Image: [Docker.Crypto_CLOB](https://github.com/mkipnis/DistributedATS/blob/master/docker/Docker.Crypto_CLOB)
-- Docker Compose: [docker-compose-crypto.yml](https://github.com/mkipnis/DistributedATS/blob/master/docker/docker-compose-crypto.yml)
-```
-sudo docker-compose -f docker-compose-crypto.yml up -d
-```
-Upon starting the dockerized instance, open in the browser: 
-* http://localhost:8080
-
-#####
-Users: 
-- CRYPTO_TRADER_1 
-- CRYPTO_TRADER_2 
-- CRYPTO_TRADER_3
-- CRYPTO_TRADER_4
-
-Password: 
-- TEST
-#####
-
-### US Treasuries Central Limit Order Book
-
-- Docker Image: [Docker.UST_CLOB](https://github.com/mkipnis/DistributedATS/blob/master/docker/Docker.UST_CLOB)
-- Docker Compose: [docker-compose-ust.yml](https://github.com/mkipnis/DistributedATS/blob/master/docker/docker-compose-ust.yml)
-```
-sudo docker-compose -f docker-compose-ust.yml up -d
-```
-Upon starting the dockerized instance, open in the browser: 
-* http://localhost:8080
-#####
-Users: 
-- UST_TRADER_1
-- UST_TRADER_2
-- UST_TRADER_3
-- UST_TRADER_4
- 
-Password: 
-- TEST
-######
