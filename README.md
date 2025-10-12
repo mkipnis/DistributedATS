@@ -35,10 +35,13 @@ services:
     depends_on:
       - fast_dds_discovery
     command: >
-      bash -c "cd /usr/local && source ./dats_env.sh && cd MiscATS && BASEDIR_ATS=`pwd`/CryptoCLOB python3 start_ats.py --ats CryptoCLOB/crypto_ats.json"
+      bash -c "cd /usr/local && source ./dats_env.sh &&
+               cd MiscATS &&
+               BASEDIR_ATS=`pwd`/CryptoCLOB python3 start_ats.py --ats CryptoCLOB/crypto_ats.json"
     volumes:
       - ./logs_ats:/usr/local/MiscATS/CryptoCLOB/logs
-    ports: # FIX Gateways
+    ports:
+      # FIX Gateways
       - "15001:15001"
       - "16001:16001"
       - "17001:17001"
@@ -74,7 +77,11 @@ services:
     depends_on:
       - fast_dds_discovery
     command: >
-      bash -c "cd /usr/local && source ./dats_env.sh && cd MiscATS && BASEDIR_ATS=`pwd`/USTreasuryCLOB python3 start_ats.py --ats USTreasuryCLOB/ust_ats.json"
+      bash -c "cd /usr/local &&
+               source ./dats_env.sh &&
+               cd MiscATS &&
+               BASEDIR_ATS=`pwd`/USTreasuryCLOB
+               python3 start_ats.py --ats USTreasuryCLOB/ust_ats.json"
     volumes:
       - ./logs_ats:/usr/local/MiscATS/USTreasuryCLOB/logs
     ports: # FIX Gateways
