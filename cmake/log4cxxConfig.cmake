@@ -12,7 +12,7 @@ if(NOT EXISTS "${LOG4CXX_INCLUDE_DIRS}/log4cxx/log4cxx.h")
 
     ExternalProject_Add(Log4cxx
         GIT_REPOSITORY https://github.com/apache/logging-log4cxx.git
-        GIT_TAG master
+        GIT_TAG rel/v1.5.0
         UPDATE_DISCONNECTED TRUE
         CMAKE_ARGS
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
