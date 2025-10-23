@@ -1,0 +1,101 @@
+version: '3.8'
+
+services:
+
+  # DDS Discovery
+  fast_dds_discovery:
+    container_name: fast_dds_discovery
+    image: ghcr.io/mkipnis/distributed_ats:latest
+    command: >
+      bash -c "LD_LIBRARY_PATH=/usr/local/lib /usr/local/bin/fastdds discovery -q 51000"
+    ports:
+      - "51000:51000"
+    restart: no 
+
+  
+  # FIX Gateways
+  fix_gateway_1:
+    container_name: distributed_ats
+    image: ghcr.io/mkipnis/multi_matching_engine_ats:latest
+    depends_on:
+      - fast_dds_discovery
+    command: >
+      bash -c "/usr/local/bin/FIXGateway -c /usr/local/MiscATS/MultiMatchingEngineATS/config/fix_gwy_1.cfg"
+    environment:
+      - LOG_FILE_NAME=fix_gateway_1.log
+    volumes:
+      - ./logs:/var/log
+    ports:
+      - "15001:15001"
+    restart: no 
+
+  fix_gateway_2:
+    container_name: fix_gateway_2
+    image: ghcr.io/mkipnis/multi_matching_engine_ats:latest
+    depends_on:
+      - fast_dds_discovery
+    command: >
+      bash -c "/usr/local/bin/FIXGateway -c /usr/local/MiscATS/MultiMatchingEngineATS/config/fix_gwy_2.cfg"
+    environment:
+      - LOG_FILE_NAME=fix_gateway_2.log
+    volumes:
+      - ./logs:/var/log
+    ports:
+      - "16001:16001"
+    restart: no
+
+
+  # Data Services
+  data_service_a:
+    container_name: data_service_a
+    image: ghcr.io/mkipnis/multi_matching_engine_ats:latest
+    depends_on:
+      - fast_dds_discovery
+    command: >
+      bash -c "/usr/local/bin/DataService -c /usr/local/MiscATS/MultiMatchingEngineATS/config/data_service_a.ini"
+    environment:
+      - LOG_FILE_NAME=data_service_a.log
+    volumes:
+      - ./logs:/var/log
+    restart: no 
+
+  data_service_b:
+    container_name: data_service_b
+    image: ghcr.io/mkipnis/multi_matching_engine_ats:latest
+    depends_on:
+      - fast_dds_discovery
+    command: >
+      bash -c "/usr/local/bin/DataService -c /usr/local/MiscATS/MultiMatchingEngineATS/config/data_service_b.ini"
+    environment:
+      - LOG_FILE_NAME=data_service_b.log
+    volumes:
+      - ./logs:/var/log
+    restart: no
+
+ 
+  # Matching Engines
+  matching_engine_market_y:
+    container_name: market_y
+    image: ghcr.io/mkipnis/multi_matching_engine_ats:latest
+    depends_on:
+      - fast_dds_discovery
+    command: >
+      bash -c "/usr/local/bin/MatchingEngine -c /usr/local/MiscATS/MultiMatchingEngineATS/config/matching_engine_MARKET_Y.ini"
+    environment:
+      - LOG_FILE_NAME=matching_engine_MARKET_Y.ini
+    volumes:
+      - ./logs:/var/log
+    restart: no
+
+  matching_engine_market_z:
+    container_name: market_z
+    image: ghcr.io/mkipnis/multi_matching_engine_ats:latest
+    depends_on:
+      - fast_dds_discovery
+    command: >
+      bash -c "/usr/local/bin/MatchingEngine -c /usr/local/MiscATS/MultiMatchingEngineATS/config/matching_engine_MARKET_Z.ini"
+    environment:
+      - LOG_FILE_NAME=matching_engine_MARKET_Z.ini
+    volumes:
+      - ./logs:/var/log
+    restart: no
