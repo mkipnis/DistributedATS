@@ -1,0 +1,12 @@
+version: '2'
+
+services:
+  # WebTrader Front-End
+  distributed_ats_webtrader:
+    container_name: distributed_ats_webtrader
+    image: ghcr.io/mkipnis/distributed_ats_webtrader:latest
+    volumes:
+      - ./webtrader_logs:/usr/local/tomcat/logs
+    ports:
+      - "8080:8080"
+    restart: no
