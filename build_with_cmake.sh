@@ -6,7 +6,7 @@ set -ex  # Print each command and exit on error
 OS="$(uname)"
 if [[ "$OS" == "Darwin" ]]; then
   LIB_PATH_VAR="DYLD_LIBRARY_PATH"
-#  CMAKE_FLAGS="-G Xcode"
+  #CMAKE_FLAGS="-G Xcode"
 else
   LIB_PATH_VAR="LD_LIBRARY_PATH"
 fi

@@ -31,7 +31,7 @@ add_subdirectory( FIXGateway/src )
 add_subdirectory( DataService/src )
 add_subdirectory( MatchingEngine/src )
 add_subdirectory( LatencyTest )
-add_subdirectory( MiscClients/cpp_ws_reactjs/oms )
+add_subdirectory( MiscClients/cpp_ws_reactjs/fix_ws_proxy )
 
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/MiscATS/
         DESTINATION MiscATS
