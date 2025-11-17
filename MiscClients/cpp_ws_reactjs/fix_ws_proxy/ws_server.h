@@ -33,8 +33,12 @@ class fix_application;
 // A single WebSocket session (handles one client)
 class Session : public std::enable_shared_from_this<Session> {
 public:
-    explicit Session(tcp::socket socket)
-        : ws_(std::move(socket)) {}
+    explicit Session(tcp::socket socket, const std::stringstream& session_settings_stream)
+        : ws_(std::move(socket))
+    {
+        std::stringstream ss(session_settings_stream.str());
+        settings_ = std::make_shared<FIX::SessionSettings>(ss);
+    }
 
     void start() {
         // Accept the websocket handshake
@@ -61,7 +65,6 @@ private:
     
     std::string fix_session_qualifier_;
     std::string ws_session_qualifier_;
-    
     
     std::shared_ptr<FIX::SessionSettings> settings_;
     std::shared_ptr<FIX::NullStoreFactory> storeFactory_;
@@ -172,8 +175,11 @@ public:
 // Accepts incoming connections and launches sessions
 class Listener : public std::enable_shared_from_this<Listener> {
 public:
-    Listener(asio::io_context& ioc, tcp::endpoint endpoint)
-        : ioc_(ioc), acceptor_(ioc) {
+    Listener(asio::io_context& ioc, tcp::endpoint endpoint, std::shared_ptr<FIX::SessionSettings>& fix_session_settings)
+        : ioc_(ioc), acceptor_(ioc)
+    {
+        session_settings_stream_ << *fix_session_settings;
+        
         beast::error_code ec;
 
         acceptor_.open(endpoint.protocol(), ec);
@@ -196,6 +202,7 @@ public:
 private:
     asio::io_context& ioc_;
     tcp::acceptor acceptor_;
+    std::stringstream session_settings_stream_;
 
     void do_accept() {
         acceptor_.async_accept(
@@ -208,7 +215,7 @@ private:
             std::cerr << "accept failed: " << ec.message() << "\n";
         } else {
             // Create and run session
-            std::make_shared<Session>(std::move(socket))->start();
+            std::make_shared<Session>(std::move(socket), session_settings_stream_)->start();
         }
         do_accept();
     }

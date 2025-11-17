@@ -37,7 +37,6 @@ void Session::on_read(beast::error_code ec, std::size_t bytes_transferred) {
     boost::json::object replay;
     if ( !FIX::Session::doesSessionExist(qualified_id) )
     {
-        settings_ = std::make_shared<FIX::SessionSettings>("/Users/mkipnis/Documents/oms/oms/fixproxy.ini");
         settings_->set(qualified_id, FIX::Dictionary());
         
         pending_logon_ = fix_message;
@@ -45,7 +44,9 @@ void Session::on_read(beast::error_code ec, std::size_t bytes_transferred) {
         storeFactory_ = std::make_shared<FIX::NullStoreFactory>();
         logFactory_ = std::make_shared<FIX::ScreenLogFactory>( *settings_ );
         
-        std::cout << "FIX Message : " << fix_message << std::endl;
+        auto json_obj = distributed_ats::fix_json::fix_to_json(fix_message);
+        auto json_str = boost::json::serialize(json_obj);
+        std::cout << "FIX Message : " << json_str << std::endl;
         
         application_ = std::make_shared<fix_application>(shared_from_this());
         socket_initator_ = std::make_shared<FIX::ThreadedSocketInitiator>( *application_, *storeFactory_, *settings_, *logFactory_ );
@@ -55,7 +56,12 @@ void Session::on_read(beast::error_code ec, std::size_t bytes_transferred) {
         replay["success"] = true;
     } else {
 
-        std::cout << "About to send: " << fix_message << std::endl;
+        //std::cout << "About to send: " << fix_message << std::endl;
+        
+        auto json_obj = distributed_ats::fix_json::fix_to_json(fix_message);
+        auto json_str = boost::json::serialize(json_obj);
+        std::cout << "FIX Message : " << json_str << std::endl;
+        
         replay["token"] = fix_session_qualifier_;
         
         bool success = FIX::Session::sendToTarget(fix_message, qualified_id);

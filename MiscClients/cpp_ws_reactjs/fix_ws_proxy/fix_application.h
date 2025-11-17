@@ -12,10 +12,7 @@ class fix_application : public FIX::Application {
 
 public:
     
-    fix_application(const std::weak_ptr<Session>& ws_session) : _ws_session(ws_session)
-    {
-        //std::cout << "Pending Logon : " << _ws_logon << std::endl;
-    }
+    fix_application(const std::weak_ptr<Session>& ws_session) : _ws_session(ws_session) {}
     
     void onCreate(const FIX::SessionID& id) override {
         std::cout << "Created: " << id << std::endl;

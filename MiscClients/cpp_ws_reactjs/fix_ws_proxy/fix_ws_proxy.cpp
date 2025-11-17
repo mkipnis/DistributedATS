@@ -56,9 +56,12 @@ int main(int argc, char** argv) {
         if (!fix_client_config.empty())
             std::cout << "Using FIX client config file: " << fix_client_config << "\n";
         
+        
+        auto fix_session_setttings = std::make_shared<FIX::SessionSettings>(fix_client_config);
+        
 
         asio::io_context ioc{1}; // number of ws threads
-        std::make_shared<Listener>(ioc, tcp::endpoint{address, port})->run();
+        std::make_shared<Listener>(ioc, tcp::endpoint{address, port}, fix_session_setttings)->run();
 
         std::cout << "WebSocket echo server listening on port " << port << "\n";
         ioc.run();
