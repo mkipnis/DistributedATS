@@ -31,3 +31,5 @@ target_link_libraries(fix_ws_proxy
     Boost::json
     Boost::chrono
 )
+
+install(TARGETS fix_ws_proxy)
