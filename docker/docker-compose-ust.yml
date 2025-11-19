@@ -34,9 +34,6 @@ services:
       - "9002:9002"
     environment:
       LD_LIBRARY_PATH: "/usr/local/lib"
-    volumes:
-      # Optional: override config without rebuilding
-      - ./fixproxy.ini:/usr/local/config/fixproxy.ini:ro
     restart: unless-stopped
 
   # WebTrader Front-End
