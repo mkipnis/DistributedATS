@@ -3,7 +3,8 @@ import React from 'react';
 import { useEffect, useState } from 'react';
 import { Container, Row, Col, Button, Form } from 'react-bootstrap/';
 import PriceLevels from './PriceLevels';
-
+import Helpers from './Helpers';
+import { ORDER_TYPE_FIX_MAP, ORDER_CONDITION_FIX_MAP } from '../websocket_fix_utils/FIXConvertUtils';
 
 const { forwardRef, useRef, useImperativeHandle } = React;
 
@@ -19,6 +20,8 @@ const Ticket = React.forwardRef ((props, ref) => {
   const [cancelAllResults, setCancelAllResults] = useState({});
   const [isTicketing, setIsTicketing] = useState(false);
 
+  const [lastTicket, setLastTicket] = useState();
+  //const [lastExecReport, setLastExecReport] = useState();
   const [ticketPrice, setTicketPrice] = useState(0);
   const [ticketStopPrice, setTicketStopPrice] = useState(0);
   const [ticketSize, setTicketSize] = useState(0);
@@ -28,66 +31,116 @@ const Ticket = React.forwardRef ((props, ref) => {
   function submit_buy( e )
   {
     e.preventDefault();
-    props.ticketState.side = "BUY";
-    Submit_order(props.ticketState);
+    Submit_order(1);
   }
 
   function submit_sell( e )
   {
     e.preventDefault();
-    props.ticketState.side = "SELL";
-    Submit_order(props.ticketState);
+    Submit_order(2);
   }
 
-  const Submit_order = ( trade ) =>
+  const Submit_order = ( side ) =>
   {
     var ticket = {};
 
     setIsTicketing(true);
 
-    ticket["symbol"] = trade.symbol;
-    ticket["securityExchange"] = trade.securityExchange;
-    ticket["quantity"] = ticketSize;
-    ticket["price_in_ticks"] = Math.round(ticketPrice * props.ticketState.tickSize);
-    ticket["stop_price_in_ticks"] = Math.round(ticketStopPrice * props.ticketState.tickSize);
-    ticket["side"] = trade.side;
-    ticket["order_type"] = orderType;
-    ticket["order_condition"] = orderCondition;
-    ticket["all_or_none"] = allOrNone;
-    ticket["username"] = trade.username;
-    ticket["token"] = trade.token;
+      const now = new Date();
 
-    const requestOptionsResults = { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(ticket) };
-    fetch(trade.url + '/SubmitOrder', requestOptionsResults)
-    .then(res => res.json())
-    .then(result => setOrderSubmitResults(result));
-  }
+      const instrument_data = props.selectedInstrumentBlotterData;
+      const order_id = Helpers.get_order_id(instrument_data)
+      const orderTypeCode = ORDER_TYPE_FIX_MAP[orderType];
+      const timeInforceCode = ORDER_CONDITION_FIX_MAP[orderCondition];
 
+      const msg = props.fixSessionHandler.current.composeHeader("D")
+      msg.Body = {
+        '11': order_id,
+        '38': ticketSize,
+        ...(orderTypeCode !== 1 && { '44': Math.round(ticketPrice * instrument_data['tickSize']) }),
+        '54': side,
+        '55': instrument_data['symbol'],
+        '207': instrument_data['securityExchange'],
+        '40': orderTypeCode,
+        '59': timeInforceCode,
+        '60': Helpers.get_fix_formatted_timestamp()
+      };
+
+    if (allOrNone == true )
+      msg.Body['18'] = 'G'
+
+    if ( orderTypeCode === 3 )
+      msg.Body['99'] = Math.round(ticketStopPrice * instrument_data['tickSize'])
+
+      setLastTicket(
+          props.sendOrder(msg)
+      )
+    }
 
     const handleCancellAll = (e) => {
       e.preventDefault();
 
-      setIsTicketing(true);
+      const mass_cancel_order_id = Helpers.get_next_cl_order_id();
 
-      var cancel_all = {};
+      const msg = props.fixSessionHandler.current.composeHeader("q")
+      msg.Body = {
+        '11': mass_cancel_order_id,
+        '530':'7',
+        '60': Helpers.get_fix_formatted_timestamp()
+      };
 
-      cancel_all["username"] = props.ticketState.username;
-      cancel_all["token"] = props.ticketState.token;
-
-      const requestOptionsResults = { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(cancel_all) };
-      fetch(props.ticketState.url + '/CancelAll', requestOptionsResults)
-      .then(res => res.json())
-      .then(result => setCancelAllResults(result));
+      props.sendCancelAll(msg)
   };
 
   useEffect(() =>
   {
-    setTicketPrice(props.ticketState.price);
-    setTicketStopPrice(props.ticketState.price);
-    setTicketSize(props.ticketState.quantity);
-  }, [props.ticketState.price]);
+    if ( props.selectedInstrumentBlotterData !== undefined  )
+    {
+      let price = 0;
+      let quantity = 0;
+
+      let last_trade_price = props.selectedInstrumentBlotterData['lastTradedPrice']
+      if ( last_trade_price == undefined )
+        last_trade_price = props.selectedInstrumentBlotterData['openPrice']
+
+      const ticket_size = props.selectedInstrumentBlotterData['tickSize']
+
+      if ( last_trade_price !== undefined )
+      {
+        price = last_trade_price/ticket_size;
+        quantity = 1;
+      } else if ( props.selectedInstrumentBlotterData['top_level_bid_price'] != 0 )
+      {
+        price = props.selectedInstrumentBlotterData ['top_level_bid_price']/ticket_size;
+        quantity = props.selectedInstrumentBlotterData['top_level_bid_size'];
+      } else if ( props.selectedInstrumentBlotterData['top_level_ask_price'] != 0 )
+      {
+        price = props.selectedInstrumentBlotterData['top_level_ask_price']/ticket_size;
+        quantity = props.selectedInstrumentBlotterData['top_level_ask_price'];
+      }  else {
+        price = props.selectedInstrumentBlotterData['openPrice']/ticket_size;
+        quantity = 1;
+      }
+
+      const lastExecReport = props.selectedInstrumentBlotterData['last_exec_report'];
+
+      if ( lastExecReport !== undefined && lastTicket !== undefined )
+      {
+        if ( lastTicket['Body']['11'] == lastExecReport['Body']['37'] )
+        {
+          setIsTicketing(false);
+        }
+      } else {
+        setTicketPrice(price);
+        setTicketStopPrice(price);
+        setIsTicketing(false);
+      }
+
+      setTicketSize(quantity);
+
+    }
+
+  }, [props.selectedInstrumentBlotterData, lastTicket]);
 
   useEffect(() => {
     setIsTicketing(false);
@@ -99,15 +152,16 @@ const Ticket = React.forwardRef ((props, ref) => {
     console.log("Cancel All Results : " + cancelAllResults );;
   },[cancelAllResults]);
 
+
   return (
-    <Row style={( props.ticketState.instrumentName == undefined ) ? {pointerEvents: "none", opacity: "0.4"} : {}}>
+    <Row style={( props.selectedInstrumentBlotterData == undefined ) ? {pointerEvents: "none", opacity: "0.4"} : {}}>
        <Row style={{marginTop: '10px'}}>
           <Col>
-            <h6>Trade : {props.ticketState.instrumentName}</h6>
+            <h6>Trade : {props.instrumentName}</h6>
           </Col>
        </Row>
        <Row style={{marginTop: '10px'}}>
-          <PriceLevels priceLevels={props.priceLevels} ticketState={props.ticketState} ref={priceLevelsRef}/>
+          <PriceLevels selectedInstrumentBlotterData={props.selectedInstrumentBlotterData} ref={priceLevelsRef}/>
        </Row>
        <Row style={{marginTop: '10px'}}>
        <div style={ ( isTicketing == true ) ? {pointerEvents: "none", opacity: "0.4"} : {}}>
@@ -120,12 +174,19 @@ const Ticket = React.forwardRef ((props, ref) => {
             <Row>
               <Col>
                 <div style={ ( orderType == "Market" || orderType == "Stop") ? {pointerEvents: "none", opacity: "0.4"} : {}}>
-                  <input type="number"
-                      step={0.01}
-                      value={ticketPrice}
-                      onChange={(value) => {
-                        setTicketPrice(value.target.value);
-                      } }/>
+                <input
+                  type="number"
+                  step={0.01}
+                  value={ticketPrice.toFixed(2)}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value);
+                    setTicketPrice(isNaN(val) ? 0 : val);
+                  }}
+                  onBlur={(e) => {
+                    // Format to 2 decimals on blur
+                    setTicketPrice((prev) => Number(prev.toFixed(2)));
+                  }}
+                />
                   </div>
                 </Col>
               <Col>
@@ -155,9 +216,9 @@ const Ticket = React.forwardRef ((props, ref) => {
                   console.log("e.target.value", e.target.value);
                     setOrderCondition(e.target.value);
                   }}>
-                <option value="no_conditition">Days</option>
-                <option value="immediate_or_cancel">Immediate of Cancel</option>
-                <option value="fill_or_kill">Fill or Kill</option>
+                <option value="None">Days</option>
+                <option value="IOC">Immediate of Cancel</option>
+                <option value="FOK">Fill or Kill</option>
               </select>
             </Col>
             </Row>
@@ -168,10 +229,19 @@ const Ticket = React.forwardRef ((props, ref) => {
             <Row>
             <Col>
               <div style={ ( orderType != "Stop" ) ? {pointerEvents: "none", opacity: "0.4"} : {}}>
-                <input type="number"
-                    step={0.01}
-                    value={ticketStopPrice}
-                    onChange={(value) => { setTicketStopPrice(value.target.value); } }/>
+              <input
+  type="number"
+  step={0.01}
+  value={ticketStopPrice.toFixed(2)}
+  onChange={(e) => {
+    const val = parseFloat(e.target.value);
+    setTicketStopPrice(isNaN(val) ? 0 : val); // keep numeric state
+  }}
+  onBlur={() => {
+    // Format to 2 decimals only when leaving the input
+    setTicketStopPrice(prev => Number(prev.toFixed(2)));
+  }}
+/>
                 </div>
               </Col>
               <Col> <label className="label"  style={{marginRight: '10px'}}>All or None</label>

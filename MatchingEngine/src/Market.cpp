@@ -135,7 +135,7 @@ void Market::publishSecurityListRequest( eprosima::fastdds::dds::DataWriter* dwr
 
     auto ret = dwr->write(&securityListRequest);
     
-    if (!ret) {
+    if ( ret != eprosima::fastdds::dds::RETCODE_OK ) {
         LOG4CXX_ERROR(logger, "SecurityListRequest write returned : " << ret);
     }
 }
@@ -164,9 +164,9 @@ void Market::publishMarketDataRequest()
 
     LoggerHelper::log_info<std::stringstream, MarketDataRequestLogger,DistributedATS_MarketDataRequest::MarketDataRequest>(logger,marketDataRequest, "MarketDataRequest");
 
-    bool ret = dataWriterContainerPtr_->market_data_request_dw->write(&marketDataRequest);
+    auto ret = dataWriterContainerPtr_->market_data_request_dw->write(&marketDataRequest);
     
-    if (!ret)
+    if ( ret != eprosima::fastdds::dds::RETCODE_OK )
     {
         LOG4CXX_ERROR(logger, "MarketDataRequest write returned : " << ret);
     }
@@ -292,9 +292,9 @@ void Market::publishExecutionReport(DistributedATS_ExecutionReport::ExecutionRep
     LoggerHelper::log_debug<std::stringstream, ExecutionReportLogger, DistributedATS_ExecutionReport::ExecutionReport>(logger,
       executionReport, "ExecutionReport");
 
-    bool ret = dataWriterContainerPtr_->execution_report_dw->write(&executionReport);
+    auto ret = dataWriterContainerPtr_->execution_report_dw->write(&executionReport);
     
-    if (!ret)
+    if ( ret != eprosima::fastdds::dds::RETCODE_OK )
     {
         LOG4CXX_ERROR(logger, "Execution Report write returned : " << ret);
     }
@@ -305,9 +305,9 @@ void Market::publishOrderMassCancelReport(DistributedATS_OrderMassCancelReport::
 
     LoggerHelper::log_debug<std::stringstream, OrderMassCancelReportLogger, DistributedATS_OrderMassCancelReport::OrderMassCancelReport>(logger, orderMassCancelReport, "OrderMassCancelReport");
 
-    bool ret = dataWriterContainerPtr_->order_mass_cancel_report_dw->write(&orderMassCancelReport);
+    auto ret = dataWriterContainerPtr_->order_mass_cancel_report_dw->write(&orderMassCancelReport);
     
-    if (!ret)
+    if ( ret != eprosima::fastdds::dds::RETCODE_OK )
     {
         LOG4CXX_ERROR(logger, "Order Mass Cancel Report write returned: " << ret);
     }
@@ -320,9 +320,9 @@ void Market::publishOrderCancelReject(
     LoggerHelper::log_debug<std::stringstream, OrderCancelRejectLogger,
         DistributedATS_OrderCancelReject::OrderCancelReject>(logger, orderCancelReject, "OrderCancelReject");
 
-    bool ret = dataWriterContainerPtr_->order_cancel_reject_dw->write(&orderCancelReject);
+    auto ret = dataWriterContainerPtr_->order_cancel_reject_dw->write(&orderCancelReject);
     
-    if (ret)
+    if ( ret != eprosima::fastdds::dds::RETCODE_OK )
     {
         LOG4CXX_ERROR(logger, "Order Cancel Reject write returned: " << ret);
     }

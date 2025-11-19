@@ -204,7 +204,7 @@ bool RefDataService::processRefDataRequest( const SecurityListRequestPtr& securi
         
     int ret = _security_list_dw->write(&securityList);
     
-    if (!ret) {
+    if ( ret != eprosima::fastdds::dds::RETCODE_OK ) {
         LOG4CXX_ERROR(logger, "Security List write returned :" << ret);
     }
 

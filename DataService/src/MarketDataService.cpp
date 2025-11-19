@@ -182,7 +182,7 @@ bool MarketDataService::processMarketDataRequest( const MarketDataRequestPtr& ma
             std::cout << "Publishing Full Market Data Snapshot : " << marketDataSnapshotFullRefresh.Symbol() << std::endl;
             int ret = _market_data_shapshot_full_refresh_dw->write(&marketDataSnapshotFullRefresh);
             
-            if (!ret) {
+            if ( ret != eprosima::fastdds::dds::RETCODE_OK ) {
                 LOG4CXX_ERROR(logger, "Market Data Snapshot Data Write returned : " << ret );
             }
 

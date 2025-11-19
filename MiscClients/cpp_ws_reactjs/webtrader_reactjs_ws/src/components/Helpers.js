@@ -25,7 +25,7 @@ const helpers = {
       } else {
         if ( price != null )
         {
-         return price/tick_size;
+         return parseFloat(price/tick_size).toFixed(2);
         }
       }
     },
@@ -54,6 +54,36 @@ const helpers = {
       }
 
       return price_levels;
+    },
+
+    get_next_cl_order_id: function()
+    {
+      const currentTime = new Date();
+      const secondsSinceMidnight = currentTime.getHours() * 3600 + currentTime.getMinutes() * 60 + currentTime.getSeconds();
+      const year = currentTime.getFullYear();
+      const month = String(currentTime.getMonth() + 1).padStart(2, '0'); // months are 0-based
+      const day = String(currentTime.getDate()).padStart(2, '0');
+      const formattedDate = `${year}${month}${day}`;
+
+      return formattedDate + "_" + secondsSinceMidnight;
+    },
+
+
+    get_order_id: function(instrument_data)
+    {
+      return instrument_data['symbol'] + '_' + this.get_next_cl_order_id();
+    },
+
+    get_fix_formatted_timestamp: function()
+    {
+      const now = new Date();
+      return now.getUTCFullYear().toString().padStart(4, '0') +
+        String(now.getUTCMonth() + 1).padStart(2, '0') +
+        String(now.getUTCDate()).padStart(2, '0') + '-' +
+        String(now.getUTCHours()).padStart(2, '0') + ':' +
+        String(now.getUTCMinutes()).padStart(2, '0') + ':' +
+        String(now.getUTCSeconds()).padStart(2, '0') + '.' +
+        String(now.getUTCMilliseconds()).padStart(3, '0');
     }
 }
 
