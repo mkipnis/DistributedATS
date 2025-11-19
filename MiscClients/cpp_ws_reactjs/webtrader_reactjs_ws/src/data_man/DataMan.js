@@ -66,8 +66,7 @@ export class DataMan {
         let market_data = instrument_market_data[instrument_name];
         this.market_data[instrument_name] = market_data;
       }
-
-      console.log(instrument_market_data)
+      
     } else if ( message_type === "8" )
     {
       const symbol = fix_message['Body']['55']
@@ -166,6 +165,9 @@ export class DataMan {
 
   getPositionsAndMarketData()
   {
+      if ( Object.keys(this.instruments).length == 0 || Object.keys(this.market_data).length == 0 )
+        return undefined;
+
       let position_and_market_data = {};
 
       for (const instrument_name of Object.keys(this.instruments)) {
@@ -178,15 +180,25 @@ export class DataMan {
           instrument['volume'] = parseInt(market_data['volume'])
           instrument['lastTradedPrice'] = market_data['lastTradedPrice']
           instrument['priceChange'] = instrument['lastTradedPrice'] - instrument['openPrice']
-          instrument['bidSide'] = market_data['bids'];
-          instrument['askSide'] = market_data['asks'];
 
           // top level
-          instrument['top_level_bid_price'] = parseInt(instrument['bidSide'][0]['price'])
-          instrument['top_level_bid_size'] = parseInt(instrument['bidSide'][0]['size'])
+          if ( market_data['bids'] != undefined )
+          {
+            instrument['bidSide'] = market_data['bids'];
+            instrument['top_level_bid_price'] = parseInt(instrument['bidSide'][0]['price'])
+            instrument['top_level_bid_size'] = parseInt(instrument['bidSide'][0]['size'])
+          } else {
+            instrument['bidSide'] = [];
+          }
 
-          instrument['top_level_ask_price'] = parseInt(instrument['askSide'][0]['price'])
-          instrument['top_level_ask_size'] = parseInt(instrument['askSide'][0]['size'])
+          if (  market_data['asks'] != undefined )
+          {
+            instrument['askSide'] = market_data['asks'];
+            instrument['top_level_ask_price'] = parseInt(instrument['askSide'][0]['price'])
+            instrument['top_level_ask_size'] = parseInt(instrument['askSide'][0]['size'])
+          } else {
+            instrument['askSide'] = [];
+          }
 
           if ( this.positions[instrument_name] !== undefined )
           {
@@ -196,8 +208,6 @@ export class DataMan {
             instrument['pnl'] = ( instrument['lastTradedPrice'] - instrument["vwap"] ) *
                 instrument["position"];
           }
-
-
         }
 
         if ( this.last_exec_reports[instrument_name] !== undefined )

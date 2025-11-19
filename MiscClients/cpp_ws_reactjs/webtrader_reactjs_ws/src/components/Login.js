@@ -81,7 +81,7 @@ const Login = React.forwardRef ((props, ref) => {
         </Col>
         <Col  style={{width:"50%", margin:"20px"}}>
         <form className="Form-Login">
-        <div style={( props.sessionState != null ) ? {pointerEvents: "none", opacity: "0.4"} : {}}>
+        <div style={( props.loginState.sessionStateCode != 0 ) ? {pointerEvents: "none", opacity: "0.4"} : {}}>
       <label className="label" style={{marginRight: '10px'}} >Username</label>
       <input className="input" style={{marginRight: '10px'}} value={name} onChange={handleName} type="text" />
 

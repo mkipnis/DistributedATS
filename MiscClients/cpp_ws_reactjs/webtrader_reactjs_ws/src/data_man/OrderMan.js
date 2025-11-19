@@ -24,8 +24,6 @@ export class OrderMan {
 
     this.order_trail[order_id].push(execution_report_body)
 
-    console.log(this.order_trail[order_id])
-
     var order_state = {}
     order_state['filled_avg_price'] = parseInt(execution_report_body['6'])
     order_state['filled_quantity'] = parseInt(execution_report_body['14'])

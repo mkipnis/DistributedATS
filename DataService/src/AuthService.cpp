@@ -130,7 +130,7 @@ bool AuthService::authenticate( std::shared_ptr<DistributedATS::SQLiteConnection
         
         int ret = m_logon_dw->write(logon.get());
         
-        if (!ret) {
+        if ( ret != eprosima::fastdds::dds::RETCODE_OK ) {
             LOG4CXX_ERROR(logger, "Error Publishing to DDS :" << ss_logon.str());
         }
         
@@ -146,17 +146,18 @@ bool AuthService::authenticate( std::shared_ptr<DistributedATS::SQLiteConnection
         
         logout.DATS_Source(logon->DATS_Destination());
         logout.DATS_Destination(logon->DATS_Source());
+        logout.DATS_SourceUser("AUTH");
         logout.DATS_DestinationUser(logon->RawData());
         
         logout.Text(textOut);
 
         std::stringstream ss_logout;
         LogoutLogger::log(ss_logout, logout);
-        LOG4CXX_INFO(logger, "Auth Service Logout : %s\n" << ss_logout.str());
+        LOG4CXX_INFO(logger, "Auth Service Logout : " << ss_logout.str());
         
         int ret = m_logout_dw->write(&logout);
         
-        if (!ret) {
+        if ( ret != eprosima::fastdds::dds::RETCODE_OK ) {
             LOG4CXX_ERROR(logger, "Logout write returned error : " << ret );
         }
     }

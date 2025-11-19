@@ -148,7 +148,7 @@ bool OrderMassStatusRequestService::processMassOrderStatusServiceRequest( OrderM
             
                 int ret = _execution_report_dw->write( execReport.get() );
                 
-                if (!ret) {
+                if ( ret != eprosima::fastdds::dds::RETCODE_OK ) {
                     LOG4CXX_ERROR(logger, "MassOrderStatusRequestDataReader/Execution Report write returned :" << ret);
                 }
             

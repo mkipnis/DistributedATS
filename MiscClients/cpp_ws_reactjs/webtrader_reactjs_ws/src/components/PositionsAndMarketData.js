@@ -111,7 +111,7 @@ const [columnDefs, setColumnDefs] = useState([
 
  useEffect(() => {
 
-  console.log("Blotter Data : " + blotterData);
+  console.log("Blotter Data : ", blotterData);
 
 }, [blotterData]);
 

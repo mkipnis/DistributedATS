@@ -127,7 +127,7 @@ int PriceDepthPublisherService::service()
         MarketDataIncrementalRefreshLogger::log(
             ss, chunkedIncrementalMarketDataRefresh);
 
-        int ret = _market_data_incremental_refresh_dw->write(
+        auto ret = _market_data_incremental_refresh_dw->write(
             &chunkedIncrementalMarketDataRefresh);
           
           if (ret != eprosima::fastdds::dds::RETCODE_OK) {

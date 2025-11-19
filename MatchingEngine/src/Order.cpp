@@ -131,7 +131,7 @@ void Order::onCancelRejected(const char *reason)
     LoggerHelper::log_debug<std::stringstream, OrderCancelRejectLogger,
     DistributedATS_OrderCancelReject::OrderCancelReject>(logger,orderCancelReject, "OrderCancelReject");
 
-    int ret = dataWriterContainerPtr_->order_cancel_reject_dw->write(&orderCancelReject);
+    auto ret = dataWriterContainerPtr_->order_cancel_reject_dw->write(&orderCancelReject);
 
     if (ret != eprosima::fastdds::dds::RETCODE_OK) {
         LOG4CXX_ERROR(logger, "OrderCancelReject write returned :" << ret);
@@ -188,7 +188,7 @@ void Order::onReplaceRejected(const char *reason)
     DistributedATS_OrderCancelReject::OrderCancelReject>( logger,
                                                          orderCancelReject, "OrderCancelReject");
 
-    int ret = dataWriterContainerPtr_->order_cancel_reject_dw->write(&orderCancelReject);
+    auto ret = dataWriterContainerPtr_->order_cancel_reject_dw->write(&orderCancelReject);
     
     if (ret != eprosima::fastdds::dds::RETCODE_OK) {
         LOG4CXX_ERROR(logger, "OrdereplaceRejected write returned :" << ret);

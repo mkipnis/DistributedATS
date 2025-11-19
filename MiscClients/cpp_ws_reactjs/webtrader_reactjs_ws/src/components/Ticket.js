@@ -80,8 +80,6 @@ const Ticket = React.forwardRef ((props, ref) => {
     const handleCancellAll = (e) => {
       e.preventDefault();
 
-      setIsTicketing(true);
-
       const mass_cancel_order_id = Helpers.get_next_cl_order_id();
 
       const msg = props.fixSessionHandler.current.composeHeader("q")
@@ -101,7 +99,10 @@ const Ticket = React.forwardRef ((props, ref) => {
       let price = 0;
       let quantity = 0;
 
-      const last_trade_price = props.selectedInstrumentBlotterData['lastTradedPrice']
+      let last_trade_price = props.selectedInstrumentBlotterData['lastTradedPrice']
+      if ( last_trade_price == undefined )
+        last_trade_price = props.selectedInstrumentBlotterData['openPrice']
+
       const ticket_size = props.selectedInstrumentBlotterData['tickSize']
 
       if ( last_trade_price !== undefined )
@@ -136,11 +137,6 @@ const Ticket = React.forwardRef ((props, ref) => {
       }
 
       setTicketSize(quantity);
-
-      if ( props.selectedInstrumentBlotterData['last_exec_report']['Body'] != undefined && lastTicket != undefined )
-      {
-
-      }
 
     }
 

@@ -31,7 +31,6 @@ function App() {
   const dataMan = useRef(null);
 
   const [sessionToken, setSessionToken] = useState(null);
-  const [sessionState, setSessionState] = useState(null);
 
   const [loginState, setLoginState] = useState({
     sessionStateCode: 0,
@@ -46,13 +45,21 @@ function App() {
 
   const [histData, setHistData] = useState([]);
 
+  function getWebSocketUrl() {
+   const host = window.location.hostname; // localhost, docker container, or prod host
+   const port = 9002;                     // your FIX WS port
+   const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+   return `${protocol}://${host}:${port}`;
+  }
+
+
   // =====================================================================================
   // FIX LOGON CALLBACK  (USER PRESSES LOGIN BUTTON)
   // =====================================================================================
   const Logon_callback = useCallback((logonValue) => {
 
     if (!fixClient.current) {
-      const wsUrl = "ws://localhost:9002";
+      const wsUrl = getWebSocketUrl();
 
       // Create FIX handler
       fixSessionHandler.current = new FIXMessageHandler({
@@ -88,6 +95,11 @@ function App() {
               token: msg.session_qualifier,
               username: logonValue.username,
             });
+            return;
+          } else if ( msgType === "5")
+          {
+            console.log("🔐 FIX Logout received", msg);
+            setLoginState({ text: msg?.Body?.["58"] });
             return;
           }
 
@@ -194,7 +206,6 @@ function App() {
           <Login
             loginState={loginState}
             logonCallback={Logon_callback}
-            sessionState={sessionState}
           />
         </nav>
 

@@ -1,5 +1,5 @@
 // © Mike Kipnis - DistributedATS
-// WebSocket FIX Client — reconnecting + heartbeat
+// WebSocket FIX Client — heartbeat only, no auto-reconnect
 
 export class FIXWebSocketClient {
   constructor(url, handler = null) {
@@ -8,13 +8,8 @@ export class FIXWebSocketClient {
 
     this.handler = handler; // handler will send FIX messages
 
-    this.forcedClose = false;
-    this.reconnectAttempts = 0;
-    this.reconnectDelayBase = 1000;
-
     this.heartbeatInterval = 30000;
     this.heartbeatTimer = null;
-    this.reconnectTimer = null;
 
     // Callbacks
     this.onopen = null;
@@ -36,12 +31,7 @@ export class FIXWebSocketClient {
   }
 
   connect() {
-    this.tryConnect();
-  }
-
-  tryConnect() {
-    if (this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING))
-      return;
+    if (this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)) return;
 
     try {
       this.ws = new WebSocket(this.url);
@@ -51,8 +41,7 @@ export class FIXWebSocketClient {
     }
 
     this.ws.onopen = evt => {
-      this.reconnectAttempts = 0;
-      // this.startHeartbeat(); - Don't heartbeat, rely on the socker state
+      this.startHeartbeat();
 
       // Send FIX Logon automatically
       if (this.handler && typeof this.handler.sendLogon === "function") {
@@ -79,32 +68,22 @@ export class FIXWebSocketClient {
     this.ws.onclose = evt => {
       this.stopHeartbeat();
       if (this.onclose) this.onclose(evt);
-      if (!this.forcedClose) this.scheduleReconnect();
+      // No auto-reconnect
     };
   }
 
   disconnect() {
-    this.forcedClose = true;
     this.stopHeartbeat();
     if (this.ws) this.ws.close();
-  }
-
-  scheduleReconnect() {
-    this.reconnectAttempts++;
-    const delay = Math.min(
-      this.reconnectDelayBase * 2 ** (this.reconnectAttempts - 1),
-      30000
-    );
-
-    console.warn(`Reconnecting in ${delay}ms...`);
-    this.reconnectTimer = setTimeout(() => this.tryConnect(), delay);
   }
 
   startHeartbeat() {
     this.stopHeartbeat();
     this.heartbeatTimer = setInterval(() => {
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-        this.sendJSON({ heartbeat: true });
+        if (this.handler && typeof this.handler.sendHeartbeat === "function") {
+          this.handler.sendHeartbeat(this);
+        }
       }
     }, this.heartbeatInterval);
   }
@@ -117,9 +96,9 @@ export class FIXWebSocketClient {
   sendJSON(obj) {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(obj));
+    } else {
+      console.warn("WS send skipped — socket not OPEN");
     }
-    console.warn("WS send skipped — socket not OPEN");
-
     return obj;
   }
 }

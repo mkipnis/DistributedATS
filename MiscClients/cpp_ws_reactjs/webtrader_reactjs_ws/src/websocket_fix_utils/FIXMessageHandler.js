@@ -26,6 +26,13 @@ export class FIXMessageHandler {
     console.log("➡️ Sent FIX Logon");
   }
 
+  sendHeartbeat(client) {
+    const msg = this.composeHeader("0");
+    msg.Body = {};
+    client.sendJSON(msg);
+    console.log("➡️ Sent FIX heartbeat");
+  }
+
   sendSecurityListRequest(client) {
     const msg = this.composeHeader("x");
     msg.Body = { "320": "RequestInstrList1", "559": 4 };
