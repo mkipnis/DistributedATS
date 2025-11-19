@@ -1,0 +1,18 @@
+FROM ghcr.io/mkipnis/distributed_ats:latest
+
+EXPOSE 15001
+EXPOSE 16001
+EXPOSE 17001
+
+COPY FastDDS.xml /usr/local/
+
+ENV DATS_HOME=/usr/local 
+ENV DEPS_HOME=/usr/local 
+ENV DATS_LOG_HOME=/var/log
+ENV LOG_FILE_NAME=default_ats.log
+
+ENV LD_LIBRARY_PATH=/usr/local/lib:/lib 
+ENV LOG4CXX_CONFIGURATION=/usr/local/config/log4cxx.xml 
+ENV FASTDDS_DEFAULT_PROFILES_FILE=/usr/local/FastDDS.xml
+
+ENV BASEDIR_ATS=/usr/local/MiscATS/MultiMatchingEngineATS
