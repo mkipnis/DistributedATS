@@ -151,6 +151,8 @@ services:
 ### Sample Clients
 - [Python3/QuickFIX](https://github.com/mkipnis/DistributedATS/tree/master/MiscClients/python3)
 - [ReactJS and SpringBoot-QuickFIX/J](https://github.com/mkipnis/DistributedATS/tree/master/MiscClients/spring_reactjs)
+- [C++/FIX/JSON/ReactJS](https://github.com/mkipnis/DistributedATS/tree/master/MiscClients/cpp_ws_reactjs)
+- [GoLang/REST](https://github.com/mkipnis/DistributedATS/tree/master/MiscClients/golang_rest_service)
 
 ## High Level Data Flow Overview
 [Overview](https://github.com/mkipnis/DistributedATS/tree/master/docs/HighLevelDesign.md)
