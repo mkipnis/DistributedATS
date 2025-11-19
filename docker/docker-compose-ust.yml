@@ -24,14 +24,28 @@ services:
       - "16001:16001"
     restart: unless-stopped
 
+  fix-ws-proxy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fix-ws-proxy
+    image: ghcr.io/mkipnis/fix_ws_proxy:latest
+    ports:
+      - "9002:9002"
+    environment:
+      LD_LIBRARY_PATH: "/usr/local/lib"
+    volumes:
+      # Optional: override config without rebuilding
+      - ./fixproxy.ini:/usr/local/config/fixproxy.ini:ro
+    restart: unless-stopped
+
   # WebTrader Front-End
   distributed_ats_webtrader:
     container_name: distributed_ats_webtrader
     image: ghcr.io/mkipnis/distributed_ats_webtrader:latest
-    depends_on:
-      - distributed_ats
     volumes:
-      - ./webtrader_logs:/usr/local/tomcat/logs
+      - ./webtrader_logs:/var/log/nginx
     ports:
-      - "8080:8080"
-    restart: unless-stopped
+      - "8080:80"
+    restart: "no"
+
