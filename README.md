@@ -22,12 +22,13 @@ DistributedATS is a [**FIX Protocol-based**](https://www.fixtrading.org) alterna
 ```
 services:
   fast_dds_discovery:
-    container_name: fast_dds_discovery
+    container_name: fast_dds_discovery 
     image: ghcr.io/mkipnis/distributed_ats:latest
     command: >
       bash -c "LD_LIBRARY_PATH=/usr/local/lib /usr/local/bin/fastdds discovery -q 51000"
     ports:
       - "51000:51000"
+    restart: unless-stopped
 
   distributed_ats:
     container_name: distributed_ats
@@ -35,26 +36,36 @@ services:
     depends_on:
       - fast_dds_discovery
     command: >
-      bash -c "cd /usr/local && source ./dats_env.sh &&
-               cd MiscATS &&
-               BASEDIR_ATS=`pwd`/CryptoCLOB python3 start_ats.py --ats CryptoCLOB/crypto_ats.json"
+      bash -c "cd /usr/local && source ./dats_env.sh && cd MiscATS && BASEDIR_ATS=`pwd`/CryptoCLOB python3 start_ats.py --ats CryptoCLOB/crypto_ats.json"
     volumes:
       - ./logs_ats:/usr/local/MiscATS/CryptoCLOB/logs
     ports:
-      # FIX Gateways
       - "15001:15001"
       - "16001:16001"
       - "17001:17001"
+    restart: unless-stopped
 
+  fix-ws-proxy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fix-ws-proxy
+    image: ghcr.io/mkipnis/fix_ws_proxy:latest
+    ports:
+      - "9002:9002"
+    environment:
+      LD_LIBRARY_PATH: "/usr/local/lib"
+    restart: unless-stopped
+
+  # WebTrader Front-End
   distributed_ats_webtrader:
     container_name: distributed_ats_webtrader
     image: ghcr.io/mkipnis/distributed_ats_webtrader:latest
-    depends_on:
-      - distributed_ats
     volumes:
-      - ./webtrader_logs:/usr/local/tomcat/logs
+      - ./webtrader_logs:/var/log/nginx
     ports:
-      - "8080:8080"
+      - "8080:80"
+    restart: "no"
 ```
 
 
@@ -62,6 +73,8 @@ services:
 * Users: UST_TRADER_1, UST_TRADER_2, UST_TRADER_3, UST_TRADER_4 : Password: TEST
 * http://localhost:8080/
 ```
+version: '2'
+
 services:
   fast_dds_discovery:
     container_name: discovery_service
@@ -74,12 +87,11 @@ services:
 
   distributed_ats:
     container_name: distributed_ats
-    image: ghcr.io/mkipnis/dats_ust_clob:latest
+    image: ghcr.io/mkipnis/dats_ust_clob:latest 
     depends_on:
-      - fast_dds_discovery
+      - fast_dds_discovery 
     command: >
-      bash -c "cd /usr/local && source ./dats_env.sh &&
-               cd MiscATS && BASEDIR_ATS=`pwd`/USTreasuryCLOB python3 start_ats.py --ats USTreasuryCLOB/ust_ats.json"
+      bash -c "cd /usr/local && source ./dats_env.sh && cd MiscATS && BASEDIR_ATS=`pwd`/USTreasuryCLOB python3 start_ats.py --ats USTreasuryCLOB/ust_ats.json"
     volumes:
       - ./logs_ats:/usr/local/MiscATS/USTreasuryCLOB/logs
     ports:
@@ -87,17 +99,27 @@ services:
       - "16001:16001"
     restart: unless-stopped
 
+  fix-ws-proxy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fix-ws-proxy
+    image: ghcr.io/mkipnis/fix_ws_proxy:latest
+    ports:
+      - "9002:9002"
+    environment:
+      LD_LIBRARY_PATH: "/usr/local/lib"
+    restart: unless-stopped
+
   # WebTrader Front-End
   distributed_ats_webtrader:
     container_name: distributed_ats_webtrader
     image: ghcr.io/mkipnis/distributed_ats_webtrader:latest
-    depends_on:
-      - distributed_ats
     volumes:
-      - ./webtrader_logs:/usr/local/tomcat/logs
+      - ./webtrader_logs:/var/log/nginx
     ports:
-      - "8080:8080"
-    restart: unless-stopped
+      - "8080:80"
+    restart: "no"
 ```
 
 ### Multi Matching Engine ATS, with each component running in a separate container
