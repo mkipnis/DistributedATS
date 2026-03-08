@@ -17,6 +17,8 @@ DistributedATS is a [**FIX Protocol-based**](https://www.fixtrading.org) alterna
 
 ## Examples
 ### Crypto CLOB/ATS – three matching engines, each handling a subset of instruments.
+![Crypto Trader](docs/Diagrams/crypto_trader.gif)
+
 * Users: CRYPTO_TRADER_1, CRYPTO_TRADER_2, CRYPTO_TRADER_3, CRYPTO_TRADER_4 : Password: TEST
 * http://localhost:8080/
 ```
@@ -70,6 +72,7 @@ services:
 
 
 ### US Treasuries CLOB/ATS – one matching engine that handles hundreds of instruments.
+![UST Trader](docs/Diagrams/ust_trader.gif)
 * Users: UST_TRADER_1, UST_TRADER_2, UST_TRADER_3, UST_TRADER_4 : Password: TEST
 * http://localhost:8080/
 ```
