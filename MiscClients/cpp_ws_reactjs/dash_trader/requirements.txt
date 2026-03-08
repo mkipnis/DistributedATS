@@ -1,0 +1,6 @@
+dash==4.0.0
+dash-bootstrap-components==2.0.4
+dash-bootstrap-templates==2.1.0
+dash-extensions==2.0.4
+dash_ag_grid==33.3.3
+gunicorn
