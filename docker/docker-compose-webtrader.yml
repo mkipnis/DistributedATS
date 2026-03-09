@@ -7,7 +7,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: fix-ws-proxy
-    image: ghcr.io/mkipnis/fix_ws_proxy:latest
+    image: ianngulube/fix_ws_proxy:latest
     ports:
       - "9002:9002"
     environment:
@@ -17,7 +17,7 @@ services:
   # WebTrader Front-End
   distributed_ats_webtrader:
     container_name: distributed_ats_webtrader
-    image: ghcr.io/mkipnis/distributed_ats_webtrader:latest
+    image: ianngulube/distributed_ats_webtrader:latest
     volumes:
       - ./webtrader_logs:/var/log/nginx
     ports:

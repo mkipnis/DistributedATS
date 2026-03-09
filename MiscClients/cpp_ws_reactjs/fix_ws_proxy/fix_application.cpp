@@ -48,7 +48,7 @@ void fix_application::toAdmin(FIX::Message& message, const FIX::SessionID& sessi
 }
 
 
-void fix_application::fromAdmin(const FIX::Message& message, const FIX::SessionID& sessionId)  throw(FIX::FieldNotFound, FIX::IncorrectDataFormat, FIX::IncorrectTagValue, FIX::RejectLogon)
+void fix_application::fromAdmin(const FIX::Message& message, const FIX::SessionID& sessionId)  noexcept(false)
 {
     // Convert FIX message to JSON
       auto json_obj = distributed_ats::fix_json::fix_to_json(message);
@@ -74,7 +74,7 @@ void fix_application::fromAdmin(const FIX::Message& message, const FIX::SessionI
 }
 
 
-void fix_application::fromApp(const FIX::Message& message, const FIX::SessionID& sessionId)  throw(FIX::FieldNotFound, FIX::IncorrectDataFormat, FIX::IncorrectTagValue, FIX::UnsupportedMessageType)
+void fix_application::fromApp(const FIX::Message& message, const FIX::SessionID& sessionId)  noexcept(false)
 {
     // Convert FIX message to JSON
        auto json_obj = distributed_ats::fix_json::fix_to_json(message);

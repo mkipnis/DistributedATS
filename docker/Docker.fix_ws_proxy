@@ -1,4 +1,4 @@
-FROM ghcr.io/mkipnis/distributed_ats:latest
+FROM ianngulube/distributed_ats:latest
 
 # Add /usr/local/lib to library path
 ENV LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH}"
@@ -9,8 +9,10 @@ RUN mkdir -p /usr/local/config
 # Copy fixproxy.ini into container config directory
 COPY fixproxy.ini /usr/local/config/
 
+COPY FIX44.xml /usr/local/config
+
 # Expose the port
 EXPOSE 9002
 
 # Set entrypoint
-ENTRYPOINT ["/usr/local/bin/fix_ws_proxy", "--fix_client_config", "/usr/local/config/fixproxy.ini"]
+ENTRYPOINT ["/usr/local/bin/fix_ws_proxy", "--fix_client_config", "/usr/local/config/fixproxy.ini","/usr/local/config/FIX44.xml"]

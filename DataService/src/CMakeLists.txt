@@ -34,7 +34,8 @@ target_link_libraries(DataService
     Boost::program_options
     fastcdr
     fastdds
-    sqlite3
+    pqxx
+        pq
 )
 
 set(CMAKE_XCODE_ATTRIBUTE_OTHER_CODE_SIGN_FLAGS "-o linker-signed")

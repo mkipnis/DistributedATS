@@ -26,18 +26,12 @@ public:
     void toAdmin(FIX::Message& message, const FIX::SessionID& sessionID) override;
     
     void fromAdmin(const FIX::Message &,
-                 const FIX::SessionID &) throw(FIX::FieldNotFound,
-                                               FIX::IncorrectDataFormat,
-                                               FIX::IncorrectTagValue,
-                                               FIX::RejectLogon) override;
+                 const FIX::SessionID &) noexcept(false) override;
     void fromApp(const FIX::Message &message,
-          const FIX::SessionID &sessionID) throw(FIX::FieldNotFound,
-                                                 FIX::IncorrectDataFormat,
-                                                 FIX::IncorrectTagValue,
-                                                 FIX::UnsupportedMessageType) override;
+          const FIX::SessionID &sessionID) noexcept(false) override;
 
 
-    void toApp(FIX::Message&, const FIX::SessionID&) throw(FIX::DoNotSend) override {};
+    void toApp(FIX::Message&, const FIX::SessionID&) noexcept(false) override {};
 
 private:
     std::weak_ptr<Session> _ws_session;

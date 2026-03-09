@@ -5,7 +5,7 @@ services:
   # DDS Discovery
   fast_dds_discovery:
     container_name: fast_dds_discovery
-    image: ghcr.io/mkipnis/distributed_ats:latest
+    image: ianngulube/distributed_ats:latest
     command: >
       bash -c "LD_LIBRARY_PATH=/usr/local/lib /usr/local/bin/fastdds discovery -q 51000"
     ports:
@@ -16,7 +16,7 @@ services:
   # FIX Gateways
   fix_gateway_1:
     container_name: distributed_ats
-    image: ghcr.io/mkipnis/multi_matching_engine_ats:latest
+    image: ianngulube/multi_matching_engine_ats:latest
     depends_on:
       - fast_dds_discovery
     command: >
@@ -31,7 +31,7 @@ services:
 
   fix_gateway_2:
     container_name: fix_gateway_2
-    image: ghcr.io/mkipnis/multi_matching_engine_ats:latest
+    image: ianngulube/multi_matching_engine_ats:latest
     depends_on:
       - fast_dds_discovery
     command: >
@@ -48,7 +48,7 @@ services:
   # Data Services
   data_service_a:
     container_name: data_service_a
-    image: ghcr.io/mkipnis/multi_matching_engine_ats:latest
+    image: ianngulube/multi_matching_engine_ats:latest
     depends_on:
       - fast_dds_discovery
     command: >
@@ -61,7 +61,7 @@ services:
 
   data_service_b:
     container_name: data_service_b
-    image: ghcr.io/mkipnis/multi_matching_engine_ats:latest
+    image: ianngulube/multi_matching_engine_ats:latest
     depends_on:
       - fast_dds_discovery
     command: >
@@ -76,7 +76,7 @@ services:
   # Matching Engines
   matching_engine_market_y:
     container_name: market_y
-    image: ghcr.io/mkipnis/multi_matching_engine_ats:latest
+    image: ianngulube/multi_matching_engine_ats:latest
     depends_on:
       - fast_dds_discovery
     command: >
@@ -89,7 +89,7 @@ services:
 
   matching_engine_market_z:
     container_name: market_z
-    image: ghcr.io/mkipnis/multi_matching_engine_ats:latest
+    image: ianngulube/multi_matching_engine_ats:latest
     depends_on:
       - fast_dds_discovery
     command: >

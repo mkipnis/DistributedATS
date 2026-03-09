@@ -72,10 +72,10 @@ namespace LatencyTest
             void onLogon( const FIX::SessionID& sessionID );
             void onLogout( const FIX::SessionID& sessionID );
             void toAdmin( FIX::Message&, const FIX::SessionID& );
-            void toApp( FIX::Message&, const FIX::SessionID& ) throw( FIX::DoNotSend );
-            void fromAdmin( const FIX::Message&, const FIX::SessionID& ) throw( FIX::FieldNotFound, FIX::IncorrectDataFormat, FIX::IncorrectTagValue, FIX::RejectLogon ) {};
+            void toApp( FIX::Message&, const FIX::SessionID& ) noexcept(false);
+            void fromAdmin( const FIX::Message&, const FIX::SessionID& ) noexcept(false) {};
 
-            void fromApp( const FIX::Message& message, const FIX::SessionID& sessionID ) throw( FIX::FieldNotFound, FIX::IncorrectDataFormat, FIX::IncorrectTagValue, FIX::UnsupportedMessageType );
+            void fromApp( const FIX::Message& message, const FIX::SessionID& sessionID ) noexcept(false);
             void onMessage( const FIX44::ExecutionReport&, const FIX::SessionID& );
             void onMessage( const FIX44::MarketDataIncrementalRefresh&, const FIX::SessionID&);
 

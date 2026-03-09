@@ -87,8 +87,8 @@ void AuthService::createLogoutTopic()
 
 int AuthService::service (void)
 {
-    std::shared_ptr<DistributedATS::SQLiteConnection> sqlite_connection_ptr = std::make_shared<DistributedATS::SQLiteConnection>( m_dbConnectionID );
-    
+    std::shared_ptr<DistributedATS::PostgresConnection> sqlite_connection_ptr = std::make_shared<DistributedATS::PostgresConnection>( m_dbConnectionID );
+
 	while(_is_running)
 	{
         if ( !sqlite_connection_ptr->connected() )
@@ -112,7 +112,7 @@ int AuthService::service (void)
 }
 
 
-bool AuthService::authenticate( std::shared_ptr<DistributedATS::SQLiteConnection>& sqliteConnectionPtr,  std::shared_ptr<DistributedATS_Logon::Logon>& logon )
+bool AuthService::authenticate( std::shared_ptr<DistributedATS::PostgresConnection>& sqliteConnectionPtr,  std::shared_ptr<DistributedATS_Logon::Logon>& logon )
 {
     std::string textOut = "";
     
@@ -167,14 +167,14 @@ bool AuthService::authenticate( std::shared_ptr<DistributedATS::SQLiteConnection
 
 
 
-bool AuthService::authenticate( std::shared_ptr<DistributedATS::SQLiteConnection>& sqliteConnect, const std::string& username, const std::string& password, std::string& textOut )
+bool AuthService::authenticate( std::shared_ptr<DistributedATS::PostgresConnection>& sqliteConnect, const std::string& username, const std::string& password, std::string& textOut )
 {
     std::stringstream auth_query_stream;
     
     auth_query_stream << "select * from user_code where user_name='" << username <<
                     "' and json_extract(properties, \"$.password\")='" << password << "'";
     
-    DistributedATS::SQLiteQuery auth_query(auth_query_stream.str());
+    DistributedATS::PostgresQuery auth_query(auth_query_stream.str());
     
     sqliteConnect->execute(auth_query);
     

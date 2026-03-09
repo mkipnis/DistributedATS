@@ -3,7 +3,7 @@ version: '3'
 services:
   fast_dds_discovery:
     container_name: fast_dds_discovery 
-    image: ghcr.io/mkipnis/distributed_ats:latest
+    image: ianngulube/distributed_ats:latest
     command: >
       bash -c "LD_LIBRARY_PATH=/usr/local/lib /usr/local/bin/fastdds discovery -q 51000"
     ports:
@@ -12,7 +12,7 @@ services:
 
   distributed_ats:
     container_name: distributed_ats
-    image: ghcr.io/mkipnis/dats_crypto_clob:latest
+    image: ianngulube/dats_crypto_clob:latest
     depends_on:
       - fast_dds_discovery
     command: >
@@ -30,7 +30,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: fix-ws-proxy
-    image: ghcr.io/mkipnis/fix_ws_proxy:latest
+    image: ianngulube/fix_ws_proxy:latest
     ports:
       - "9002:9002"
     environment:
@@ -40,7 +40,7 @@ services:
   # WebTrader Front-End
   distributed_ats_webtrader:
     container_name: distributed_ats_webtrader
-    image: ghcr.io/mkipnis/distributed_ats_webtrader:latest
+    image: ianngulube/distributed_ats_webtrader:latest
     volumes:
       - ./webtrader_logs:/var/log/nginx
     ports:

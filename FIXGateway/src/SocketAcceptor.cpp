@@ -38,13 +38,13 @@ using namespace FIX;
 namespace DistributedATS {
 SocketAcceptor::SocketAcceptor(
     DistributedATS::DATSApplication &application, MessageStoreFactory &factory,
-    const SessionSettings &settings) throw(ConfigError)
+    const SessionSettings &settings) noexcept(false)
     : Acceptor(application, factory, settings), m_pServer(0) {}
 
 SocketAcceptor::SocketAcceptor(
     DistributedATS::DATSApplication &application, MessageStoreFactory &factory,
     const SessionSettings &settings, FIX::LogFactory &logFactory/*,
-    std::ofstream *dds_input_stream_log_file*/) throw(ConfigError)
+    std::ofstream *dds_input_stream_log_file*/) noexcept(false)
     : Acceptor(application, factory, settings, logFactory), m_pServer(0) {}
 
 SocketAcceptor::~SocketAcceptor() {
@@ -53,7 +53,7 @@ SocketAcceptor::~SocketAcceptor() {
     delete iter->second;
 }
 
-void SocketAcceptor::onConfigure(const SessionSettings &s) throw(ConfigError) {
+void SocketAcceptor::onConfigure(const SessionSettings &s) noexcept(false) {
   std::set<SessionID> sessions = s.getSessions();
   std::set<SessionID>::iterator i;
   for (i = sessions.begin(); i != sessions.end(); ++i) {
@@ -66,8 +66,7 @@ void SocketAcceptor::onConfigure(const SessionSettings &s) throw(ConfigError) {
   }
 }
 
-void SocketAcceptor::onInitialize(const SessionSettings &s) throw(
-    RuntimeError) {
+void SocketAcceptor::onInitialize(const SessionSettings &s) noexcept(false) {
   short port = 0;
 
   try {
@@ -99,9 +98,7 @@ void SocketAcceptor::onInitialize(const SessionSettings &s) throw(
       m_pServer->add(port, reuseAddress, noDelay, sendBufSize, rcvBufSize);
     }
   } catch (SocketException &e) {
-    throw RuntimeError("Unable to create, bind, or listen to port " +
-                       IntConvertor::convert((unsigned short)port) + " (" +
-                       e.what() + ")");
+noexcept(false);
   }
 }
 

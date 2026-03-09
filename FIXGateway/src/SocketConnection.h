@@ -94,7 +94,7 @@ public:
 private:
   typedef std::deque<std::string, ALLOCATOR<std::string>> Queue;
 
-  void readFromSocket() throw(SocketRecvFailed);
+  void readFromSocket() noexcept(false);
   bool readMessage(std::string &msg);
   void readMessages(SocketMonitor &s);
 

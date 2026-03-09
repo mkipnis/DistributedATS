@@ -54,7 +54,7 @@ MarketDataService::MarketDataService( std::shared_ptr<distributed_ats_utils::bas
     
     _incrementalRefreshMapPtr = std::make_shared<IncrementalRefreshMap>();
     
-    m_sqliteConnection.reset( new DistributedATS::SQLiteConnection(dbConnectionID) );
+    m_sqliteConnection.reset( new DistributedATS::PostgresConnection(dbConnectionID) );
     
     _markat_data_request_queue_ptr = std::make_shared<MarketDataRequestQueue>();
 
@@ -74,7 +74,7 @@ MarketDataService::~MarketDataService() {
 void MarketDataService::initialize()
 {
 
-    DistributedATS::SQLiteQuery query("select i.instrument_name, m.market_name, json_extract(hp.properties,\"$.open\") as open_price " \
+    DistributedATS::PostgresQuery query("select i.instrument_name, m.market_name, json_extract(hp.properties,\"$.open\") as open_price " \
                                " from " \
                                " hist_price hp, " \
                                " instrument i, " \

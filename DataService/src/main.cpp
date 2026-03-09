@@ -31,7 +31,7 @@
 #include "RefDataService.h"
 #include "MarketDataService.h"
 #include "OrderMassStatusRequestService.h"
-#include "SQLiteConnection.hpp"
+#include "PgConnection.hpp"
 #include <memory>
 #include <quickfix/FixValues.h>
 #include <Common.h>
@@ -110,17 +110,26 @@ int main(int argc, char* argv[] )
         basic_domain_participant_ptr->create_subscriber();
         basic_domain_participant_ptr->create_publisher();
 
-        FIX::DatabaseConnectionID databaseConnectionID(std::string(base_dir_ats) + "/data/" + database_file,"", "", "", 0);
-        
-        std::shared_ptr<DistributedATS::SQLiteConnection> sql_connection =
-            std::make_shared<DistributedATS::SQLiteConnection>( databaseConnectionID );
+        //FIX::DatabaseConnectionID databaseConnectionID(std::string(base_dir_ats) + "/data/" + database_file,"", "", "", 0);
+        //string connectionString = "dbname=distributed_ats user=postgres password=secret host=localhost port=5430";
+        /*
+        const std::string &database,
+      const std::string &user,
+      const std::string &password,
+      const std::string &host,
+      short port
+         */
+        FIX::DatabaseConnectionID databaseConnectionID("distributed_ats","postgres","secret","localhost",5430);
+        std::shared_ptr<DistributedATS::PostgresConnection> sql_connection =
+            std::make_shared<DistributedATS::PostgresConnection>( databaseConnectionID );
         
         if ( !sql_connection->connected() )
         {
             LOG4CXX_ERROR(logger, "Data Service is not connected to the database");
             return -1;
-        };
-        
+        }
+        LOG4CXX_INFO(logger, "Data Service is connected to the database");
+
         auto authServicePtr =
                 std::make_shared<DistributedATS::AuthService>(basic_domain_participant_ptr, databaseConnectionID );
         

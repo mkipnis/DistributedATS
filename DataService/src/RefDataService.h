@@ -32,7 +32,7 @@
 
 #include <quickfix/Exceptions.h>
 #include <quickfix/DatabaseConnectionID.h>
-#include "SQLiteConnection.hpp"
+#include "PgConnection.hpp"
 
 #include <iostream>
 
@@ -122,7 +122,7 @@ protected:
     
 private:
 
-    std::shared_ptr<DistributedATS::SQLiteConnection> m_sqliteConnection;
+    std::shared_ptr<DistributedATS::PostgresConnection> m_sqliteConnection;
     std::shared_ptr<distributed_ats_utils::basic_domain_participant> _basic_domain_participant_ptr;
     
     SecurityListRequestQueuePtr _security_list_queue_ptr;

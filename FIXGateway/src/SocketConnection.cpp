@@ -210,10 +210,10 @@ bool SocketConnection::isValidSession() {
   return !(m_sessions.find(sessionID) == m_sessions.end());
 }
 
-void SocketConnection::readFromSocket() throw(SocketRecvFailed) {
+void SocketConnection::readFromSocket() noexcept(false) {
   ssize_t size = socket_recv(m_socket, m_buffer, sizeof(m_buffer));
   if (size <= 0)
-    throw SocketRecvFailed(size);
+    noexcept(false);
   m_parser.addToStream(m_buffer, size);
 }
 

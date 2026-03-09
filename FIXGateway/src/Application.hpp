@@ -59,18 +59,12 @@ class DATSApplication : public FIX::Application, public FIX::MessageCracker {
   void onLogon(const FIX::SessionID &sessionID);
   void onLogout(const FIX::SessionID &sessionID);
   void toAdmin(FIX::Message &, const FIX::SessionID &);
-  void toApp(FIX::Message &, const FIX::SessionID &) throw(FIX::DoNotSend);
+  void toApp(FIX::Message &, const FIX::SessionID &) noexcept(false);
   void fromAdmin(const FIX::Message &,
-                 const FIX::SessionID &) throw(FIX::FieldNotFound,
-                                               FIX::IncorrectDataFormat,
-                                               FIX::IncorrectTagValue,
-                                               FIX::RejectLogon);
+                 const FIX::SessionID &) noexcept(false);
   void
   fromApp(const FIX::Message &message,
-          const FIX::SessionID &sessionID) throw(FIX::FieldNotFound,
-                                                 FIX::IncorrectDataFormat,
-                                                 FIX::IncorrectTagValue,
-                                                 FIX::UnsupportedMessageType);
+          const FIX::SessionID &sessionID) noexcept(false);
 
   void onMessage(const FIX44::NewOrderSingle &, const FIX::SessionID &);
   void onMessage(const FIX44::OrderCancelRequest &, const FIX::SessionID &);

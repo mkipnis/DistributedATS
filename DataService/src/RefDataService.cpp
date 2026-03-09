@@ -50,7 +50,7 @@ RefDataService::RefDataService(
         const FIX::DatabaseConnectionID& dbConnectionID)
 {
     _basic_domain_participant_ptr = basic_domain_participant_ptr;
-    m_sqliteConnection = std::make_shared<DistributedATS::SQLiteConnection>(dbConnectionID);
+    m_sqliteConnection = std::make_shared<DistributedATS::PostgresConnection>(dbConnectionID);
     
     m_pInstrumentMapPtr = std::make_shared< InstrumentMap >();
     m_pUserInstruments = std::make_shared< UserInstrumentList >();
@@ -83,7 +83,7 @@ void RefDataService::initialize()
 
 void RefDataService::populateUserGroupInstrumentMap()
 {
-    DistributedATS::SQLiteQuery sqliteQuery("select i.instrument_name, i.properties, u.user_name, m.market_name from "
+    DistributedATS::PostgresQuery postgres_query("select i.instrument_name, i.properties, u.user_name, m.market_name from "
                                " user_code u, " \
                                " instrument i, " \
                                " market m, " \
@@ -95,16 +95,18 @@ void RefDataService::populateUserGroupInstrumentMap()
                                " im_map.market_name=ugm_map.market_name");
 
     LOG4CXX_INFO(logger, "Populating security list : ");
-    LOG4CXX_INFO(logger, "Query : " + sqliteQuery.getQuery());
+    LOG4CXX_INFO(logger, "Query : " + postgres_query.getQuery());
         
-    m_sqliteConnection->execute(sqliteQuery);
+    m_sqliteConnection->execute(postgres_query);
         
-    for ( int instrument_index =0; instrument_index<sqliteQuery.rows(); instrument_index++)
+    for ( int instrument_index =0; instrument_index<postgres_query.rows(); instrument_index++)
     {
-        std::string symbol = sqliteQuery.getValue(instrument_index,0);
-        std::string properties = sqliteQuery.getValue(instrument_index,1);
-        std::string username = sqliteQuery.getValue(instrument_index,2);
-        std::string market = sqliteQuery.getValue(instrument_index,3);
+        std::string symbol = postgres_query.getValue(instrument_index,0);
+        std::string properties = postgres_query.getValue(instrument_index,1);
+        std::string username = postgres_query.getValue(instrument_index,2);
+        std::string market = postgres_query.getValue(instrument_index,3);
+
+        LOG4CXX_INFO(logger, std::string("Symbol: ") + symbol + " Properties: " + properties + " Username: " + username + " Market: " + market);
         
         auto instrumentPtr = m_pInstrumentMapPtr->find(symbol);
         
@@ -123,6 +125,8 @@ void RefDataService::populateUserGroupInstrumentMap()
         
         instrumentList->second->emplace_back(instrumentPtr->second);
     }
+
+    LOG4CXX_INFO(logger, "After iteration ********************************");
 }
 
 

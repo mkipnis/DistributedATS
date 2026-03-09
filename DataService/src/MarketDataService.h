@@ -38,7 +38,7 @@
 #include <MarketDataSnapshotFullRefresh.hpp>
 
 #include "RefDataService.h"
-#include "SQLiteConnection.hpp"
+#include "PgConnection.hpp"
 
 #include <Common.h>
 
@@ -71,7 +71,7 @@ public:
 private:
     IncrementalRefreshMapPtr _incrementalRefreshMapPtr;
     
-    std::shared_ptr<DistributedATS::SQLiteConnection> m_sqliteConnection;
+    std::shared_ptr<DistributedATS::PostgresConnection> m_sqliteConnection;
     std::shared_ptr<distributed_ats_utils::basic_domain_participant> _basic_domain_participant_ptr;
     
     distributed_ats_utils::data_writer_ptr _market_data_shapshot_full_refresh_dw;

@@ -32,7 +32,7 @@
 #include <thread>
 
 #include <quickfix/DatabaseConnectionID.h>
-#include "SQLiteConnection.hpp"
+#include "PgConnection.hpp"
 #include <iostream>
 #include <BasicDomainParticipant.h>
 #include <Logon.hpp>
@@ -63,10 +63,10 @@ public:
 private:
     
     bool authenticate(
-                      std::shared_ptr<DistributedATS::SQLiteConnection>& sqliteConnect,
+                      std::shared_ptr<DistributedATS::PostgresConnection>& sqliteConnect,
                       std::shared_ptr<DistributedATS_Logon::Logon>& logonPtr );
 
-    bool authenticate( std::shared_ptr<DistributedATS::SQLiteConnection>& sqliteConnect,
+    bool authenticate( std::shared_ptr<DistributedATS::PostgresConnection>& sqliteConnect,
                       const std::string& username_in,
                       const std::string& password_in,
                       std::string& textOut );

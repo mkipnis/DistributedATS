@@ -18,7 +18,7 @@
                     <initialPeersList>
                         <locator>
                             <tcpv4>
-                                <address>127.0.0.1</address>
+                                <address>localhost</address>
                                 <physical_port>51000</physical_port>
                             </tcpv4>
                         </locator>

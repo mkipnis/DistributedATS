@@ -101,13 +101,13 @@ void Application::onLogout( const FIX::SessionID& sessionID )
 }
 
 void Application::fromApp( const FIX::Message& message, const FIX::SessionID& sessionID )
-throw( FIX::FieldNotFound, FIX::IncorrectDataFormat, FIX::IncorrectTagValue, FIX::UnsupportedMessageType )
+noexcept(false)
 {
   crack( message, sessionID );
 }
 
 void Application::toApp( FIX::Message& message, const FIX::SessionID& sessionID )
-throw( FIX::DoNotSend )
+noexcept(false)
 {
   try
   {

@@ -4,7 +4,7 @@ project(DistributedATS)
 
 set(CMAKE_PREFIX_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -13,6 +13,13 @@ find_package( DDS REQUIRED )
 find_package( log4cxx REQUIRED )
 find_package( quickfix REQUIRED )
 find_package( liquibook REQUIRED )
+
+# PostgreSQL
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(PQXX REQUIRED libpqxx)
+
+include_directories(${PQXX_INCLUDE_DIRS})
+link_directories(${PQXX_LIBRARY_DIRS})
 
 set(DDS_INCLUDE_DIR "${DDS_INSTALL_PREFIX}/include")
 set(DDS_LIBRARY_DIR "${DDS_INSTALL_PREFIX}/lib")

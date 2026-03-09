@@ -12,5 +12,5 @@ mvn install
 cp target/WebTraderRest-0.0.1-SNAPSHOT.war $DOCKER_DIR
 cd $DOCKER_DIR
 
-docker build -t ghcr.io/mkipnis/distributed_ats_webtrader:latest -f Docker.WebTrader .
-docker push ghcr.io/mkipnis/distributed_ats_webtrader:latest
+docker build -t ianngulube/distributed_ats_webtrader:latest -f Docker.WebTrader .
+docker push ianngulube/distributed_ats_webtrader:latest

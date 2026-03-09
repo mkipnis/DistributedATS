@@ -1,4 +1,4 @@
-FROM ghcr.io/mkipnis/distributed_ats:latest
+FROM ianngulube/distributed_ats:latest
 
 EXPOSE 15001
 EXPOSE 16001
