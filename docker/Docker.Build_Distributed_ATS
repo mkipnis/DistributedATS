@@ -1,15 +1,34 @@
 FROM ianngulube/distributed_ats_deps AS dats_builder
 
-RUN apt-get update
-RUN apt install -y vim cmake curl build-essential libapr1-dev libaprutil1-dev git libboost-all-dev libtool libasio-dev libtinyxml2-dev zip python3-pip libpqxx-dev libpq-dev sqlite3 libsqlite3-dev
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        build-essential \
+        cmake \
+        git \
+        libpqxx-dev \
+        libpq-dev \
+        libboost-all-dev \
+        libasio-dev \
+        libtinyxml2-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN pip install psutil --break-system-packages
 
-ADD build_distributed_ats.sh /
-RUN /build_distributed_ats.sh
+COPY build_distributed_ats.sh /
+RUN chmod +x /build_distributed_ats.sh && /build_distributed_ats.sh
 
+# ------------------- Runtime Image -------------------
 FROM ubuntu:latest
+
 RUN apt-get update && apt-get install --no-install-recommends -y \
-    libboost-all-dev vim python3-pip libapr1-dev libaprutil1-dev libtinyxml2-dev \
- && apt-get clean && rm -rf /var/lib/apt/lists/*
+        libboost-all-dev \
+        vim \
+        python3-pip \
+        libapr1-dev \
+        libaprutil1-dev \
+        libtinyxml2-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY --from=dats_builder /usr/local /usr/local
+
+RUN ldconfig

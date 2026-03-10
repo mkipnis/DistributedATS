@@ -1,15 +1,52 @@
+# ---------- Build Stage ----------
 FROM ubuntu:latest AS dats_dependency_builder
 
-RUN apt-get update
-RUN apt install -y vim cmake curl build-essential libapr1-dev libaprutil1-dev git libboost-all-dev libpqxx-dev libpq-dev libtool libasio-dev libtinyxml2-dev zip python3-pip sqlite3 libsqlite3-dev
-RUN pip install psutil --break-system-packages
+ENV DEBIAN_FRONTEND=noninteractive
 
-ADD build_dependences.sh /
-RUN /build_dependences.sh
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        vim \
+        cmake \
+        curl \
+        build-essential \
+        libapr1-dev \
+        libaprutil1-dev \
+        git \
+        libboost-all-dev \
+        libpqxx-dev \
+        libpq-dev \
+        libtool \
+        libasio-dev \
+        libtinyxml2-dev \
+        zip \
+        python3-pip \
+        sqlite3 \
+        libsqlite3-dev \
+    && rm -rf /var/lib/apt/lists/*
 
+RUN pip3 install psutil --break-system-packages
+
+COPY build_dependences.sh /
+RUN chmod +x /build_dependences.sh && /build_dependences.sh
+
+
+# ---------- Runtime Stage ----------
 FROM ubuntu:latest
-RUN apt-get update && apt-get install --no-install-recommends -y \
-    libboost-all-dev vim python3-pip libapr1-dev libaprutil1-dev libtinyxml2-dev \
- && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        libboost-all-dev \
+        libpqxx-dev \
+        libpq-dev \
+        libapr1-dev \
+        libaprutil1-dev \
+        libtinyxml2-dev \
+        python3-pip \
+        vim \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY --from=dats_dependency_builder /usr/local /usr/local
+
+RUN ldconfig
