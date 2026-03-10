@@ -1,5 +1,6 @@
--- Connect to your PostgreSQL DB before running
--- Example: psql "postgresql://postgres:secret@localhost:5430/distributed_ats"
+#!/bin/sh
+# Connect to your PostgreSQL DB before running
+psql "postgresql://postgres:secret@localhost:5430/distributed_ats"<<EOF
 
 -- User Groups
 INSERT INTO user_group (user_group, properties) VALUES
@@ -151,3 +152,4 @@ INSERT INTO hist_price (instrument_name, business_date, properties) VALUES
   ('LTC-JPY', 20210401, '{"open":401,"low":400,"high":500,"last":450,"volume":700000}'::jsonb)
 ON CONFLICT (instrument_name, business_date) DO UPDATE
 SET properties = EXCLUDED.properties;
+EOF
