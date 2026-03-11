@@ -18,7 +18,10 @@ build_and_install() {
 
     cmake .. \
       -DCMAKE_INSTALL_PREFIX="$INSTALL_DIR" \
-      -DCMAKE_PREFIX_PATH="$INSTALL_DIR"
+      -DCMAKE_PREFIX_PATH="$INSTALL_DIR" \
+      -DCMAKE_CXX_STANDARD=17 \
+      -DPQXX_INCLUDE_DIR="/usr/local/include" \
+      -DPQXX_LIBRARY_DIR="/usr/local/lib"
 
     cmake --build . --target install -j$(nproc)
 
