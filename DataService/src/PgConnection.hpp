@@ -110,7 +110,7 @@ namespace DistributedATS {
             try {
                 std::string conn_str =
                         "dbname=" + m_database.getDatabase() +
-                        " user=postgres password=postgres host=localhost port=5430";
+                        " user=postgres password=postgres host=db port=5430";
 
                 m_connection = new pqxx::connection(conn_str);
             } catch (const std::exception &e) {
