@@ -32,6 +32,9 @@
 #include <vector>
 
 #include <quickfix/DatabaseConnectionID.h>
+#include <log4cxx/logger.h>
+#include <log4cxx/basicconfigurator.h>
+#include <BasicDomainParticipant.h>
 
 #include <pqxx/pqxx>
 #include <iostream>
