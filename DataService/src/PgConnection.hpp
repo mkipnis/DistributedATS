@@ -114,7 +114,7 @@ namespace DistributedATS {
 
                 m_connection = new pqxx::connection(conn_str);
             } catch (const std::exception &e) {
-                std::cerr << "PostgreSQL connection failed: "
+                std::cerr << "*** PostgreSQL connection failed: "
                         << e.what() << std::endl;
                 LOG4CXX_ERROR(logger, std::string("Postgres connection failed: ") + e.what());
             }
