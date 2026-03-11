@@ -106,6 +106,7 @@ namespace DistributedATS {
     private:
         void connect() {
             LOG4CXX_INFO(logger, "Attempting to connect");
+            std::cout << "Attempting to connect"<<std::endl;
             try {
                 std::string conn_str =
                         "dbname=" + m_database.getDatabase() +
