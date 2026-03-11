@@ -45,6 +45,7 @@ namespace DistributedATS {
         explicit PostgresQuery(const std::string &query)
             : m_query(query) {
         }
+
         bool execute(pqxx::connection *conn) {
             try {
                 pqxx::work txn(*conn);
@@ -77,8 +78,7 @@ namespace DistributedATS {
             return m_rows[row][column];
         }
 
-        std::string getQuery()
-        {
+        std::string getQuery() {
             return m_query;
         }
 
@@ -106,11 +106,14 @@ namespace DistributedATS {
     private:
         void connect() {
             LOG4CXX_ERROR(logger, "Attempting to connect");
-            std::cout << "Attempting to connect"<< std::endl;
+            std::cout << "Attempting to connect" << std::endl;
             try {
                 std::string conn_str =
                         "dbname=" + m_database.getDatabase() +
-                        " user=postgres password=postgres host=db port=5430";
+                        " user=" + m_database.getUser() +
+                        " password=" + m_database.getPassword() +
+                        " host=" + m_database.getHost() +
+                        " port=" + std::to_string(m_database.getPort());
 
                 m_connection = new pqxx::connection(conn_str);
             } catch (const std::exception &e) {
