@@ -105,8 +105,8 @@ namespace DistributedATS {
 
     private:
         void connect() {
-            LOG4CXX_INFO(logger, "Attempting to connect");
-            std::cout << "Attempting to connect"<<std::endl;
+            LOG4CXX_ERROR(logger, "Attempting to connect");
+            std::cout << "Attempting to connect"<< std::endl;
             try {
                 std::string conn_str =
                         "dbname=" + m_database.getDatabase() +
@@ -114,7 +114,7 @@ namespace DistributedATS {
 
                 m_connection = new pqxx::connection(conn_str);
             } catch (const std::exception &e) {
-                std::cerr << "PostgreSQL connection failed: "
+                std::cout << " ### PostgreSQL connection failed: "
                         << e.what() << std::endl;
                 LOG4CXX_ERROR(logger, std::string("*** Postgres connection failed: ") + e.what());
             }
