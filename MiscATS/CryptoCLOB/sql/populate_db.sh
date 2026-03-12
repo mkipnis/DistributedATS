@@ -1,6 +1,6 @@
 #!/bin/sh
 # Connect to your PostgreSQL DB before running
-psql "postgresql://postgres:secret@localhost:5430/distributed_ats"<<EOF
+psql "postgresql://postgres:postgres@localhost:5432/distributed_ats"<<EOF
 
 -- User Groups
 INSERT INTO user_group (user_group, properties) VALUES

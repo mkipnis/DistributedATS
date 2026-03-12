@@ -1,6 +1,6 @@
 #!/bin/sh
 
-psql "postgresql://postgres:secret@localhost:5430/distributed_ats" <<EOF
+psql "postgresql://postgres:postgres@localhost:5432/distributed_ats" <<EOF
 
 CREATE TABLE IF NOT EXISTS user_group (
     user_group text PRIMARY KEY,

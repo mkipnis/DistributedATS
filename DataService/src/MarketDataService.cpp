@@ -74,16 +74,7 @@ MarketDataService::~MarketDataService() {
 void MarketDataService::initialize()
 {
 
-    DistributedATS::PostgresQuery query("select i.instrument_name, m.market_name, json_extract(hp.properties,\"$.open\") as open_price " \
-                               " from " \
-                               " hist_price hp, " \
-                               " instrument i, " \
-                               " market m, " \
-                               " instrument_market_map imm " \
-                               " where hp.instrument_name=i.instrument_name and " \
-                               " imm.instrument_name=i.instrument_name and " \
-                               " m.market_name=imm.market_name and " \
-                               " hp.business_date=(select max(business_date) from hist_price where instrument_name=i.instrument_name)");
+    DistributedATS::PostgresQuery query("SELECT i.instrument_name,m.market_name,hp.properties->>'open' AS open_price FROM hist_price hp JOIN instrument i ON hp.instrument_name = i.instrument_name JOIN instrument_market_map imm ON imm.instrument_name = i.instrument_name JOIN market m ON m.market_name = imm.market_name WHERE hp.business_date = (SELECT MAX(business_date) FROM hist_price WHERE instrument_name = i.instrument_name)");
     
     LOG4CXX_INFO(logger, "Populating hist stats");
     
