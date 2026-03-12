@@ -171,8 +171,8 @@ bool AuthService::authenticate( std::shared_ptr<DistributedATS::PostgresConnecti
 {
     std::stringstream auth_query_stream;
     
-    auth_query_stream << "select * from user_code where user_name='" << username <<
-                    "' and json_extract(properties, \"$.password\")='" << password << "'";
+    auth_query_stream << "select * from user_code where user_name='" << username
+                  << "' and properties->>'password'='" << password << "'";
     
     DistributedATS::PostgresQuery auth_query(auth_query_stream.str());
     
