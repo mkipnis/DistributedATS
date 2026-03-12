@@ -102,7 +102,6 @@ int main(int argc, char* argv[] )
             throw std::runtime_error("BASEDIR_ATS is not set");
         
         std::string data_service_name = pt.get<std::string>("dataservice.name");
-        std::string database_file = pt.get<std::string>("database.database_file");
         
         distributed_ats_utils::basic_domain_participant_ptr basic_domain_participant_ptr =
             std::make_shared<distributed_ats_utils::basic_domain_participant>( 0, data_service_name );
@@ -110,16 +109,7 @@ int main(int argc, char* argv[] )
         basic_domain_participant_ptr->create_subscriber();
         basic_domain_participant_ptr->create_publisher();
 
-        //FIX::DatabaseConnectionID databaseConnectionID(std::string(base_dir_ats) + "/data/" + database_file,"", "", "", 0);
-        //string connectionString = "dbname=distributed_ats user=postgres password=secret host=localhost port=5430";
-        /*
-        const std::string &database,
-      const std::string &user,
-      const std::string &password,
-      const std::string &host,
-      short port
-         */
-        FIX::DatabaseConnectionID databaseConnectionID("distributed_ats","postgres","postgres","db",5430);
+        FIX::DatabaseConnectionID databaseConnectionID("distributed_ats","postgres","postgres","db",5432);
         std::shared_ptr<DistributedATS::PostgresConnection> sql_connection =
             std::make_shared<DistributedATS::PostgresConnection>( databaseConnectionID );
         
