@@ -119,7 +119,7 @@ int main(int argc, char* argv[] )
       const std::string &host,
       short port
          */
-        FIX::DatabaseConnectionID databaseConnectionID("distributed_ats","postgres","postgres","db",5430);
+        FIX::DatabaseConnectionID databaseConnectionID("distributed_ats","postgres","postgres","host.docker.internal",5430);
         std::shared_ptr<DistributedATS::PostgresConnection> sql_connection =
             std::make_shared<DistributedATS::PostgresConnection>( databaseConnectionID );
         
