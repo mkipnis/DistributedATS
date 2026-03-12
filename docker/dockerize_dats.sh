@@ -3,8 +3,8 @@
 set -x 
 
 # Core
-docker build --no-cache -t ianngulube/distributed_ats_deps:latest -f Docker.Build_DATS_Deps .
-docker build --no-cache -t ianngulube/distributed_ats:latest -f Docker.Build_Distributed_ATS .
+docker build -t ianngulube/distributed_ats_deps:latest -f Docker.Build_DATS_Deps .
+docker build -t ianngulube/distributed_ats:latest -f Docker.Build_Distributed_ATS .
 
 # Exchanges
 docker build --no-cache -t ianngulube/dats_crypto_clob:latest -f Docker.Crypto_CLOB .
