@@ -90,7 +90,7 @@ function App() {
           // -------------------------
           if (msgType === "A") {
             console.log("🔐 FIX Logon received");
-            setLoginState({ text: "Logon successful" });
+            setLoginState({ sessionStateCode: 0, text: "Logon successful" });
             setSessionToken({
               token: msg.session_qualifier,
               username: logonValue.username,
@@ -99,7 +99,7 @@ function App() {
           } else if ( msgType === "5")
           {
             console.log("🔐 FIX Logout received", msg);
-            setLoginState({ text: msg?.Body?.["58"] });
+            setLoginState({ sessionStateCode: 1, text: msg?.Body?.["58"] });
             return;
           }
 
@@ -133,7 +133,7 @@ function App() {
       // -------------------------
       fixClient.current.onerror = (err) => {
         console.error("❌ FIX WS error:", err);
-        setLoginState({ text: "FIX WebSocket connection failed" });
+        setLoginState({ sessionStateCode: 1, text: "FIX WebSocket connection failed" });
       };
 
       // -------------------------
@@ -141,7 +141,7 @@ function App() {
       // -------------------------
       fixClient.current.onclose = () => {
         console.warn("⚠️ FIX WS closed");
-        setLoginState({ text: "Disconnected from FIX WS" });
+        setLoginState({ sessionStateCode: 1, text: "Disconnected from FIX WS" });
         setBlotterData(undefined);
       };
     }
