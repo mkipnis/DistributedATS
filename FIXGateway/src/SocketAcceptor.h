@@ -42,10 +42,10 @@ class SocketAcceptor : public FIX::Acceptor, FIX::SocketServer::Strategy {
 
 public:
   SocketAcceptor(DistributedATS::DATSApplication &, FIX::MessageStoreFactory &,
-                 const FIX::SessionSettings &) throw(FIX::ConfigError);
+                 const FIX::SessionSettings &);
   SocketAcceptor(DistributedATS::DATSApplication &, FIX::MessageStoreFactory &,
                  const FIX::SessionSettings &, FIX::LogFactory &/*,
-                 std::ofstream */ ) throw(FIX::ConfigError);
+                 std::ofstream */ );
 
   virtual ~SocketAcceptor();
 
