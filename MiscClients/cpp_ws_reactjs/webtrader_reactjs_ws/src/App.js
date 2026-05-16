@@ -45,13 +45,28 @@ function App() {
 
   const [histData, setHistData] = useState([]);
 
+/*
   function getWebSocketUrl() {
    const host = window.location.hostname; // localhost, docker container, or prod host
    const port = 9002;                     // your FIX WS port
    const protocol = window.location.protocol === "https:" ? "wss" : "ws";
    return `${protocol}://${host}:${port}`;
   }
+*/
 
+
+function getWebSocketUrl() {
+  const host = window.location.hostname;
+  const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+
+  // Only special-case production domain
+  if (host === "ats.alpharesearch.online" || host === "ats.ustreasuries.online") {
+    return `${protocol}://${host}/ws`;
+  }
+
+  // everything else keeps old behavior
+  return `${protocol}://${host}:9002`;
+}
 
   // =====================================================================================
   // FIX LOGON CALLBACK  (USER PRESSES LOGIN BUTTON)
