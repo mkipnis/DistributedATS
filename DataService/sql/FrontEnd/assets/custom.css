@@ -1,0 +1,156 @@
+body {
+    font-size: 14px;
+}
+
+.card {
+    border-radius: 2px !important;
+}
+
+.form-control {
+    border-radius: 2px !important;
+    font-size: 14px !important;
+    padding: 2px 6px !important;
+    min-height: 26px !important;
+}
+
+/* Accordion container */
+.accordion {
+    background-color: #0e2537 !important;  /* dark container */
+}
+
+/* Each panel item */
+.accordion-item {
+    background-color: #0e2537 !important;
+    border: 0px solid #2a2f42 !important;
+}
+
+/* Header / button */
+.accordion-button {
+    background-color: #0e2537 !important;
+    color: #f09d08 !important;
+    border: 0px solid #2a2f42 !important;
+}
+
+/* Expanded header */
+.accordion-button:not(.collapsed) {
+    background-color: #0f1118 !important;
+    color: white !important;
+}
+
+/* Hover */
+.accordion-button:hover {
+    color: white !important;
+}
+
+/* Body content */
+.accordion-body {
+    background-color: #0e2537 !important;
+    color: #cccccc !important;
+    padding: 2px !important;
+}
+
+/* Arrow icon */
+.accordion-button::after {
+    filter: invert(65%) !important;
+}
+
+/* Remove focus outline */
+.accordion-button:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* =========================================================
+   Global Buttons
+   ========================================================= */
+
+button {
+    background-color: #343a40;
+    color: white;
+    border: 1px solid #555;
+    border-radius: 4px;
+    padding: 6px 16px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #495057;
+}
+
+button:active {
+    background-color: #212529;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+
+/* =========================================================
+   Global Inputs
+   ========================================================= */
+
+input,
+textarea,
+select {
+    background-color: #343a40 !important;
+    color: white !important;
+    border: 1px solid #555 !important;
+    border-radius: 4px;
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: #adb5bd !important;
+    opacity: 1;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    background-color: #343a40 !important;
+    color: white !important;
+    border-color: #777 !important;
+    box-shadow: none !important;
+    outline: none;
+}
+
+
+/* =========================================================
+   Labels
+   ========================================================= */
+
+label {
+    color: white;
+}
+
+
+/* =========================================================
+   Common layout helpers
+   ========================================================= */
+
+.input-container {
+    margin-top: 10px;
+}
+
+.button-container {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+
+.error-message {
+    color: #dc3545;
+    margin-top: 5px;
+}
+
+.ag-theme-quartz {
+    --ag-font-size: 14px;
+    --ag-row-height: 30px;
+    --ag-header-height: 32px;
+}
+
+.ag-root-wrapper {
+    border-radius: 0 !important;
+}
