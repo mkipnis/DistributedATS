@@ -1,0 +1,25 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="C5RBs43oDa-KdzZeNtuy" name="Page-1">
+    <mxGraphModel dx="2357" dy="859" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="WIyWlLk6GJQsqaUBKTNV-0" />
+        <mxCell id="WIyWlLk6GJQsqaUBKTNV-1" parent="WIyWlLk6GJQsqaUBKTNV-0" />
+        <mxCell id="AYbjLaYqNvyPd6iQrfFA-0" parent="WIyWlLk6GJQsqaUBKTNV-1" style="shape=ext;double=1;rounded=1;whiteSpace=wrap;html=1;fillColor=light-dark(#0050EF,#103660);fontColor=default;strokeColor=none;fontStyle=0;fontSize=16;" value="QuickFIX/C++" vertex="1">
+          <mxGeometry height="80" width="120" x="360" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="AYbjLaYqNvyPd6iQrfFA-1" parent="WIyWlLk6GJQsqaUBKTNV-1" style="shape=doubleArrow;whiteSpace=wrap;html=1;fillColor=light-dark(#0050EF,#103660);fontColor=default;strokeColor=none;" value="WebSockets" vertex="1">
+          <mxGeometry height="60" width="100" x="260" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="AYbjLaYqNvyPd6iQrfFA-2" parent="WIyWlLk6GJQsqaUBKTNV-1" style="shape=doubleArrow;whiteSpace=wrap;html=1;fillColor=light-dark(#0050EF,#103660);fontColor=default;fontStyle=0;strokeColor=none;" value="FIX" vertex="1">
+          <mxGeometry height="60" width="100" x="480" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="AYbjLaYqNvyPd6iQrfFA-3" parent="WIyWlLk6GJQsqaUBKTNV-1" style="ellipse;shape=doubleEllipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=light-dark(#0050EF,#103660);fontColor=default;strokeColor=none;fontStyle=0;fontSize=20;" value="ATS" vertex="1">
+          <mxGeometry height="80" width="80" x="580" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="AYbjLaYqNvyPd6iQrfFA-4" parent="WIyWlLk6GJQsqaUBKTNV-1" style="shape=ext;double=1;rounded=0;whiteSpace=wrap;html=1;fillColor=light-dark(#0050EF,#103660);fontColor=default;strokeColor=none;fontStyle=0;fontSize=20;" value="React" vertex="1">
+          <mxGeometry height="80" width="100" x="160" y="80" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
