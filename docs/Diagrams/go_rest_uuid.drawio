@@ -1,0 +1,25 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="C5RBs43oDa-KdzZeNtuy" name="Page-1">
+    <mxGraphModel dx="2343" dy="845" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="WIyWlLk6GJQsqaUBKTNV-0" />
+        <mxCell id="WIyWlLk6GJQsqaUBKTNV-1" parent="WIyWlLk6GJQsqaUBKTNV-0" />
+        <mxCell id="16F8E4MRgyEASm6aLNG2-0" parent="WIyWlLk6GJQsqaUBKTNV-1" style="shape=ext;double=1;rounded=1;whiteSpace=wrap;html=1;fillColor=light-dark(#0050EF,#103660);fontColor=default;strokeColor=none;fontStyle=0;fontSize=16;" value="QuickFIX/GO" vertex="1">
+          <mxGeometry height="80" width="120" x="350" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="16F8E4MRgyEASm6aLNG2-1" parent="WIyWlLk6GJQsqaUBKTNV-1" style="shape=doubleArrow;whiteSpace=wrap;html=1;fillColor=light-dark(#0050EF,#103660);fontColor=default;strokeColor=none;" value="REST" vertex="1">
+          <mxGeometry height="60" width="100" x="250" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="16F8E4MRgyEASm6aLNG2-2" parent="WIyWlLk6GJQsqaUBKTNV-1" style="shape=doubleArrow;whiteSpace=wrap;html=1;fillColor=light-dark(#0050EF,#103660);fontColor=default;fontStyle=0;strokeColor=none;" value="FIX" vertex="1">
+          <mxGeometry height="60" width="100" x="470" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="16F8E4MRgyEASm6aLNG2-3" parent="WIyWlLk6GJQsqaUBKTNV-1" style="ellipse;shape=doubleEllipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=light-dark(#0050EF,#103660);fontColor=default;strokeColor=none;fontStyle=0;fontSize=20;" value="ATS" vertex="1">
+          <mxGeometry height="80" width="80" x="570" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="16F8E4MRgyEASm6aLNG2-5" parent="WIyWlLk6GJQsqaUBKTNV-1" style="shape=actor;whiteSpace=wrap;html=1;fontSize=15;fillColor=light-dark(#FFFFFF,#103660);strokeColor=none;" value="&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;Investors" vertex="1">
+          <mxGeometry height="90" width="70" x="180" y="90" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
